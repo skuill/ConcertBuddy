@@ -10,8 +10,6 @@ namespace SetlistFmAPI
     {
         private readonly string _language;
         private readonly string _apiKey;
-        private static string root = "https://api.setlist.fm";
-        private static string apiVersion = "1.0";
 
         private readonly ILogger<SetlistFmClient> _logger;
 
@@ -29,10 +27,7 @@ namespace SetlistFmAPI
 
         public async Task<Artist> SearchArtist(string mbid)
         {
-            string url = string.Format("/artist/{0}", mbid);
-            Artist artist = await Load<Artist>(url);
-
-            return artist;
+            return await Load<Artist>(SetlistFmUrls.Artist(mbid));
         }
 
         /// <summary>
@@ -46,21 +41,7 @@ namespace SetlistFmAPI
         /// <returns>A list of matching artist.</returns>
         public async Task<Artists> SearchArtists(Artist searchFields, int page = 1)
         {
-            StringBuilder query = new StringBuilder();
-            if (searchFields != null)
-            {
-                if (!string.IsNullOrEmpty(searchFields.MBID))
-                    query.AppendFormat("artistMbid={0}&", searchFields.MBID);
-                if (searchFields.TMIDSpecified)
-                    query.AppendFormat("artistTmid={0}&", searchFields.TMID);
-                if (!string.IsNullOrEmpty(searchFields.Name))
-                    query.AppendFormat("artistName={0}&", searchFields.Name);
-            }
-
-            string url = string.Format("/search/artists?{0}sort=relevance&p={1}", query.ToString(), page.ToString());
-            Artists artists = await Load<Artists>(url);
-
-            return artists;
+            return await Load<Artists>(SetlistFmUrls.Artists(searchFields));
         }
 
         public async Task<Artists> SearchArtists(string artistName, int page = 1)
@@ -68,15 +49,36 @@ namespace SetlistFmAPI
             return await SearchArtists(new Artist(artistName), page);
         }
 
-        private async Task<T> Load<T>(string url)
+        /// <summary>
+        /// Get a list of an artist's setlists.
+        /// </summary>
+        /// <param name="mbid">the Musicbrainz MBID of the artist</param>
+        /// <param name="page">the number of the result page</param>
+        /// <returns></returns>
+        public async Task<Setlists> SearchArtistSetlists(string mbid, int page = 1)
+        {
+            return await Load<Setlists>(SetlistFmUrls.ArtistSetlists(mbid, page));
+        }
+
+        /// <summary>
+        /// Returns the current version of a setlist. E.g. if you pass the id of a setlist that got edited since you last accessed it, you'll get the current version.
+        /// </summary>
+        /// <param name="setlistId">The setlist id.</param>
+        /// <returns>The setlist for the provided id.</returns>
+        public async Task<Setlist> SearchSetlist(string setlistId)
+        {
+            return await Load<Setlist>(SetlistFmUrls.Setlist(setlistId));
+        }
+
+        private async Task<T> Load<T>(Uri url)
         {
             var httpClient = new HttpClient();
-            httpClient.BaseAddress = new Uri(root);
+            httpClient.BaseAddress = SetlistFmUrls.APIV1;
             httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
             httpClient.DefaultRequestHeaders.Add("Accept-Language", _language);
             httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
-            var response = await httpClient.GetAsync($"/rest/{apiVersion}{url}");
+            var response = await httpClient.GetAsync(url);
             if (response.IsSuccessStatusCode)
                 return await response.Content.ReadFromJsonAsync<T>();
 

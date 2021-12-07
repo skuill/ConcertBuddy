@@ -14,5 +14,9 @@ namespace SetlistFmAPI
         public Task<Artists> SearchArtists(Artist searchFields, int page = 1);
 
         public Task<Artists> SearchArtists(string artistName, int page = 1);
+
+        public Task<Setlists> SearchArtistSetlists(string mbid, int page = 1);
+
+        public Task<Setlist> SearchSetlist(string setlistId);
     }
 }

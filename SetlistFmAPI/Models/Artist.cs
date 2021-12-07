@@ -1,4 +1,4 @@
-﻿using System.Net.Http;
+﻿
 using System.Text.Json.Serialization;
 
 namespace SetlistFmAPI.Models
@@ -10,58 +10,43 @@ namespace SetlistFmAPI.Models
     /// </summary>
     public class Artist
     {
+        #region Properties
         /// <summary>
-        /// Disambiguation to distinguish between artists with same names.
-        /// </summary>
-        [JsonPropertyName("disambiguation")]
-        public string Disambiguation { get; set; }
-
-        /// <summary>
-        /// Gets or sets unique Musicbrainz Identifier (MBID), e.g. "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d" (The Beatles).
+        /// unique Musicbrainz Identifier (MBID), e.g. "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d"
         /// </summary>
         [JsonPropertyName("mbid")]
         public string MBID { get; set; }
 
         /// <summary>
-        /// Gets or sets unique Ticket Master Identifier (TMID), e.g. 1953.
+        /// unique Ticket Master Identifier (TMID), e.g. 735610
         /// </summary>
         [JsonPropertyName("tmid")]
-        public int TMID { get; set; }
+        public string TMID { get; set; }
 
         /// <summary>
-        /// Gets or sets the <paramref name="TMID"/> property should be included in the output.
-        /// </summary>
-        /// 
-        public bool TMIDSpecified { get; set; }
-
-        /// <summary>
-        /// Gets or sets the artist's name, e.g. "The Beatles" or "Bruce Springsteen".
+        /// the artist's name, e.g. "The Beatles"
         /// </summary>
         [JsonPropertyName("name")]
         public string Name { get; set; }
 
         /// <summary>
-        /// Gets or sets the artist's sort name, e.g. "Beatles, The" or "Springsteen, Bruce".
+        /// the artist's sort name, e.g. "Beatles, The" or "Springsteen, Bruce"
         /// </summary>
         [JsonPropertyName("sortName")]
         public string SortName { get; set; }
 
         /// <summary>
-        /// Gets or sets the url to artist's setlists' page on Setlist.fm.
+        /// disambiguation to distinguish between artists with same names
+        /// </summary>
+        [JsonPropertyName("disambiguation")]
+        public string Disambiguation { get; set; }
+
+        /// <summary>
+        /// the attribution url
         /// </summary>
         [JsonPropertyName("url")]
         public string Url { get; set; }
-
-        /// <summary>
-        /// Gets the url to artist's stats' page on Setlist.fm.
-        /// </summary>
-        public string UrlStats
-        {
-            get
-            {
-                return Url.Replace("/setlists/", "/stats/");
-            }
-        }
+        #endregion
 
         public string NameWithDisambiguation
         {
@@ -82,11 +67,6 @@ namespace SetlistFmAPI.Models
             : this()
         {
             Name = name;
-        }
-
-        public override string ToString()
-        {
-            return "Name = " + Name;
         }
     }
 }

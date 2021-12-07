@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace SetlistFmAPI.Models
 {
@@ -13,25 +9,25 @@ namespace SetlistFmAPI.Models
     public class ArrayResult<T>
     {
         /// <summary>
-        /// Gets or sets the total amount of items matching the query.
+        /// the total amount of items matching the query
         /// </summary>
         [JsonPropertyName("total")]
         public int Total { get; set; }
 
         /// <summary>
-        /// Gets or sets current page.
+        /// the current page. starts at 1
         /// </summary>
         [JsonPropertyName("page")]
         public int Page { get; set; }
 
         /// <summary>
-        /// Gets or sets the amount of items you get per page.
+        /// the amount of items you get per page
         /// </summary>
         [JsonPropertyName("itemsPerPage")]
         public int ItemsPerPage { get; set; }
 
         /// <summary>
-        /// Gets or sets the property "type" of an object.
+        /// the property "type" of an object.
         /// </summary>
         [JsonPropertyName("type")]
         public string ApiType { get; set; }
