@@ -6,19 +6,10 @@ namespace SetlistFmAPI.Tests
     [TestClass]
     public class SetlistFmClientTest
     {
-        private string _apiKey = "";
-
-        [TestInitialize]
-        public void TestInitialize()
-        {
-            // sativkv@gmail.com API
-            this._apiKey = "YswjYvgRtNyqt6zHfVQavkh8uyf_iP6ZWQjv";
-        }
-
         [TestMethod]
         public async Task SearchArtist_ByMBID_NotNull()
         {
-            ISetlistFmClient client = new SetlistFmClient(_apiKey);
+            ISetlistFmClient client = new SetlistFmClient(AppSettings.SetlistFmApiKey);
             var result = await client.SearchArtist("b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d");
 
             Assert.IsNotNull(result);
@@ -30,7 +21,7 @@ namespace SetlistFmAPI.Tests
         [TestMethod]
         public async Task SearchArtists_ByName_NotNull()
         {
-            ISetlistFmClient client = new SetlistFmClient(_apiKey);
+            ISetlistFmClient client = new SetlistFmClient(AppSettings.SetlistFmApiKey);
             var result = await client.SearchArtists("Parkway Drive");
 
             Assert.IsNotNull(result);
@@ -43,7 +34,7 @@ namespace SetlistFmAPI.Tests
         {
             string mbid = "a436dd02-0549-4c91-b608-df451217fdeb";
 
-            ISetlistFmClient client = new SetlistFmClient(_apiKey);
+            ISetlistFmClient client = new SetlistFmClient(AppSettings.SetlistFmApiKey);
             var result = await client.SearchArtistSetlists(mbid);
 
             Assert.IsNotNull(result);
@@ -58,7 +49,7 @@ namespace SetlistFmAPI.Tests
         {
             string setlistId = "539a63ed";
 
-            ISetlistFmClient client = new SetlistFmClient(_apiKey);
+            ISetlistFmClient client = new SetlistFmClient(AppSettings.SetlistFmApiKey);
             var result = await client.SearchSetlist(setlistId);
 
             Assert.IsNotNull(result);

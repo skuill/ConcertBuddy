@@ -17,7 +17,7 @@ namespace ConcertBuddy.ConsoleApp
             string bandName = "Parkway Drive";
 
             // sativkv@gmail.com API
-            string setlistApiKey = "YswjYvgRtNyqt6zHfVQavkh8uyf_iP6ZWQjv";
+            string setlistApiKey = AppSettings.SetlistFmApiKey;
 
             ISetlistFmClient setlistFmClient = new SetlistFmClient(setlistApiKey);
             
