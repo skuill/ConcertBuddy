@@ -10,8 +10,11 @@ namespace ConcertBuddy.ConsoleApp
     {
         private static readonly ILogger<AppSettings> _logger;
         private static readonly string SETLISTFM_API_KEY = "SetlistFmApiKey";
+        private static readonly string GENIUS_CLIENT_ACCESS_TOKEN_KEY = "GeniusClientAccessToken";
 
         public static string SetlistFmApiKey => ReadSetting(SETLISTFM_API_KEY);
+
+        public static string GeniusClientAccessToken => ReadSetting(GENIUS_CLIENT_ACCESS_TOKEN_KEY);
 
         private static string ReadSetting(string key)
         {
