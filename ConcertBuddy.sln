@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConcertBuddy.Bot.AWSServerl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConcertBuddy.Bot.AWSServerless.Tests", "ConcertBuddy.Bot.AWSServerless.Tests\ConcertBuddy.Bot.AWSServerless.Tests.csproj", "{91ED867A-34E1-4FFF-827A-354021CF9E8E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LyricsScraper", "LyricsScraper\LyricsScraper.csproj", "{BF866A82-B4B2-4B4B-B149-4061FC1F052D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{91ED867A-34E1-4FFF-827A-354021CF9E8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91ED867A-34E1-4FFF-827A-354021CF9E8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91ED867A-34E1-4FFF-827A-354021CF9E8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF866A82-B4B2-4B4B-B149-4061FC1F052D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF866A82-B4B2-4B4B-B149-4061FC1F052D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF866A82-B4B2-4B4B-B149-4061FC1F052D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF866A82-B4B2-4B4B-B149-4061FC1F052D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

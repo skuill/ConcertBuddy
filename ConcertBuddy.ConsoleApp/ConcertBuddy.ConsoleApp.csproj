@@ -10,12 +10,14 @@
   <ItemGroup>
     <PackageReference Include="Genius.NET" Version="4.0.1" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.39" />
-    <PackageReference Include="ScrapySharp" Version="3.0.0" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.1.0" />
+    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="96.0.4664.4500" />
     <PackageReference Include="SpotifyAPI.Web" Version="6.2.2" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LyricsScraper\LyricsScraper.csproj" />
     <ProjectReference Include="..\SetlistFmApi\SetlistFmAPI.csproj" />
   </ItemGroup>
 

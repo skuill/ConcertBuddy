@@ -1,5 +1,6 @@
 ﻿using HtmlAgilityPack;
-using ScrapySharp.Network;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,14 +12,14 @@ namespace ConcertBuddy.ConsoleApp
 {
     public class GeniusHtmlParser
     {
-        private static bool _isStatisWebPage = false;
+        private static bool _isStatisWebPage = true;
 
         private async static Task<string> GetStaticPageLyric(string url)
         {
             var htmlPage = new HtmlWeb();
-            var document = htmlPage.Load(url);
+            var document = htmlPage.Load(url, "GET");
             IEnumerable<HtmlNode> nodes =
-                document.DocumentNode.Descendants(0).Where(x => x.HasClass("lyrics"));
+                document.DocumentNode.Descendants(0).Where(x => x.Attributes.Any(a => a.Name == "data-lyrics-container" && a.Value == "true"));
 
             string lyrics = nodes.FirstOrDefault().InnerHtml.ToString();
 
@@ -32,16 +33,26 @@ namespace ConcertBuddy.ConsoleApp
         //TODO Try to scrape from Musixmatch!
         private async static Task<string> GetDynamicPageLyric(string url)
         {
-            ScrapingBrowser browser = new ScrapingBrowser();
-            WebPage htmlPage = browser.NavigateToPage(new Uri(url), HttpVerb.Post);
+            string lyrics = String.Empty;
+            try
+            {
+                var chromeOptions = new ChromeOptions();
+                chromeOptions.AddArguments("headless");
+                IWebDriver driver = new ChromeDriver(chromeOptions);
 
-            IEnumerable<HtmlNode> nodes = htmlPage.Html.Descendants(0).Where(x => x.HasClass("lyrics"));
+                driver.Navigate().GoToUrl(url);
 
-            string lyrics = nodes.FirstOrDefault().InnerHtml.ToString();
+                IWebElement lyricElement = driver.FindElement(By.Id("lyrics"));
+                lyrics = lyricElement.Text;
 
-            lyrics = StripTagsRegex(lyrics);
-            lyrics = StripNewLines(lyrics);
-            lyrics = CleanEnding(lyrics);
+                lyrics = StripTagsRegex(lyrics);
+                lyrics = StripNewLines(lyrics);
+                lyrics = CleanEnding(lyrics);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
             return lyrics;
         }
 
