@@ -1,5 +1,6 @@
 ﻿using HtmlAgilityPack;
 using LyricsScraper.Abstract;
+using LyricsScraper.Common;
 using LyricsScraper.Unils;
 using Microsoft.Extensions.Logging;
 using System;
@@ -10,10 +11,8 @@ using System.Threading.Tasks;
 
 namespace LyricsScraper.AZLyrics
 {
-    public class AZLyricsGetter : IGetter
+    public class AZLyricsGetter : LyricGetter
     {
-        private IParser _parser;
-
         private readonly ILogger<AZLyricsGetter> _logger;
         private readonly Uri _baseUri;
 
@@ -23,43 +22,39 @@ namespace LyricsScraper.AZLyrics
         public AZLyricsGetter(string endpoint = "http://www.azlyrics.com/lyrics/")
             : this(new Uri(endpoint)) { }
 
-        public AZLyricsGetter(Uri endpoint)
+        public AZLyricsGetter(Uri endpoint): base()
         {
             _baseUri = endpoint;
-            _parser = new AZLyricsParser();
+            Parser = new AZLyricsParser();
+            WebClient = new HtmlAgilityWebClient();
         }
 
-        public string SearchLyric(string artist, string song)
+        public override string SearchLyric(string artist, string song)
         {
             // http://www.azlyrics.com/lyrics/youngthug/richniggashit.htm
-            var artistStripped = StringUtils.StripWhiteSpaces(artist.ToLowerInvariant());
-            var titleStripped = StringUtils.StripWhiteSpaces(song.ToLowerInvariant());
-
-            //_uri = new Uri(_url + artist + "/" + title + ".html", UriKind.Absolute);
+            var artistStripped = StringUtils.StripRedundantChars(artist.ToLowerInvariant());
+            var titleStripped = StringUtils.StripRedundantChars(song.ToLowerInvariant());
 
             return SearchLyric(new Uri(_baseUri, $"{artistStripped}/{titleStripped}.html"));
         }
 
-        public string SearchLyric(Uri uri)
+        public override string SearchLyric(Uri uri)
         {
-            var htmlPage = new HtmlWeb();
-            var document = htmlPage.Load(uri, "GET");
-
-            var text = document.ParsedText;
+            var text = WebClient.Load(uri);
             if (string.IsNullOrEmpty(text))
             {
                 _logger?.LogError($"text is empty for {uri}");
+                return null;
             }
 
             var startIndex = text.IndexOf(_lyricStart);
             var endIndex = text.IndexOf(_lyricEnd);
-            return _parser.Parse(text.Substring(startIndex, endIndex - startIndex));
-        }
-
-        public void WithParser(IParser parser)
-        {
-            if (parser != null)
-                _parser = parser;
+            if (startIndex <= 0 || endIndex <= 0)
+            {
+                _logger?.LogError($"can't find lyrics for {uri}");
+                return null;
+            }
+            return Parser.Parse(text.Substring(startIndex, endIndex - startIndex));
         }
     }
 }

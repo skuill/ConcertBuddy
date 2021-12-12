@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace LyricsScraper.Unils
@@ -24,9 +25,9 @@ namespace LyricsScraper.Unils
             return text;
         }
 
-        public static string StripWhiteSpaces(string input)
+        public static string StripRedundantChars(string input)
         {
-            return input = input.Replace(" ", string.Empty);
+            return new string(input.Where(c => char.IsLetterOrDigit(c)).ToArray());
         }
 
     }

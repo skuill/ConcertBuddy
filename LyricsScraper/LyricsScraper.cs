@@ -5,7 +5,7 @@ namespace LyricsScraper
 {
     public class LyricsScraperUtil
     {
-        private static List<IGetter> _lyricGetters;
+        private static List<LyricGetter> _lyricGetters;
         private static readonly ILogger<LyricsScraperUtil> _logger;
 
         public static string SearchLyric(Uri uri)
@@ -46,10 +46,10 @@ namespace LyricsScraper
             return null;
         }
 
-        public static void WithGetter(IGetter getter)
+        public static void WithGetter(LyricGetter getter)
         {
             if (IsEmptyGetters())
-                _lyricGetters = new List<IGetter>();
+                _lyricGetters = new List<LyricGetter>();
             _lyricGetters.Add(getter);
         }
 

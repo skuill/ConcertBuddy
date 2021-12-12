@@ -1,4 +1,5 @@
-﻿using SetlistFmAPI.Models;
+﻿using SetlistFmAPI.Http;
+using SetlistFmAPI.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,5 +19,7 @@ namespace SetlistFmAPI
         public Task<Setlists> SearchArtistSetlists(string mbid, int page = 1);
 
         public Task<Setlist> SearchSetlist(string setlistId);
+
+        public void WithHttpClient(IHttpClient httpClient);
     }
 }

@@ -3,31 +3,24 @@ using System.Text;
 using System.Net.Http;
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
+using SetlistFmAPI.Http;
 
 namespace SetlistFmAPI
 {
     public class SetlistFmClient: ISetlistFmClient
     {
-        private readonly string _language;
-        private readonly string _apiKey;
 
         private readonly ILogger<SetlistFmClient> _logger;
+        private IHttpClient _httpClient;
 
-        public SetlistFmClient(string apiKey)
+        public SetlistFmClient(string apiKey, string language = "en")
         {
-            _language = "en";
-            _apiKey = apiKey;
-        }
-
-        public SetlistFmClient(string apiKey, string language)
-            : this(apiKey)
-        {
-            _language = language;
+            _httpClient = new HttpSetlistWebClient(apiKey, language);
         }
 
         public async Task<Artist> SearchArtist(string mbid)
         {
-            return await Load<Artist>(SetlistFmUrls.Artist(mbid));
+            return await _httpClient.Load<Artist>(SetlistFmUrls.Artist(mbid));
         }
 
         /// <summary>
@@ -41,7 +34,7 @@ namespace SetlistFmAPI
         /// <returns>A list of matching artist.</returns>
         public async Task<Artists> SearchArtists(Artist searchFields, int page = 1)
         {
-            return await Load<Artists>(SetlistFmUrls.Artists(searchFields));
+            return await _httpClient.Load<Artists>(SetlistFmUrls.Artists(searchFields));
         }
 
         public async Task<Artists> SearchArtists(string artistName, int page = 1)
@@ -57,7 +50,7 @@ namespace SetlistFmAPI
         /// <returns></returns>
         public async Task<Setlists> SearchArtistSetlists(string mbid, int page = 1)
         {
-            return await Load<Setlists>(SetlistFmUrls.ArtistSetlists(mbid, page));
+            return await _httpClient.Load<Setlists>(SetlistFmUrls.ArtistSetlists(mbid, page));
         }
 
         /// <summary>
@@ -67,23 +60,13 @@ namespace SetlistFmAPI
         /// <returns>The setlist for the provided id.</returns>
         public async Task<Setlist> SearchSetlist(string setlistId)
         {
-            return await Load<Setlist>(SetlistFmUrls.Setlist(setlistId));
+            return await _httpClient.Load<Setlist>(SetlistFmUrls.Setlist(setlistId));
         }
 
-        private async Task<T> Load<T>(Uri url)
+        public void WithHttpClient(IHttpClient httpClient)
         {
-            var httpClient = new HttpClient();
-            httpClient.BaseAddress = SetlistFmUrls.APIV1;
-            httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
-            httpClient.DefaultRequestHeaders.Add("Accept-Language", _language);
-            httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-
-            var response = await httpClient.GetAsync(url);
-            if (response.IsSuccessStatusCode)
-                return await response.Content.ReadFromJsonAsync<T>();
-
-            _logger?.LogError($"Response status: {response.StatusCode}. {response.ReasonPhrase}");
-            return default(T);
+            if (httpClient != null)
+                _httpClient = httpClient;
         }
     }
 }

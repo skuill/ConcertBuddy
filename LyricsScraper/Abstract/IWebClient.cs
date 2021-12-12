@@ -6,12 +6,8 @@ using System.Threading.Tasks;
 
 namespace LyricsScraper.Abstract
 {
-    public interface IGetter
+    public interface IWebClient
     {
-        string SearchLyric(Uri uri);
-
-        string SearchLyric(string artist, string song);
-
-        void WithParser(IParser parser);
+        string Load(Uri uri);
     }
 }
