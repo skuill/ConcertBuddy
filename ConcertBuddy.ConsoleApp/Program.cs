@@ -6,6 +6,11 @@ using SetlistFmAPI;
 using SetlistFmAPI.Models;
 using LyricsScraper;
 using LyricsScraper.AZLyrics;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using SetlistFmAPI.Http;
+using LyricsScraper.Abstract;
+using LyricsScraper.Common;
 
 namespace ConcertBuddy.ConsoleApp
 {
@@ -17,24 +22,33 @@ namespace ConcertBuddy.ConsoleApp
 
         public static void Main(string[] args)
         {
+            var serviceCollection = new ServiceCollection();
+            ConfigureServices(serviceCollection);
+
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+            var logger = serviceProvider.GetService<ILogger<Program>>();
+
             string artistName = "Parkway Drive";
-            Console.WriteLine(artistName);
+            logger.LogInformation(artistName);
             /// Get setlist for artist
 
             // sativkv@gmail.com API
             string setlistApiKey = AppSettings.SetlistFmApiKey;
 
-            ISetlistFmClient setlistFmClient = new SetlistFmClient(setlistApiKey);
+            ISetlistFmClient setlistFmClient = serviceProvider.GetService<ISetlistFmClient>();
+            setlistFmClient.WithApiKey(setlistApiKey);
 
             var artists = setlistFmClient.SearchArtists(artistName).GetAwaiter().GetResult();
             var artist = artists.Items.FirstOrDefault();
 
             var setlists = setlistFmClient.SearchArtistSetlists(artist.MBID).GetAwaiter().GetResult();
-            Console.WriteLine($"setlists: {setlists.Items.Count}");
+            logger.LogInformation($"setlists: {setlists.Items.Count}");
 
             /// Get lyric for first song in setlist
-            var songName = setlists.Items.FirstOrDefault().Sets.Items.FirstOrDefault().Songs.FirstOrDefault().Name;
-            Console.WriteLine($"Song: {songName}");
+            var songName = setlists.Items.FirstOrDefault()
+                .Sets.Items.FirstOrDefault()
+                .Songs.FirstOrDefault().Name;
+            logger.LogInformation($"Song: {songName}");
 
             var artistAndSong = $"{artistName} {songName}";
 
@@ -51,9 +65,23 @@ namespace ConcertBuddy.ConsoleApp
             //var songLyrics = GeniusHtmlParser.GetLyric(lyricUrl).GetAwaiter().GetResult();
             //Console.WriteLine(songLyrics);
 
-            LyricsScraperUtil.WithGetter(new AZLyricsGetter());
-            var lyric = LyricsScraperUtil.SearchLyric(artistName, songName);
-            Console.WriteLine(lyric);
+            ILyricsScraperUtil lyricsScraperUtil = serviceProvider.GetService<ILyricsScraperUtil>();
+            ILyricGetter lyricGetter = serviceProvider.GetService<ILyricGetter>();
+            lyricsScraperUtil.AddGetter(lyricGetter);
+            var lyric = lyricsScraperUtil.SearchLyric(artistName, songName);
+            logger.LogInformation(lyric);
+        }
+
+        private static void ConfigureServices(IServiceCollection services)
+        {
+            services.AddLogging(configure => configure.AddConsole())
+                    .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
+                    .AddScoped<ISetlistFmClient, SetlistFmClient>()
+                    .AddScoped<IHttpClient, HttpSetlistWebClient>()
+                    .AddScoped<IParser, AZLyricsParser>()
+                    .AddScoped<IWebClient, HtmlAgilityWebClient>()
+                    .AddScoped<ILyricGetter, AZLyricsGetter>()
+                    .AddScoped<ILyricsScraperUtil, LyricsScraperUtil>();
         }
     }
 }

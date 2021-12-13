@@ -3,12 +3,17 @@ using Microsoft.Extensions.Logging;
 
 namespace LyricsScraper
 {
-    public class LyricsScraperUtil
+    public class LyricsScraperUtil: ILyricsScraperUtil
     {
-        private static List<LyricGetter> _lyricGetters;
-        private static readonly ILogger<LyricsScraperUtil> _logger;
+        private List<ILyricGetter> _lyricGetters;
+        private readonly ILogger<LyricsScraperUtil> _logger;
 
-        public static string SearchLyric(Uri uri)
+        public LyricsScraperUtil(ILogger<LyricsScraperUtil> logger)
+        {
+            _logger = logger;
+        }
+
+        public string SearchLyric(Uri uri)
         {
             if (IsEmptyGetters())
             {
@@ -27,7 +32,7 @@ namespace LyricsScraper
             return null;
         }
 
-        public static string SearchLyric(string artist, string song)
+        public string SearchLyric(string artist, string song)
         {
             if (IsEmptyGetters())
             {
@@ -46,13 +51,13 @@ namespace LyricsScraper
             return null;
         }
 
-        public static void WithGetter(LyricGetter getter)
+        public void AddGetter(ILyricGetter getter)
         {
             if (IsEmptyGetters())
-                _lyricGetters = new List<LyricGetter>();
+                _lyricGetters = new List<ILyricGetter>();
             _lyricGetters.Add(getter);
         }
 
-        private static bool IsEmptyGetters() => _lyricGetters == null || !_lyricGetters.Any();
+        private bool IsEmptyGetters() => _lyricGetters == null || !_lyricGetters.Any();
     }
 }

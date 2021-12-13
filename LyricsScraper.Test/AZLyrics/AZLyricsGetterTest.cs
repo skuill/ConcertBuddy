@@ -1,5 +1,6 @@
 ﻿using LyricsScraper.Abstract;
 using LyricsScraper.AZLyrics;
+using LyricsScraper.Common;
 using LyricsScraper.Test.TestModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -31,7 +32,7 @@ namespace LyricsScraper.Test.AZLyrics
                 var mockWebClient = new Mock<IWebClient>();
                 mockWebClient.Setup(x => x.Load(It.IsAny<Uri>())).Returns(testData.LyricPageData);
 
-                var lyricsGetter = new AZLyricsGetter();
+                var lyricsGetter = new AZLyricsGetter(null, new AZLyricsParser(), new HtmlAgilityWebClient());
                 lyricsGetter.WithWebClient(mockWebClient.Object);
 
                 // Act

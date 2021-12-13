@@ -1,17 +1,18 @@
-﻿using System;
+﻿using LyricsScraper.Abstract;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LyricsScraper.Abstract
+namespace LyricsScraper.Common
 {
-    public abstract class LyricGetter
+    public abstract class LyricGetterBase: ILyricGetter
     {
         protected IParser Parser { get; set; }
         protected IWebClient WebClient { get; set; }
 
-        public LyricGetter()
+        public LyricGetterBase()
         {
         }
 

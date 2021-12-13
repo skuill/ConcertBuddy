@@ -11,20 +11,19 @@ using System.Threading.Tasks;
 
 namespace LyricsScraper.AZLyrics
 {
-    public class AZLyricsGetter : LyricGetter
+    public class AZLyricsGetter : LyricGetterBase
     {
         private readonly ILogger<AZLyricsGetter> _logger;
-        private readonly Uri _baseUri;
+        private readonly string _baseUri = "http://www.azlyrics.com/lyrics/";
 
         private readonly string _lyricStart = "<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->";
         private readonly string _lyricEnd = "<!-- MxM banner -->";
 
-        public AZLyricsGetter(string endpoint = "http://www.azlyrics.com/lyrics/")
-            : this(new Uri(endpoint)) { }
+        public Uri BaseUri => new Uri(_baseUri);
 
-        public AZLyricsGetter(Uri endpoint): base()
+        public AZLyricsGetter(ILogger<AZLyricsGetter> logger, IParser parser, IWebClient webClient)
         {
-            _baseUri = endpoint;
+            _logger = logger;
             Parser = new AZLyricsParser();
             WebClient = new HtmlAgilityWebClient();
         }
@@ -35,11 +34,17 @@ namespace LyricsScraper.AZLyrics
             var artistStripped = StringUtils.StripRedundantChars(artist.ToLowerInvariant());
             var titleStripped = StringUtils.StripRedundantChars(song.ToLowerInvariant());
 
-            return SearchLyric(new Uri(_baseUri, $"{artistStripped}/{titleStripped}.html"));
+            return SearchLyric(new Uri(BaseUri, $"{artistStripped}/{titleStripped}.html"));
         }
 
         public override string SearchLyric(Uri uri)
         {
+            if (WebClient == null || Parser == null)
+            {
+                _logger?.LogError($"Please set up WebClient and Parser at first");
+                return null;
+            }
+
             var text = WebClient.Load(uri);
             if (string.IsNullOrEmpty(text))
             {

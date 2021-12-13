@@ -13,14 +13,18 @@ namespace SetlistFmAPI
         private readonly ILogger<SetlistFmClient> _logger;
         private IHttpClient _httpClient;
 
-        public SetlistFmClient(string apiKey, string language = "en")
+        private string _apiKey;
+        private string _language = "en";
+
+        public SetlistFmClient(ILogger<SetlistFmClient> logger, IHttpClient httpClient)
         {
-            _httpClient = new HttpSetlistWebClient(apiKey, language);
+            _logger = logger;
+            _httpClient = httpClient;
         }
 
         public async Task<Artist> SearchArtist(string mbid)
         {
-            return await _httpClient.Load<Artist>(SetlistFmUrls.Artist(mbid));
+            return await _httpClient.Load<Artist>(SetlistFmUrls.Artist(mbid), _apiKey, _language);
         }
 
         /// <summary>
@@ -34,7 +38,7 @@ namespace SetlistFmAPI
         /// <returns>A list of matching artist.</returns>
         public async Task<Artists> SearchArtists(Artist searchFields, int page = 1)
         {
-            return await _httpClient.Load<Artists>(SetlistFmUrls.Artists(searchFields));
+            return await _httpClient.Load<Artists>(SetlistFmUrls.Artists(searchFields), _apiKey, _language);
         }
 
         public async Task<Artists> SearchArtists(string artistName, int page = 1)
@@ -50,7 +54,7 @@ namespace SetlistFmAPI
         /// <returns></returns>
         public async Task<Setlists> SearchArtistSetlists(string mbid, int page = 1)
         {
-            return await _httpClient.Load<Setlists>(SetlistFmUrls.ArtistSetlists(mbid, page));
+            return await _httpClient.Load<Setlists>(SetlistFmUrls.ArtistSetlists(mbid, page), _apiKey, _language);
         }
 
         /// <summary>
@@ -60,13 +64,23 @@ namespace SetlistFmAPI
         /// <returns>The setlist for the provided id.</returns>
         public async Task<Setlist> SearchSetlist(string setlistId)
         {
-            return await _httpClient.Load<Setlist>(SetlistFmUrls.Setlist(setlistId));
+            return await _httpClient.Load<Setlist>(SetlistFmUrls.Setlist(setlistId), _apiKey, _language);
+        }
+
+        public void WithApiKey(string apiKey)
+        {
+            _apiKey = apiKey;
         }
 
         public void WithHttpClient(IHttpClient httpClient)
         {
             if (httpClient != null)
                 _httpClient = httpClient;
+        }
+
+        public void WithLanguage(string language)
+        {
+            _language = language;
         }
     }
 }

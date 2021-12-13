@@ -15,7 +15,7 @@ namespace LyricsScraper.Common
             var htmlPage = new HtmlWeb();
             var document = htmlPage.Load(uri, "GET");
 
-            return document.ParsedText;
+            return document?.ParsedText;
         }
     }
 }

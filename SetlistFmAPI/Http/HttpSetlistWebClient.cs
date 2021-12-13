@@ -10,30 +10,42 @@ namespace SetlistFmAPI.Http
 {
     public class HttpSetlistWebClient: IHttpClient
     {
-        private readonly string _language;
-        private readonly string _apiKey;
-
         private readonly ILogger<HttpSetlistWebClient> _logger;
 
-        public HttpSetlistWebClient(string apiKey, string language = "en")
+        public HttpSetlistWebClient(ILogger<HttpSetlistWebClient> logger)
         {
-            _language = language;
-            _apiKey = apiKey;
+            _logger = logger;
         }
 
-        public async Task<T> Load<T>(Uri url)
+        public async Task<T> Load<T>(Uri url, string apiKey, string language = "en")
         {
-            var httpClient = new HttpClient();
-            httpClient.BaseAddress = SetlistFmUrls.APIV1;
-            httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
-            httpClient.DefaultRequestHeaders.Add("Accept-Language", _language);
-            httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            int retryCount = 1;
+            int retryAmount = 3;
 
-            var response = await httpClient.GetAsync(url);
-            if (response.IsSuccessStatusCode)
-                return await response.Content.ReadFromJsonAsync<T>();
+            do {
+                try
+                {
+                    var httpClient = new HttpClient();
+                    httpClient.BaseAddress = SetlistFmUrls.APIV1;
+                    httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+                    httpClient.DefaultRequestHeaders.Add("Accept-Language", language);
+                    httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
-            _logger?.LogError($"Response status: {response.StatusCode}. {response.ReasonPhrase}. Url: {url}");
+                    var response = await httpClient.GetAsync(url);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        _logger?.LogError($"Try №{retryCount} to load setlist error. Response status: {response.StatusCode}. {response.ReasonPhrase}. Url: {url}");
+                        continue;
+                    }
+                    return await response.Content.ReadFromJsonAsync<T>();
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError($"Try №{retryCount} to load setlist error: {ex}. Url: {url}");
+                    Thread.Sleep(1000);
+                }
+            } while (retryCount++ <= retryAmount);
+            
             return default(T);
         }
     }
