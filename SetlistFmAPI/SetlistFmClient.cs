@@ -1,9 +1,6 @@
-﻿using SetlistFmAPI.Models;
-using System.Text;
-using System.Net.Http;
-using System.Net.Http.Json;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using SetlistFmAPI.Http;
+using SetlistFmAPI.Models;
 
 namespace SetlistFmAPI
 {

@@ -1,13 +1,7 @@
-﻿using HtmlAgilityPack;
-using LyricsScraper.Abstract;
+﻿using LyricsScraper.Abstract;
 using LyricsScraper.Common;
 using LyricsScraper.Unils;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LyricsScraper.AZLyrics
 {

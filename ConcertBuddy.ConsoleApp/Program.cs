@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Genius;
-using SetlistFmAPI;
-using SetlistFmAPI.Models;
-using LyricsScraper;
+﻿using LyricsScraper;
+using LyricsScraper.Abstract;
 using LyricsScraper.AZLyrics;
+using LyricsScraper.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SetlistFmAPI;
 using SetlistFmAPI.Http;
-using LyricsScraper.Abstract;
-using LyricsScraper.Common;
 
 namespace ConcertBuddy.ConsoleApp
 {

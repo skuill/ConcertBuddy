@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Configuration;
-using System.Text;
 
 namespace ConcertBuddy.ConsoleApp
 {
