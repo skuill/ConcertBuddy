@@ -4,8 +4,8 @@ namespace LyricsScraper.Common
 {
     public abstract class LyricGetterBase: ILyricGetter
     {
-        protected IParser Parser { get; set; }
-        protected IWebClient WebClient { get; set; }
+        protected ILyricParser Parser { get; set; }
+        protected ILyricWebClient WebClient { get; set; }
 
         public LyricGetterBase()
         {
@@ -15,13 +15,13 @@ namespace LyricsScraper.Common
 
         public abstract string SearchLyric(string artist, string song);
 
-        public void WithParser(IParser parser)
+        public void WithParser(ILyricParser parser)
         {
             if (parser != null)
                 Parser = parser;
         }
 
-        public void WithWebClient(IWebClient webClient)
+        public void WithWebClient(ILyricWebClient webClient)
         {
             if (webClient != null)
                 WebClient = webClient;

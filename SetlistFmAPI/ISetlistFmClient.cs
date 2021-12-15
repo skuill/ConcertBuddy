@@ -15,7 +15,7 @@ namespace SetlistFmAPI
 
         public Task<Setlist> SearchSetlist(string setlistId);
 
-        public void WithHttpClient(IHttpClient httpClient);
+        public void WithHttpClient(ISetlistHttpClient httpClient);
 
         public void WithApiKey(string apiKey);
 

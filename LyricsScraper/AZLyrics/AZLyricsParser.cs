@@ -3,7 +3,7 @@ using LyricsScraper.Unils;
 
 namespace LyricsScraper.AZLyrics
 {
-    public class AZLyricsParser : IParser
+    public class AZLyricsParser : ILyricParser
     {
         public string Parse(string lyric)
         {

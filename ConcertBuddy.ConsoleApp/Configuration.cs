@@ -3,9 +3,9 @@ using System.Configuration;
 
 namespace ConcertBuddy.ConsoleApp
 {
-    public class AppSettings
+    public class Configuration
     {
-        private static readonly ILogger<AppSettings> _logger;
+        private static readonly ILogger<Configuration> _logger;
         private static readonly string SETLISTFM_API_KEY = "SetlistFmApiKey";
         private static readonly string GENIUS_CLIENT_ACCESS_TOKEN_KEY = "GeniusClientAccessToken";
         private static readonly string TELEGRAM_TOKEN_KEY = "TelegramToken";

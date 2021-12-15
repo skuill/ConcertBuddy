@@ -15,7 +15,7 @@ namespace LyricsScraper.AZLyrics
 
         public Uri BaseUri => new Uri(_baseUri);
 
-        public AZLyricsGetter(ILogger<AZLyricsGetter> logger, IParser parser, IWebClient webClient)
+        public AZLyricsGetter(ILogger<AZLyricsGetter> logger, ILyricParser parser, ILyricWebClient webClient)
         {
             _logger = logger;
             Parser = new AZLyricsParser();
@@ -42,7 +42,7 @@ namespace LyricsScraper.AZLyrics
             var text = WebClient.Load(uri);
             if (string.IsNullOrEmpty(text))
             {
-                _logger?.LogError($"text is empty for {uri}");
+                _logger?.LogError($"Text is empty for {uri}");
                 return null;
             }
 
@@ -50,7 +50,7 @@ namespace LyricsScraper.AZLyrics
             var endIndex = text.IndexOf(_lyricEnd);
             if (startIndex <= 0 || endIndex <= 0)
             {
-                _logger?.LogError($"can't find lyrics for {uri}");
+                _logger?.LogError($"Can't find lyrics for {uri}");
                 return null;
             }
             return Parser.Parse(text.Substring(startIndex, endIndex - startIndex));

@@ -8,12 +8,12 @@ namespace SetlistFmAPI
     {
 
         private readonly ILogger<SetlistFmClient> _logger;
-        private IHttpClient _httpClient;
+        private ISetlistHttpClient _httpClient;
 
         private string _apiKey;
         private string _language = "en";
 
-        public SetlistFmClient(ILogger<SetlistFmClient> logger, IHttpClient httpClient)
+        public SetlistFmClient(ILogger<SetlistFmClient> logger, ISetlistHttpClient httpClient)
         {
             _logger = logger;
             _httpClient = httpClient;
@@ -69,7 +69,7 @@ namespace SetlistFmAPI
             _apiKey = apiKey;
         }
 
-        public void WithHttpClient(IHttpClient httpClient)
+        public void WithHttpClient(ISetlistHttpClient httpClient)
         {
             if (httpClient != null)
                 _httpClient = httpClient;

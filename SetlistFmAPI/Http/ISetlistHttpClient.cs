@@ -1,6 +1,6 @@
 ﻿namespace SetlistFmAPI.Http
 {
-    public interface IHttpClient
+    public interface ISetlistHttpClient
     {
         Task<T> Load<T>(Uri url, string apiKey, string language = "en");
     }

@@ -3,11 +3,11 @@ using System.Net.Http.Json;
 
 namespace SetlistFmAPI.Http
 {
-    public class HttpSetlistWebClient: IHttpClient
+    public class SetlistHttpWebClient: ISetlistHttpClient
     {
-        private readonly ILogger<HttpSetlistWebClient> _logger;
+        private readonly ILogger<SetlistHttpWebClient> _logger;
 
-        public HttpSetlistWebClient(ILogger<HttpSetlistWebClient> logger)
+        public SetlistHttpWebClient(ILogger<SetlistHttpWebClient> logger)
         {
             _logger = logger;
         }

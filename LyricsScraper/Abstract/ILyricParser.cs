@@ -1,6 +1,6 @@
 ﻿namespace LyricsScraper.Abstract
 {
-    public interface IParser
+    public interface ILyricParser
     {
         string Parse(string lyric);
     }

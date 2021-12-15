@@ -3,7 +3,7 @@ using LyricsScraper.Abstract;
 
 namespace LyricsScraper.Common
 {
-    public class HtmlAgilityWebClient : IWebClient
+    public class HtmlAgilityWebClient : ILyricWebClient
     {
         public string Load(Uri uri)
         {

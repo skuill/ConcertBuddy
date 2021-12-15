@@ -6,8 +6,8 @@
 
         string SearchLyric(string artist, string song);
 
-        void WithParser(IParser parser);
+        void WithParser(ILyricParser parser);
 
-        void WithWebClient(IWebClient webClient);
+        void WithWebClient(ILyricWebClient webClient);
     }
 }

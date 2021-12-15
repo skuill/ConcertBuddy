@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConcertBuddy.ConsoleApp", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LyricsScraper", "LyricsScraper\LyricsScraper.csproj", "{BF866A82-B4B2-4B4B-B149-4061FC1F052D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LyricsScraper.Test", "LyricsScraper.Test\LyricsScraper.Test.csproj", "{BE4EA92C-964F-49B0-BD58-F7F5A3255116}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LyricsScraper.Test", "LyricsScraper.Test\LyricsScraper.Test.csproj", "{BE4EA92C-964F-49B0-BD58-F7F5A3255116}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicSearcher", "MusicSearcher\MusicSearcher.csproj", "{1D5CCB83-2E9F-40FD-B7DE-20F8906E6950}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{BE4EA92C-964F-49B0-BD58-F7F5A3255116}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE4EA92C-964F-49B0-BD58-F7F5A3255116}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE4EA92C-964F-49B0-BD58-F7F5A3255116}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D5CCB83-2E9F-40FD-B7DE-20F8906E6950}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D5CCB83-2E9F-40FD-B7DE-20F8906E6950}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D5CCB83-2E9F-40FD-B7DE-20F8906E6950}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D5CCB83-2E9F-40FD-B7DE-20F8906E6950}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

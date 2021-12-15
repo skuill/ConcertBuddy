@@ -4,9 +4,9 @@ using System.Configuration;
 
 namespace SetlistFmAPI.Tests
 {
-    public class AppSettings
+    public class Configuration
     {
-        private static readonly ILogger<AppSettings> _logger;
+        private static readonly ILogger<Configuration> _logger;
         private static readonly string SETLISTFM_API_KEY = "SetlistFmApiKey";
 
         public static string SetlistFmApiKey => ReadSetting(SETLISTFM_API_KEY);

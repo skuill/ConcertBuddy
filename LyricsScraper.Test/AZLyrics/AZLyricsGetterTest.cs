@@ -28,7 +28,7 @@ namespace LyricsScraper.Test.AZLyrics
             foreach (var testData in _testDataCollection)
             {
                 // Arrange
-                var mockWebClient = new Mock<IWebClient>();
+                var mockWebClient = new Mock<ILyricWebClient>();
                 mockWebClient.Setup(x => x.Load(It.IsAny<Uri>())).Returns(testData.LyricPageData);
 
                 var lyricsGetter = new AZLyricsGetter(null, new AZLyricsParser(), new HtmlAgilityWebClient());
