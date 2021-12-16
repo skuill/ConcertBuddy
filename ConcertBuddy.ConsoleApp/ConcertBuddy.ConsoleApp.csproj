@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LyricsScraper\LyricsScraper.csproj" />
+    <ProjectReference Include="..\MusicSearcher\MusicSearcher.csproj" />
     <ProjectReference Include="..\SetlistFmApi\SetlistFmAPI.csproj" />
   </ItemGroup>
 

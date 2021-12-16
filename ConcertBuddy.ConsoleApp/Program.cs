@@ -4,6 +4,8 @@ using LyricsScraper.AZLyrics;
 using LyricsScraper.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MusicSearcher.Abstract;
+using MusicSearcher.MusicBrainz;
 using SetlistFmAPI;
 using SetlistFmAPI.Http;
 using Telegram.Bot;
@@ -95,7 +97,8 @@ namespace ConcertBuddy.ConsoleApp
                     .AddScoped<ILyricWebClient, HtmlAgilityWebClient>()
                     .AddScoped<ILyricParser, AZLyricsParser>()
                     .AddScoped<ILyricGetter, AZLyricsGetter>()
-                    .AddScoped<IBotHandlers, BotHandlers>();
+                    .AddScoped<IBotHandlers, BotHandlers>()
+                    .AddScoped<IMusicSearcherClient, MusicBrainzSearcherClient>();
         }
 
         private static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)

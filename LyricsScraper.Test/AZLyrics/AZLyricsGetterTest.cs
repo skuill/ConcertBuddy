@@ -39,7 +39,7 @@ namespace LyricsScraper.Test.AZLyrics
                     ? lyricsGetter.SearchLyric(new Uri(testData.SongUri)) 
                     : lyricsGetter.SearchLyric(testData.ArtistName, testData.SongName);
 
-                // Result
+                // Assert
                 Assert.AreEqual(testData.LyricResultData, lyric);
             }
         }
