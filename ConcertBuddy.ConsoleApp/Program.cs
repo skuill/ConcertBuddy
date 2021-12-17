@@ -54,37 +54,10 @@ namespace ConcertBuddy.ConsoleApp
             _logger.LogInformation($"Start listening for user {botUser.Id} with name {botUser.FirstName}.");
 
             Console.ReadLine();
+
             // Send cancellation request to stop bot
             cts.Cancel();
             return;
-
-            string artistName = "Parkway Drive";
-            _logger.LogInformation(artistName);
-            /// Get setlist for artist
-
-            // sativkv@gmail.com API
-            string setlistApiKey = Configuration.SetlistFmApiKey;
-
-            ISetlistFmClient setlistFmClient = serviceProvider.GetService<ISetlistFmClient>();
-            setlistFmClient.WithApiKey(setlistApiKey);
-
-            var artists = setlistFmClient.SearchArtists(artistName).GetAwaiter().GetResult();
-            var artist = artists.Items.FirstOrDefault();
-
-            var setlists = setlistFmClient.SearchArtistSetlists(artist.MBID).GetAwaiter().GetResult();
-            _logger.LogInformation($"setlists: {setlists.Items.Count}");
-
-            /// Get lyric for first song in setlist
-            var songName = setlists.Items.FirstOrDefault()
-                .Sets.Items.FirstOrDefault()
-                .Songs.FirstOrDefault().Name;
-            _logger.LogInformation($"Song: {songName}");
-            
-            ILyricsScraperUtil lyricsScraperUtil = serviceProvider.GetService<ILyricsScraperUtil>();
-            ILyricGetter lyricGetter = serviceProvider.GetService<ILyricGetter>();
-            lyricsScraperUtil.AddGetter(lyricGetter);
-            var lyric = lyricsScraperUtil.SearchLyric(artistName, songName);
-            _logger.LogInformation(lyric);
         }
 
         private static void ConfigureServices(IServiceCollection services)
@@ -98,41 +71,8 @@ namespace ConcertBuddy.ConsoleApp
                     .AddScoped<ILyricParser, AZLyricsParser>()
                     .AddScoped<ILyricGetter, AZLyricsGetter>()
                     .AddScoped<IBotHandlers, BotHandlers>()
-                    .AddScoped<IMusicSearcherClient, MusicBrainzSearcherClient>();
-        }
-
-        private static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
-        {
-            // Only process Message updates: https://core.telegram.org/bots/api#message
-            if (update.Type != UpdateType.Message)
-                return;
-            // Only process text messages
-            if (update.Message!.Type != MessageType.Text)
-                return;
-
-            var chatId = update.Message.Chat.Id;
-            var messageText = update.Message.Text;
-
-            _logger.LogInformation($"Received a '{messageText}' message in chat {chatId}.");
-
-            // Echo received message text
-            Message sentMessage = await botClient.SendTextMessageAsync(
-                chatId: chatId,
-                text: "You said:\n" + messageText,
-                cancellationToken: cancellationToken);
-        }
-
-        private static Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
-        {
-            var ErrorMessage = exception switch
-            {
-                ApiRequestException apiRequestException
-                    => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
-                _ => exception.ToString()
-            };
-
-            _logger.LogError(ErrorMessage);
-            return Task.CompletedTask;
+                    .AddScoped<IMusicSearcherClient, MusicBrainzSearcherClient>()
+                    .AddScoped<ISearchHandler, SearchHandler>();
         }
     }
 }

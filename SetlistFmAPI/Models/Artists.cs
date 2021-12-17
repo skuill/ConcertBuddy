@@ -13,5 +13,7 @@ namespace SetlistFmAPI.Models
         /// </summary>
         [JsonPropertyName("artist")]
         public List<Artist> Items { get; set; }
+
+        public bool IsEmpty() => Items == null || !Items.Any();
     }
 }

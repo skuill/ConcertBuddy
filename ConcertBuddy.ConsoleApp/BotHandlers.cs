@@ -12,10 +12,12 @@ namespace ConcertBuddy.ConsoleApp
     public class BotHandlers : IBotHandlers
     {
         private readonly ILogger<IBotHandlers> _logger;
+        private readonly ISearchHandler _searchHandler;
         
-        public BotHandlers(ILogger<IBotHandlers> logger)
+        public BotHandlers(ILogger<IBotHandlers> logger, ISearchHandler searchHandler)
         {
             _logger = logger;
+            _searchHandler = searchHandler;
         }
 
         public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -58,6 +60,16 @@ namespace ConcertBuddy.ConsoleApp
             }
         }
 
+        private async Task<Message> SearchArtist(ITelegramBotClient botClient, Message message)
+        {
+            const string text = "Please type artist name:";
+            return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
+                                                        text: text,
+                                                        replyMarkup: new ForceReplyMarkup());
+
+            //var artists = _searchHandler.SearchArtistsWithScore(artistName);
+        }
+
         private async Task BotOnMessageReceived(ITelegramBotClient botClient, Message message)
         {
             _logger.LogInformation($"Receive message type: {message.Type}");
@@ -66,15 +78,11 @@ namespace ConcertBuddy.ConsoleApp
 
             var action = message.Text!.Split(' ')[0] switch
             {
-                "/inline" => SendInlineKeyboard(botClient, message),
-                "/keyboard" => SendReplyKeyboard(botClient, message),
-                "/remove" => RemoveKeyboard(botClient, message),
-                "/photo" => SendFile(botClient, message),
-                "/request" => RequestContactAndLocation(botClient, message),
+                "/search" => SearchArtist(botClient, message),
                 _ => Usage(botClient, message)
             };
             Message sentMessage = await action;
-            _logger.LogInformation($"The message was sent with id: {sentMessage.MessageId}");
+            _logger.LogInformation($"The message was sent with id: {sentMessage?.MessageId}");
 
             // Send inline keyboard
             // You can process responses in BotOnCallbackQueryReceived handler
@@ -107,65 +115,10 @@ namespace ConcertBuddy.ConsoleApp
                                                             replyMarkup: inlineKeyboard);
             }
 
-            static async Task<Message> SendReplyKeyboard(ITelegramBotClient botClient, Message message)
-            {
-                ReplyKeyboardMarkup replyKeyboardMarkup = new(
-                    new[]
-                    {
-                        new KeyboardButton[] { "1.1", "1.2" },
-                        new KeyboardButton[] { "2.1", "2.2" },
-                    })
-                {
-                    ResizeKeyboard = true
-                };
-
-                return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
-                                                            text: "Choose",
-                                                            replyMarkup: replyKeyboardMarkup);
-            }
-
-            static async Task<Message> RemoveKeyboard(ITelegramBotClient botClient, Message message)
-            {
-                return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
-                                                            text: "Removing keyboard",
-                                                            replyMarkup: new ReplyKeyboardRemove());
-            }
-
-            static async Task<Message> SendFile(ITelegramBotClient botClient, Message message)
-            {
-                await botClient.SendChatActionAsync(message.Chat.Id, ChatAction.UploadPhoto);
-
-                const string filePath = @"Files/tux.png";
-                using FileStream fileStream = new(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                var fileName = filePath.Split(Path.DirectorySeparatorChar).Last();
-
-                return await botClient.SendPhotoAsync(chatId: message.Chat.Id,
-                                                      photo: new InputOnlineFile(fileStream, fileName),
-                                                      caption: "Nice Picture");
-            }
-
-            static async Task<Message> RequestContactAndLocation(ITelegramBotClient botClient, Message message)
-            {
-                ReplyKeyboardMarkup RequestReplyKeyboard = new(
-                    new[]
-                    {
-                    KeyboardButton.WithRequestLocation("Location"),
-                    KeyboardButton.WithRequestContact("Contact"),
-                    });
-
-                return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
-                                                            text: "Who or Where are you?",
-                                                            replyMarkup: RequestReplyKeyboard);
-            }
-
             static async Task<Message> Usage(ITelegramBotClient botClient, Message message)
             {
                 const string usage = "Usage:\n" +
-                                     "/inline   - send inline keyboard\n" +
-                                     "/keyboard - send custom keyboard\n" +
-                                     "/remove   - remove custom keyboard\n" +
-                                     "/photo    - send a photo\n" +
-                                     "/request  - request location or contact";
+                                     "/search   - search artist's setlists and lyrics for songs\n";
 
                 return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
                                                             text: usage,
