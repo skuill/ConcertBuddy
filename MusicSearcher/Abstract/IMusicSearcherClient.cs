@@ -1,13 +1,16 @@
-﻿using MusicSearcher.MusicBrainz;
+﻿using MusicSearcher.Model;
+using MusicSearcher.MusicBrainz;
 
 namespace MusicSearcher.Abstract
 {
     public interface IMusicSearcherClient
     {
-        Task<string> SearchArtist(string name, ScoreType scoreType = ScoreType.MusicBrainz);
+        Task<MusicArtist> SearchArtistByMBID(string mbid);
 
-        Task<IEnumerable<string>> SearchArtists(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5);
+        Task<MusicArtist> SearchArtistByName(string name, ScoreType scoreType = ScoreType.MusicBrainz);
 
-        Task<IDictionary<string, int>> SearchArtistsWithScore(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5);
+        Task<IEnumerable<MusicArtist>> SearchArtistsByName(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5);
+
+        void WithLastFmClient(string apiKey, string secret);
     }
 }

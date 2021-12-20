@@ -1,22 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Configuration;
 
-namespace ConcertBuddy.ConsoleApp
+namespace MusicSearcher.Tests
 {
     public class Configuration
     {
         private static readonly ILogger<Configuration> _logger;
-        private static readonly string SETLISTFM_API_KEY = "SetlistFmApiKey";
-        private static readonly string GENIUS_CLIENT_ACCESS_TOKEN_KEY = "GeniusClientAccessToken";
-        private static readonly string TELEGRAM_TOKEN_KEY = "TelegramToken";
         private static readonly string LASTFM_API_KEY = "LastFmApiKey";
         private static readonly string LASTFM_API_SECRET = "LastFmApiSecret";
-
-        public static string TelegramToken => ReadSetting(TELEGRAM_TOKEN_KEY);
-
-        public static string SetlistFmApiKey => ReadSetting(SETLISTFM_API_KEY);
-
-        public static string GeniusClientAccessToken => ReadSetting(GENIUS_CLIENT_ACCESS_TOKEN_KEY);
 
         public static string LastFmApiKey => ReadSetting(LASTFM_API_KEY);
 

@@ -2,13 +2,9 @@
 using LyricsScraper.Abstract;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
+using MusicSearcher.Model;
 using SetlistFmAPI;
 using SetlistFmAPI.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ConcertBuddy.ConsoleApp
 {
@@ -28,6 +24,7 @@ namespace ConcertBuddy.ConsoleApp
             )
         {
             _logger = logger;
+            musicSearcherClient.WithLastFmClient(Configuration.LastFmApiKey, Configuration.LastFmApiSecret);
             _musicSearcherClient = musicSearcherClient;
 
             setlistFmClient.WithApiKey(Configuration.SetlistFmApiKey);
@@ -52,14 +49,19 @@ namespace ConcertBuddy.ConsoleApp
             return _setlistFmClient.SearchArtistSetlists(artist.MBID, page);
         }
 
-        public Task<IDictionary<string, int>> SearchArtistsWithScore(string artistName, int limit = 5)
+        public Task<IEnumerable<MusicArtist>> SearchArtistsByName(string artistName, int limit = 5)
         {
-            return _musicSearcherClient.SearchArtistsWithScore(artistName, limit:limit);
+            return _musicSearcherClient.SearchArtistsByName(artistName, limit:limit);
         }
 
         public string SearchLyric(string artistName, string songName)
         {
             return _lyricsScraperUtil.SearchLyric(artistName, songName);
+        }
+
+        public Task<MusicArtist> SearchArtistByMBID(string mbid)
+        {
+            return _musicSearcherClient.SearchArtistByMBID(mbid);
         }
     }
 }

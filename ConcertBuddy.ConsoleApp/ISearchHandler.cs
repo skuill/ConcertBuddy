@@ -1,15 +1,13 @@
-﻿using SetlistFmAPI.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MusicSearcher.Model;
+using SetlistFmAPI.Models;
 
 namespace ConcertBuddy.ConsoleApp
 {
     public interface ISearchHandler
     {
-        Task<IDictionary<string, int>> SearchArtistsWithScore(string artistName, int limit = 5);
+        Task<IEnumerable<MusicArtist>> SearchArtistsByName(string artistName, int limit = 5);
+
+        Task<MusicArtist> SearchArtistByMBID(string mbid);
 
         Task<Setlists> SearchArtistSetlists(string artistName, int page = 1);
 

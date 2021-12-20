@@ -1,18 +1,16 @@
-﻿using LyricsScraper;
+﻿using ConcertBuddy.ConsoleApp.TelegramBot;
+using LyricsScraper;
 using LyricsScraper.Abstract;
 using LyricsScraper.AZLyrics;
 using LyricsScraper.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MusicSearcher;
 using MusicSearcher.Abstract;
-using MusicSearcher.MusicBrainz;
 using SetlistFmAPI;
 using SetlistFmAPI.Http;
 using Telegram.Bot;
-using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace ConcertBuddy.ConsoleApp
 {
@@ -71,7 +69,7 @@ namespace ConcertBuddy.ConsoleApp
                     .AddScoped<ILyricParser, AZLyricsParser>()
                     .AddScoped<ILyricGetter, AZLyricsGetter>()
                     .AddScoped<IBotHandlers, BotHandlers>()
-                    .AddScoped<IMusicSearcherClient, MusicBrainzSearcherClient>()
+                    .AddScoped<IMusicSearcherClient, MusicSearcherClient>()
                     .AddScoped<ISearchHandler, SearchHandler>();
         }
     }

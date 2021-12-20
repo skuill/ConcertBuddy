@@ -1,7 +1,7 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace ConcertBuddy.ConsoleApp
+namespace ConcertBuddy.ConsoleApp.TelegramBot
 {
     public interface IBotHandlers
     {
