@@ -92,7 +92,7 @@ namespace MusicSearcher
                     }
                     else
                     {
-                        _logger.LogError($"Can't get artist by mbid [{mbid}] from LastFM. Status: {lastFmArtist?.Status}. Error: {lastFmArtist?.Error}");
+                        _logger.LogError($"Can't get artist by mbid [{mbid}] from LastFM. Status: {lastFmArtist?.Status}.");
                     }
                 }
             } 

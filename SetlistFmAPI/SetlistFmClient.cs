@@ -10,7 +10,7 @@ namespace SetlistFmAPI
         private readonly ILogger<SetlistFmClient> _logger;
         private ISetlistHttpClient _httpClient;
 
-        private string _apiKey;
+        private string _apiKey = string.Empty;
         private string _language = "en";
 
         public SetlistFmClient(ILogger<SetlistFmClient> logger, ISetlistHttpClient httpClient)
