@@ -117,6 +117,26 @@ namespace MusicSearcher.Tests
             // Assert
             Assert.IsNotNull(result.LastFmArtist);
             Assert.IsTrue(string.Equals(artist, result.Name));
+            Assert.IsTrue(string.Equals(artist, result.LastFmArtist.Name));
+        }
+
+        [TestMethod]
+        public async Task SearchArtistByMBID_WithSpotifyClient_AreEqual()
+        {
+            // Arrange
+            string artist = "The Beatles";
+            string mbid = "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d";
+            var client = InitClient();
+            client.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
+
+            // Act
+            var result = await client.SearchArtistByMBID(mbid);
+
+            // Assert
+            Assert.IsNotNull(result.SpotifyArtist);
+            Assert.IsTrue(string.Equals(artist, result.Name));
+            Assert.IsTrue(string.Equals(artist, result.SpotifyArtist.Name));
+            Assert.IsNotNull(result.ImageUri);
         }
 
         private IMusicSearcherClient InitClient()

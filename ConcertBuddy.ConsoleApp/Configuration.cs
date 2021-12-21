@@ -11,6 +11,8 @@ namespace ConcertBuddy.ConsoleApp
         private static readonly string TELEGRAM_TOKEN_KEY = "TelegramToken";
         private static readonly string LASTFM_API_KEY = "LastFmApiKey";
         private static readonly string LASTFM_API_SECRET = "LastFmApiSecret";
+        private static readonly string SPOTIFY_CLIENT_ID = "SpotifyClientID";
+        private static readonly string SPOTIFY_CLIENT_SECRET = "SpotifyClientSecret";
 
         public static string TelegramToken => ReadSetting(TELEGRAM_TOKEN_KEY);
 
@@ -21,6 +23,10 @@ namespace ConcertBuddy.ConsoleApp
         public static string LastFmApiKey => ReadSetting(LASTFM_API_KEY);
 
         public static string LastFmApiSecret => ReadSetting(LASTFM_API_SECRET);
+
+        public static string SpotifyClientID => ReadSetting(SPOTIFY_CLIENT_ID);
+
+        public static string SpotifyClientSecret => ReadSetting(SPOTIFY_CLIENT_SECRET);
 
         private static string ReadSetting(string key)
         {

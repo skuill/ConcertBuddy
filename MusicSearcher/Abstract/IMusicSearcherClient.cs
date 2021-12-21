@@ -12,5 +12,7 @@ namespace MusicSearcher.Abstract
         Task<IEnumerable<MusicArtist>> SearchArtistsByName(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5);
 
         void WithLastFmClient(string apiKey, string secret);
+
+        Task WithSpotifyClient(string cliendID, string clientSecret);
     }
 }

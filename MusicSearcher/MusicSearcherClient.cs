@@ -1,10 +1,11 @@
 ﻿using Hqub.MusicBrainz.API;
-using Hqub.MusicBrainz.API.Entities;
 using IF.Lastfm.Core.Api;
+using IF.Lastfm.Core.Objects;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
 using MusicSearcher.Model;
 using MusicSearcher.MusicBrainz;
+using SpotifyAPI.Web;
 using System.Net;
 using System.Reflection;
 
@@ -15,6 +16,7 @@ namespace MusicSearcher
         private readonly ILogger<MusicSearcherClient> _logger;
         private MusicBrainzClient _musicBrainzClient;
         private LastfmClient _lastFmClient;
+        private SpotifyClient _spotifyClient;
 
         public MusicSearcherClient(ILogger<MusicSearcherClient> logger)
         {
@@ -35,7 +37,6 @@ namespace MusicSearcher
                 Cache = new FileRequestCache(Path.Combine(location, "cache"))
             };
         }
-
 
         // TODO: Add additional check for aliases in case of abbreviations. For example: RHCP
         public async Task<MusicArtist> SearchArtistByName(string name, ScoreType scoreType = ScoreType.MusicBrainz)
@@ -83,18 +84,9 @@ namespace MusicSearcher
             {
                 result.MusicBrainzArtist = await _musicBrainzClient.Artists.GetAsync(mbid);
 
-                if (IsLastFmClientEnabled())
-                {
-                    var lastFmArtist = await _lastFmClient.Artist.GetInfoByMbidAsync(mbid);
-                    if (lastFmArtist != null && lastFmArtist.Success)
-                    {
-                        result.LastFmArtist = lastFmArtist.Content;
-                    }
-                    else
-                    {
-                        _logger.LogError($"Can't get artist by mbid [{mbid}] from LastFM. Status: {lastFmArtist?.Status}.");
-                    }
-                }
+                result.LastFmArtist = await GetLastFmArtist(mbid);
+
+                result.SpotifyArtist = await GetSpotifyArtist(result.Name);
             } 
             catch (Exception ex)
             {
@@ -108,7 +100,7 @@ namespace MusicSearcher
         {
             if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(secret))
             {
-                _logger.LogWarning($"Please set apiKey [{apiKey}] and secret[{secret}] properly!");
+                _logger.LogWarning($"Please set apiKey [{apiKey}] and secret [{secret}] properly!");
                 return;
             }
             try
@@ -121,6 +113,66 @@ namespace MusicSearcher
             }
         }
 
+        public async Task WithSpotifyClient(string cliendID, string clientSecret)
+        {
+            if (string.IsNullOrEmpty(cliendID) || string.IsNullOrEmpty(clientSecret))
+            {
+                _logger.LogWarning($"Please set cliendID [{cliendID}] and clientSecret [{clientSecret}] properly!");
+                return;
+            }
+            try
+            {
+                var config = SpotifyClientConfig
+                    .CreateDefault()
+                    .WithRetryHandler(new SimpleRetryHandler() { RetryAfter = TimeSpan.FromSeconds(1) })
+                    .WithAuthenticator(new ClientCredentialsAuthenticator(cliendID, clientSecret));
+
+                _spotifyClient = new SpotifyClient(config);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Can't initialize Spotify client!");
+            }
+        }
+
+        private async Task<LastArtist> GetLastFmArtist(string mbid)
+        {
+            LastArtist result = null;
+            if (IsLastFmClientEnabled())
+            {
+                var lastFmArtist = await _lastFmClient.Artist.GetInfoByMbidAsync(mbid);
+                if (lastFmArtist != null && lastFmArtist.Success)
+                {
+                    result = lastFmArtist.Content;
+                }
+                else
+                {
+                    _logger.LogError($"Can't get artist by mbid [{mbid}] from LastFM. Status: {lastFmArtist?.Status}.");
+                }
+            }
+            return result;
+        }
+
+        private async Task<FullArtist> GetSpotifyArtist(string artistName)
+        {
+            FullArtist result = null;
+            if (IsSpotifyClientEnabled())
+            {
+                var searchArtist = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Artist, artistName));
+                if (searchArtist == null
+                    || searchArtist.Artists == null
+                    || searchArtist.Artists.Total == 0)
+                {
+                    _logger.LogError($"Can't get artist by name [{artistName}] from Spotify.");
+                    return null;
+                }
+                result = searchArtist.Artists.Items.First(x => string.Equals(x.Name, artistName));
+            }
+            return result;
+        }
+
         private bool IsLastFmClientEnabled() => _lastFmClient != null;
+
+        private bool IsSpotifyClientEnabled() => _spotifyClient != null;
     }
 }
