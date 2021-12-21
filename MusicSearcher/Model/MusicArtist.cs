@@ -22,7 +22,10 @@ namespace MusicSearcher.Model
 
         public string Biography => LastFmArtist?.Bio?.Summary;
 
-        public Uri Url => LastFmArtist?.Url;
+        public Uri LastFmUrl => LastFmArtist?.Url;
+
+        // TODO: change from API to web client spotify
+        public Uri SpotifyUrl => SpotifyArtist?.Href != null ? new Uri(SpotifyArtist.Href) : null;
 
         private Uri TryGetSpotifyArtistImage()
         {

@@ -1,12 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
+using MusicSearcher.Model;
+using SetlistFmAPI.Models;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InlineQueryResults;
-using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
-using Hqub.MusicBrainz.API.Entities;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot
 {
@@ -19,13 +18,19 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot
         private const string COMMAND_ARTIST = "/artist";
         private const string COMMAND_BIOGRAPHY = "/biography";
         private const string COMMAND_SETLISTS = "/setlists";
+        private const string COMMAND_SETLIST = "/setlist";
+        private const string COMMAND_TRACK = "/track";
 
         // Command with mbid. Example: /artist b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d
-        private const string CALLBACK_DATA_FORMAT_ARTIST = "/artist {0}";
+        private const string CALLBACK_DATA_FORMAT_ARTIST = $"{COMMAND_ARTIST} {{0}}";
         // Command with mbid. Example: /biography b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d
-        private const string CALLBACK_DATA_FORMAT_BIOGRAPHY = "/biography {0}";
-        // Command with name. Example: /setlists The Beatles
-        private const string CALLBACK_DATA_FORMAT_SETLISTS = "/setlists {0}";
+        private const string CALLBACK_DATA_FORMAT_BIOGRAPHY = $"{COMMAND_BIOGRAPHY} {{0}}";
+        // Command with mbid. Example: /setlists b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d
+        private const string CALLBACK_DATA_FORMAT_SETLISTS = $"{COMMAND_SETLISTS} {{0}}";
+        // Command with mbid. Example: /setlists b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d
+        private const string CALLBACK_DATA_FORMAT_SETLIST = $"{COMMAND_SETLIST} {{0}} {{1}}";
+        // Command with mbid. Example: /setlists b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d
+        private const string CALLBACK_DATA_FORMAT_TRACK = $"{COMMAND_TRACK} {{0}}";
 
         public BotHandlers(ILogger<IBotHandlers> logger, ISearchHandler searchHandler)
         {
@@ -107,15 +112,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot
                 // TODO: answer immediately without inlineKeyboardButtons choice.
             }
 
-            List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
-            int counter = 1;
-            foreach (var artist in artists)
-            {
-                string callbackText = $"{counter++}. {artist.Name} [score: {artist.Score}%]";
-                string callbackData = string.Format(CALLBACK_DATA_FORMAT_ARTIST, artist.MBID);
-                inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
-            }
-            InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup(inlineKeyboardButtons);
+            InlineKeyboardMarkup inlineKeyboard = GetArtistsWithScoreInlineKeyboard(artists);
 
             replyText = "Choose the right artist:";
             return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
@@ -152,40 +149,96 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot
         {
             _logger.LogDebug($"Handle artist command: [{callbackQuery.Data}]");
 
-            var splitMessage = callbackQuery.GetSplitMessageText();
+            var isValidQuery = await ValidateCallbackQueryData(botClient, callbackQuery, COMMAND_ARTIST);
+            if (!isValidQuery)
+                return null;
+
             string replyText = string.Empty;
-
-            if (splitMessage.Count() == 1)
-            {
-                replyText = $"Please pass artist's MBID as a parameter. For example: [{COMMAND_ARTIST} b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d]";
-
-                await botClient.AnswerCallbackQueryAsync(
-                    callbackQueryId: callbackQuery.Id,
-                    text: replyText);
-
-                return await botClient.SendTextMessageAsync(
-                    chatId: callbackQuery.Message.Chat.Id,
-                    text: replyText);
-            }
 
             var mbid = callbackQuery.GetParameterFromMessageText(COMMAND_ARTIST);
 
             var artist = await _searchHandler.SearchArtistByMBID(mbid);
 
-            // TODO: ADD IMAGES FROM SPOTIFY API!
-            // If image, bio or url doesn't exist return blank image
-            if (artist.LastFmArtist != null && artist.ImageUri != null && artist.Url != null)
+            if (artist.ImageUri != null)
             {
                 await botClient.SendPhotoAsync(
                     chatId: callbackQuery.Message.Chat.Id,
-                    photo: artist.ImageUri.ToString(),
-                    caption: $"<b>{artist.Name}</b>. <i>Source</i>: <a href=\"" + artist.Url.ToString() + "\">last.fm</a>",
-                    parseMode: ParseMode.Html);
+                    photo: artist.ImageUri.ToString());
             }
 
-            // TODO: Write inline buttons to get discography, get releases get top 5 popular songs, get setlists....
+            replyText = $"<b>{artist.Name}</b>. ";
+            if (artist.LastFmUrl != null || artist.SpotifyUrl != null)
+                replyText = replyText + "<i>Links</i>: ";
+            if (artist.LastFmUrl != null)
+                replyText = replyText + "<a href=\"" + artist.LastFmUrl.ToString() + "\">last.fm</a>, ";
+            if (artist.SpotifyUrl != null)
+                replyText = replyText + "<a href=\"" + artist.SpotifyUrl.ToString() + "\">spotify</a>";
 
-            return null;
+            InlineKeyboardMarkup inlineKeyboard = GetArtistInlineKeyboardMenu(mbid);
+
+            await botClient.AnswerCallbackQueryAsync(
+                callbackQueryId: callbackQuery.Id,
+                text: $"Artist: {artist.Name}");
+
+            return await botClient.SendTextMessageAsync(chatId: callbackQuery.Message.Chat.Id,
+                                                        text: replyText,
+                                                        replyMarkup: inlineKeyboard,
+                                                        parseMode: ParseMode.Html);
+        }
+
+        private async Task<Message> BiographyCommandHandler(ITelegramBotClient botClient, CallbackQuery callbackQuery)
+        {
+            var isValidQuery = await ValidateCallbackQueryData(botClient, callbackQuery, COMMAND_BIOGRAPHY);
+            if (!isValidQuery)
+                return null;
+
+            string replyText = "Sorry, but the biography of this artist was not found ☹️";
+
+            var mbid = callbackQuery.GetParameterFromMessageText(COMMAND_BIOGRAPHY);
+            var artist = await _searchHandler.SearchArtistByMBID(mbid);            
+            if (artist.Biography != null)
+            {
+                replyText = artist.Biography;
+            }
+
+            InlineKeyboardMarkup inlineKeyboard = GetArtistInlineKeyboardMenu(mbid);
+
+            return await botClient.SendTextMessageAsync(chatId: callbackQuery.Message.Chat.Id,
+                                                       text: replyText,
+                                                       replyMarkup: inlineKeyboard,
+                                                       parseMode: ParseMode.Html);
+        }
+
+        private async Task<Message> SetlistsCommandHandler(ITelegramBotClient botClient, CallbackQuery callbackQuery)
+        {
+            var isValidQuery = await ValidateCallbackQueryData(botClient, callbackQuery, COMMAND_SETLISTS);
+            if (!isValidQuery)
+                return null;
+
+            var replyText = "Please select a setlist:";
+
+            var mbid = callbackQuery.GetParameterFromMessageText(COMMAND_SETLISTS);
+            var setlists = await _searchHandler.SearchArtistSetlists(mbid);
+
+            if (setlists == null || setlists.IsEmpty())
+            {
+                replyText = $"Can't find any setlist for artist MBID {mbid}";
+
+                await botClient.AnswerCallbackQueryAsync(
+                    callbackQueryId: callbackQuery.Id,
+                    text: $"{replyText}");
+
+                return await botClient.SendTextMessageAsync(chatId: callbackQuery.Message.Chat.Id,
+                                                            text: replyText,
+                                                            replyMarkup: new ReplyKeyboardRemove());
+            }
+            
+            InlineKeyboardMarkup inlineKeyboard = GetSetlistsInlineKeyboardMenu(setlists.Items);
+
+            return await botClient.SendTextMessageAsync(chatId: callbackQuery.Message.Chat.Id,
+                                                       text: replyText,
+                                                       replyMarkup: inlineKeyboard,
+                                                       parseMode: ParseMode.Html);
         }
 
         // Process Inline Keyboard callback data
@@ -194,6 +247,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot
             var action = callbackQuery.GetSplitMessageText()[0] switch
             {
                 $"{COMMAND_ARTIST}" => ArtistCommandHandler(botClient, callbackQuery),
+                $"{COMMAND_BIOGRAPHY}" => BiographyCommandHandler(botClient, callbackQuery),
+                $"{COMMAND_SETLISTS}" => SetlistsCommandHandler(botClient, callbackQuery),
                 _ => Usage(botClient, callbackQuery.Message)
             };
         }
@@ -208,6 +263,63 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot
         {
             _logger.LogInformation($"Unknown update type: {update.Type}");
             return Task.CompletedTask;
+        }
+
+        private async Task<bool> ValidateCallbackQueryData(ITelegramBotClient botClient, CallbackQuery callbackQuery, string command = "/SOME_COMMAND")
+        {
+            var splitMessage = callbackQuery.GetSplitMessageText();
+            string replyText = string.Empty;
+
+            if (splitMessage.Count() == 1)
+            {
+                replyText = $"Please pass artist's MBID as a parameter. For example: [{command} b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d]";
+
+                await botClient.AnswerCallbackQueryAsync(
+                    callbackQueryId: callbackQuery.Id,
+                    text: replyText);
+
+                await botClient.SendTextMessageAsync(
+                    chatId: callbackQuery.Message.Chat.Id,
+                    text: replyText);
+
+                return false;
+            }
+            return true;
+        }
+
+        private InlineKeyboardMarkup GetSetlistsInlineKeyboardMenu(IEnumerable<Setlist> setlists)
+        {
+            List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
+            foreach (var setlist in setlists)
+            {
+                string callbackText = $"{setlist.ToString()}";
+                string callbackData = string.Format(CALLBACK_DATA_FORMAT_SETLIST, setlist.Artist.MBID, setlist.Id);
+                inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
+            }
+            return new InlineKeyboardMarkup(inlineKeyboardButtons);
+        }
+
+        private InlineKeyboardMarkup GetArtistsWithScoreInlineKeyboard(IEnumerable<MusicArtist> artists)
+        {
+            List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
+            int counter = 1;
+            foreach (var artist in artists)
+            {
+                string callbackText = $"{counter++}. {artist.Name}   [score:  {artist.Score}%]";
+                string callbackData = string.Format(CALLBACK_DATA_FORMAT_ARTIST, artist.MBID);
+                inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
+            }
+            return new InlineKeyboardMarkup(inlineKeyboardButtons);
+        }
+
+        private InlineKeyboardMarkup GetArtistInlineKeyboardMenu(string mbid)
+        {
+            List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
+            inlineKeyboardButtons.Add(new[] {
+                InlineKeyboardButton.WithCallbackData("🎓 Biography", string.Format(CALLBACK_DATA_FORMAT_BIOGRAPHY, mbid)),
+                InlineKeyboardButton.WithCallbackData("📝 Setlists", string.Format(CALLBACK_DATA_FORMAT_SETLISTS, mbid)),
+            });
+            return new InlineKeyboardMarkup(inlineKeyboardButtons);
         }
     }
 }

@@ -14,6 +14,8 @@ namespace SetlistFmAPI.Models
         [JsonPropertyName("setlist")]
         public List<Setlist> Items { get; set; }
 
+        public bool IsEmpty() => Items == null || !Items.Any();
+
         public override string ToString()
         {
             return string.Format("Count = {0}", Items == null ? 0 : Items.Count);
