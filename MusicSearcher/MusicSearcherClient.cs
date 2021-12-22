@@ -45,7 +45,7 @@ namespace MusicSearcher
         }
 
         // TODO: Add additional check for aliases in case of abbreviations. For example: RHCP
-        public async Task<IEnumerable<MusicArtist>> SearchArtistsByName(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5)
+        public async Task<IEnumerable<MusicArtist>> SearchArtistsByName(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5, int offset = 0)
         {
             IEnumerable<MusicArtist> result = new List<MusicArtist>();
             try
@@ -53,7 +53,7 @@ namespace MusicSearcher
                 // By default, search results will be ordered by score, so to get the
                 // best match you could do artists.Items.First(). Sometimes this method
                 // won't work (example: search for 'U2').
-                var artists = await _musicBrainzClient.Artists.SearchAsync(name.Quote(), limit);
+                var artists = await _musicBrainzClient.Artists.SearchAsync(name.Quote(), limit, offset);
                 if (artists == null || !artists.Any())
                 {
                     _logger.LogError($"Can't find artist {name} with search limit {limit}");

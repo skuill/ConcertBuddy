@@ -66,8 +66,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
                 return;
             var action = message.GetSplitMessageText()[0] switch
             {
-                $"{CommandList.COMMAND_SEARCH}" => new SearchCommand(_searchHandler, botClient, message).Execute(),
-                _ => new UsageCommand(_searchHandler, botClient, message).Execute()
+                $"{CommandList.COMMAND_START}" => new UsageCommand(_searchHandler, botClient, message).Execute(),
+                _ => new SearchCommand(_searchHandler, botClient, message).Execute()
             };
             Message sentMessage = await action;
             _logger.LogInformation($"The message was sent with id: {sentMessage?.MessageId}");
@@ -82,6 +82,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
                 $"{CommandList.COMMAND_ARTIST}" => new ArtistCommand(_searchHandler, botClient, callbackQuery).Execute(),
                 $"{CommandList.COMMAND_BIOGRAPHY}" => new BiographyCommand(_searchHandler, botClient, callbackQuery).Execute(),
                 $"{CommandList.COMMAND_SETLISTS}" => new SetlistsCommand(_searchHandler, botClient, callbackQuery).Execute(),
+                $"{CommandList.COMMAND_DELETE}" => new DeleteCommand(_searchHandler, botClient, callbackQuery).Execute(),
                 _ => new UsageCommand(_searchHandler, botClient, callbackQuery.Message).Execute()
             };
         }

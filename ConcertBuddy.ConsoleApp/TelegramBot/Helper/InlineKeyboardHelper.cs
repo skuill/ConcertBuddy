@@ -18,13 +18,13 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
             return new InlineKeyboardMarkup(inlineKeyboardButtons);
         }
 
-        public static InlineKeyboardMarkup GetArtistsWithScoreInlineKeyboard(IEnumerable<MusicArtist> artists)
+        public static InlineKeyboardMarkup GetArtistsInlineKeyboard(IEnumerable<MusicArtist> artists)
         {
             List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
             int counter = 1;
             foreach (var artist in artists)
             {
-                string callbackText = $"{counter++}. {artist.Name}   [score:  {artist.Score}%]";
+                string callbackText = $"{counter++}. {artist.Name} ({artist.ActiveYears}) [{artist.Area}]";
                 string callbackData = string.Format(CommandList.CALLBACK_DATA_FORMAT_ARTIST, artist.MBID);
                 inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
             }
@@ -38,6 +38,13 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
                 InlineKeyboardButton.WithCallbackData("🎓 Biography", string.Format(CommandList.CALLBACK_DATA_FORMAT_BIOGRAPHY, mbid)),
                 InlineKeyboardButton.WithCallbackData("📝 Setlists", string.Format(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, mbid)),
             });
+            return new InlineKeyboardMarkup(inlineKeyboardButtons);
+        }
+
+        public static InlineKeyboardMarkup WithDeleteButton(this InlineKeyboardMarkup inlineKeyboardMarkup)
+        {
+            var inlineKeyboardButtons = inlineKeyboardMarkup.InlineKeyboard;
+            inlineKeyboardButtons = inlineKeyboardButtons.Append(new List<InlineKeyboardButton> { InlineKeyboardButton.WithCallbackData("❌", string.Format(CommandList.CALLBACK_DATA_FORMAT_DELETE)) });
             return new InlineKeyboardMarkup(inlineKeyboardButtons);
         }
     }

@@ -50,7 +50,7 @@ namespace ConcertBuddy.ConsoleApp.Search
             return _setlistFmClient.SearchArtistSetlists(artist.MBID, page);
         }
 
-        public Task<IEnumerable<MusicArtist>> SearchArtistsByName(string artistName, int limit = 5)
+        public Task<IEnumerable<MusicArtist>> SearchArtistsByName(string artistName, int limit = 5, int offset = 0)
         {
             return _musicSearcherClient.SearchArtistsByName(artistName, limit:limit);
         }

@@ -17,8 +17,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         public async Task<Message> Execute()
         {
-            const string usage = "Usage:\n" +
-                                 $"{CommandList.COMMAND_SEARCH}   - search artist's biography, setlists and lyrics for songs\n";
+            string usage = $"Hi, {Data.From?.FirstName}! 👋\n" +
+                $"Please, write any artist and I will find him! 🔍";
 
             return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Chat.Id,
                                                         text: usage,

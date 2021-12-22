@@ -32,13 +32,6 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             var artist = await SearchHandler.SearchArtistByMBID(mbid);
 
-            if (artist.ImageUri != null)
-            {
-                await TelegramBotClient.SendPhotoAsync(
-                    chatId: Data.Message.Chat.Id,
-                    photo: artist.ImageUri.ToString());
-            }
-
             replyText = $"<b>{artist.Name}</b>. ";
             if (artist.LastFmUrl != null || artist.SpotifyUrl != null)
                 replyText = replyText + "<i>Links</i>: ";
@@ -47,16 +40,26 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             if (artist.SpotifyUrl != null)
                 replyText = replyText + "<a href=\"" + artist.SpotifyUrl.ToString() + "\">spotify</a>";
 
-            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(mbid);
+            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(mbid)
+                .WithDeleteButton();
 
             await TelegramBotClient.AnswerCallbackQueryAsync(
                 callbackQueryId: Data.Id,
                 text: $"Artist: {artist.Name}");
 
-            return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
-                                                        text: replyText,
-                                                        replyMarkup: inlineKeyboard,
-                                                        parseMode: ParseMode.Html);
+            if (artist.ImageUri != null)
+                return await TelegramBotClient.SendPhotoAsync(
+                    chatId: Data.Message.Chat.Id,
+                    caption: replyText,
+                    photo: artist.ImageUri.ToString(),
+                    replyMarkup: inlineKeyboard,
+                    parseMode: ParseMode.Html);
+
+            return await TelegramBotClient.SendTextMessageAsync(
+                chatId: Data.Message.Chat.Id,
+                text: replyText,
+                replyMarkup: inlineKeyboard,
+                parseMode: ParseMode.Html);
         }
     }
 }

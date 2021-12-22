@@ -42,7 +42,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                                                             replyMarkup: new ReplyKeyboardRemove());
             }
 
-            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetSetlistsInlineKeyboardMenu(setlists.Items);
+            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetSetlistsInlineKeyboardMenu(setlists.Items)
+                .WithDeleteButton();
 
             return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
                                                        text: replyText,

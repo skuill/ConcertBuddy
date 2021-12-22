@@ -26,6 +26,12 @@ namespace MusicSearcher.Model
 
         public Uri SpotifyUrl => SpotifyArtist?.ExternalUrls != null && SpotifyArtist.ExternalUrls.TryGetValue("spotify", out string uriString) ? new Uri(uriString) : null;
 
+        public string Area => MusicBrainzArtist?.Area?.Name;
+
+        public string ActiveYears => $"{MusicBrainzArtist?.LifeSpan?.Begin} - {MusicBrainzArtist?.LifeSpan?.End}";
+
+        public string Type => MusicBrainzArtist?.Type;
+
         private Uri TryGetSpotifyArtistImage()
         {
             if (SpotifyArtist is null || SpotifyArtist.Images is null || !SpotifyArtist.Images.Any())

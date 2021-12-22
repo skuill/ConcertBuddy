@@ -20,19 +20,26 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
         {
             _logger.LogDebug($"Handle search command: [{Data.Text}]");
 
-            var split_message = Data.GetSplitMessageText();
             string replyText = string.Empty;
+            string artistName = string.Empty;
 
-            if (split_message.Count() == 1)
+            if (Data.Text.Contains(CommandList.COMMAND_START))
             {
-                replyText = $"Please pass artist's name as a parameter. For example: [{CommandList.COMMAND_SEARCH} The Beatles]";
-                return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Chat.Id,
-                                                            text: replyText,
-                                                            replyMarkup: new ReplyKeyboardRemove());
+                var split_message = Data.GetSplitMessageText();
+
+                if (split_message.Count() == 1)
+                {
+                    replyText = $"Please pass artist's name as a parameter. For example: [{CommandList.COMMAND_SEARCH} The Beatles]";
+                    return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Chat.Id,
+                                                                text: replyText,
+                                                                replyMarkup: new ReplyKeyboardRemove());
+                }
+                artistName = Data.GetParameterFromMessageText(CommandList.COMMAND_SEARCH);
             }
-
-            var artistName = Data.GetParameterFromMessageText(CommandList.COMMAND_SEARCH);
-
+            else
+            {
+                artistName = Data.GetClearMessage();
+            }
             var artists = await SearchHandler.SearchArtistsByName(artistName);
 
             if (artists == null || !artists.Any())
@@ -50,7 +57,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 // TODO: answer immediately without inlineKeyboardButtons choice.
             }
 
-            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsWithScoreInlineKeyboard(artists);
+            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists)
+                .WithDeleteButton();
 
             replyText = "Choose the right artist:";
             return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Chat.Id,
