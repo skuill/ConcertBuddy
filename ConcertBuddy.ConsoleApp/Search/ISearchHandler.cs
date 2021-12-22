@@ -1,7 +1,7 @@
 ﻿using MusicSearcher.Model;
 using SetlistFmAPI.Models;
 
-namespace ConcertBuddy.ConsoleApp
+namespace ConcertBuddy.ConsoleApp.Search
 {
     public interface ISearchHandler
     {

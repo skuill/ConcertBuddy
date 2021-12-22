@@ -1,14 +1,5 @@
-﻿using ConcertBuddy.ConsoleApp.TelegramBot;
-using LyricsScraper;
-using LyricsScraper.Abstract;
-using LyricsScraper.AZLyrics;
-using LyricsScraper.Common;
-using Microsoft.Extensions.DependencyInjection;
+﻿using ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 using Microsoft.Extensions.Logging;
-using MusicSearcher;
-using MusicSearcher.Abstract;
-using SetlistFmAPI;
-using SetlistFmAPI.Http;
 using Telegram.Bot;
 using Telegram.Bot.Extensions.Polling;
 
@@ -23,15 +14,11 @@ namespace ConcertBuddy.ConsoleApp
 
         public static void Main(string[] args)
         {
-            var serviceCollection = new ServiceCollection();
-            ConfigureServices(serviceCollection);
-
-            var serviceProvider = serviceCollection.BuildServiceProvider();
-            _logger = serviceProvider.GetService<ILogger<Program>>();
+            _logger = ServiceProviderSingleton.Source.GetService<ILogger<Program>>();
 
             var botClient = new TelegramBotClient(Configuration.TelegramToken);
 
-            IBotHandlers botHandler = serviceProvider.GetService<IBotHandlers>();
+            IBotHandlers botHandler = ServiceProviderSingleton.Source.GetService<IBotHandlers>();
 
             using var cts = new CancellationTokenSource();
 
@@ -56,21 +43,6 @@ namespace ConcertBuddy.ConsoleApp
             // Send cancellation request to stop bot
             cts.Cancel();
             return;
-        }
-
-        private static void ConfigureServices(IServiceCollection services)
-        {
-            services.AddLogging(configure => configure.AddConsole())
-                    .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
-                    .AddScoped<ISetlistFmClient, SetlistFmClient>()
-                    .AddScoped<ISetlistHttpClient, SetlistHttpWebClient>()
-                    .AddScoped<ILyricsScraperUtil, LyricsScraperUtil>()
-                    .AddScoped<ILyricWebClient, HtmlAgilityWebClient>()
-                    .AddScoped<ILyricParser, AZLyricsParser>()
-                    .AddScoped<ILyricGetter, AZLyricsGetter>()
-                    .AddScoped<IBotHandlers, BotHandlers>()
-                    .AddScoped<IMusicSearcherClient, MusicSearcherClient>()
-                    .AddScoped<ISearchHandler, SearchHandler>();
         }
     }
 }

@@ -6,7 +6,7 @@ using MusicSearcher.Model;
 using SetlistFmAPI;
 using SetlistFmAPI.Models;
 
-namespace ConcertBuddy.ConsoleApp
+namespace ConcertBuddy.ConsoleApp.Search
 {
     internal class SearchHandler : ISearchHandler
     {
