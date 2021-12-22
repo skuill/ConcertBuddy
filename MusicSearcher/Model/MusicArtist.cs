@@ -24,8 +24,7 @@ namespace MusicSearcher.Model
 
         public Uri LastFmUrl => LastFmArtist?.Url;
 
-        // TODO: change from API to web client spotify
-        public Uri SpotifyUrl => SpotifyArtist?.Href != null ? new Uri(SpotifyArtist.Href) : null;
+        public Uri SpotifyUrl => SpotifyArtist?.ExternalUrls != null && SpotifyArtist.ExternalUrls.TryGetValue("spotify", out string uriString) ? new Uri(uriString) : null;
 
         private Uri TryGetSpotifyArtistImage()
         {
