@@ -18,10 +18,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
             return new InlineKeyboardMarkup(inlineKeyboardButtons);
         }
 
-        public static InlineKeyboardMarkup GetArtistsInlineKeyboard(IEnumerable<MusicArtist> artists)
+        public static InlineKeyboardMarkup GetArtistsInlineKeyboard(IEnumerable<MusicArtist> artists, int counter = 1)
         {
             List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
-            int counter = 1;
             foreach (var artist in artists)
             {
                 string callbackText = $"{counter++}. {artist.Name} ({artist.ActiveYears}) [{artist.Area}]";
@@ -44,8 +43,28 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
         public static InlineKeyboardMarkup WithDeleteButton(this InlineKeyboardMarkup inlineKeyboardMarkup)
         {
             var inlineKeyboardButtons = inlineKeyboardMarkup.InlineKeyboard;
-            inlineKeyboardButtons = inlineKeyboardButtons.Append(new List<InlineKeyboardButton> { InlineKeyboardButton.WithCallbackData("❌", string.Format(CommandList.CALLBACK_DATA_FORMAT_DELETE)) });
+            inlineKeyboardButtons = inlineKeyboardButtons.Append(new List<InlineKeyboardButton> { GetDeleteButton() });
             return new InlineKeyboardMarkup(inlineKeyboardButtons);
+        }
+
+        public static InlineKeyboardMarkup WithNavigationButtons(this InlineKeyboardMarkup inlineKeyboardMarkup, string command, string data, int page, int limit = 0)
+        {
+            var inlineKeyboard = inlineKeyboardMarkup.InlineKeyboard;
+            var navigationButtons = new List<InlineKeyboardButton>();
+            int shift = limit == 0 ? 1 : limit;
+            
+            if (page - shift >= 0 && !(limit == 0 && page == 1))
+                navigationButtons.Add(InlineKeyboardButton.WithCallbackData("⬅️", string.Format(command, page - shift, limit, data)));
+            navigationButtons.Add(GetDeleteButton());
+            navigationButtons.Add(InlineKeyboardButton.WithCallbackData("➡️", string.Format(command, page + shift, limit, data)));
+
+            inlineKeyboard = inlineKeyboard.Append(navigationButtons);
+            return new InlineKeyboardMarkup(inlineKeyboard);
+        }
+
+        private static InlineKeyboardButton GetDeleteButton()
+        {
+            return InlineKeyboardButton.WithCallbackData("❌", string.Format(CommandList.CALLBACK_DATA_FORMAT_DELETE));
         }
     }
 }

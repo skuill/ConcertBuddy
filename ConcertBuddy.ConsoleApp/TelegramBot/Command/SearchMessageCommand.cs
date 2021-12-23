@@ -8,11 +8,11 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 {
-    public class SearchCommand : AbstractCommand<Message, Message>
+    public class SearchMessageCommand : AbstractCommand<Message, Message>
     {
-        private ILogger<SearchCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<SearchCommand>>();
+        private ILogger<SearchMessageCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<SearchMessageCommand>>();
 
-        public SearchCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, Message data) : base(searchHandler, telegramBotClient, data)
+        public SearchMessageCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, Message data) : base(searchHandler, telegramBotClient, data)
         {
         }
 
@@ -21,25 +21,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             _logger.LogDebug($"Handle search command: [{Data.Text}]");
 
             string replyText = string.Empty;
-            string artistName = string.Empty;
+            string artistName = Data.GetClearMessage();
 
-            if (Data.Text.Contains(CommandList.COMMAND_START))
-            {
-                var split_message = Data.GetSplitMessageText();
-
-                if (split_message.Count() == 1)
-                {
-                    replyText = $"Please pass artist's name as a parameter. For example: [{CommandList.COMMAND_SEARCH} The Beatles]";
-                    return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Chat.Id,
-                                                                text: replyText,
-                                                                replyMarkup: new ReplyKeyboardRemove());
-                }
-                artistName = Data.GetParameterFromMessageText(CommandList.COMMAND_SEARCH);
-            }
-            else
-            {
-                artistName = Data.GetClearMessage();
-            }
             var artists = await SearchHandler.SearchArtistsByName(artistName);
 
             if (artists == null || !artists.Any())
@@ -58,7 +41,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             }
 
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists)
-                .WithDeleteButton();
+                .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, 0, SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT);
 
             replyText = "Choose the right artist:";
             return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Chat.Id,

@@ -10,13 +10,14 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
     {
         private ILogger<DeleteCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<DeleteCommand>>();
 
-        public DeleteCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data) : base(searchHandler, telegramBotClient, data)
+        public DeleteCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data) 
+            : base(searchHandler, telegramBotClient, data)
         {
         }
 
         public async Task<Message> Execute()
         {
-            await TelegramBotClient.DeleteMessageAsync(Data.From.Id, Data.Message.MessageId);
+            await TelegramBotClient.DeleteMessageAsync(Data.Message.Chat.Id, Data.Message.MessageId);
             return null;
         }
     }

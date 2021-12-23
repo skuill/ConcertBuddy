@@ -23,7 +23,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot
 
         public static string[] GetParametersFromMessageText(this Message message, string command)
         {
-            return message.Text!.Trim().Replace(command, "").Trim().Split(MESSAGE_TEXT_DELIMETER);
+            return message.Text!.Trim().Replace(command, "").Trim().Split(MESSAGE_TEXT_DELIMETER).Select(x => x.Trim()).ToArray();
         }
 
         public static string[] GetSplitMessageText(this CallbackQuery callbackQuery)

@@ -11,7 +11,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Validation
 
             if (splitMessage.Count() == 1)
             {
-                string replyText = $"Please pass artist's MBID as a parameter. For example: [{command} b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d]";
+                string replyText = $"Please pass any parameters for command {command}!";
 
                 await botClient.AnswerCallbackQueryAsync(
                     callbackQueryId: callbackQuery.Id,

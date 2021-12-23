@@ -52,7 +52,7 @@ namespace ConcertBuddy.ConsoleApp.Search
 
         public Task<IEnumerable<MusicArtist>> SearchArtistsByName(string artistName, int limit = 5, int offset = 0)
         {
-            return _musicSearcherClient.SearchArtistsByName(artistName, limit:limit);
+            return _musicSearcherClient.SearchArtistsByName(artistName, limit:limit, offset:offset);
         }
 
         public string SearchLyric(string artistName, string songName)

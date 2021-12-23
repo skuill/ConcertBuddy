@@ -14,7 +14,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
     {
         private ILogger<BiographyCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<BiographyCommand>>();
 
-        public BiographyCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data) : base(searchHandler, telegramBotClient, data)
+        public BiographyCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data) 
+            : base(searchHandler, telegramBotClient, data)
         {
         }
 
