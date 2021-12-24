@@ -26,25 +26,45 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 return null;
 
             var replyText = "Please select a setlist:";
-
-            var mbid = Data.GetParameterFromMessageText(CommandList.COMMAND_SETLISTS);
-            var setlists = await SearchHandler.SearchArtistSetlists(mbid);
+            
+            var parameters = Data.GetParametersFromMessageText(CommandList.COMMAND_SETLISTS);
+            var page = int.Parse(parameters[0]);
+            // ingore limit in parameters[1]. NOT USED BY LAST.FM
+            var mbid = parameters[2];
+            
+            var setlists = await SearchHandler.SearchArtistSetlists(mbid, page);
 
             if (setlists == null || setlists.IsEmpty())
             {
-                replyText = $"Can't find any setlist for artist MBID {mbid}";
+                replyText = $"Nothing found there! Try another search or go back:";
 
                 await TelegramBotClient.AnswerCallbackQueryAsync(
                     callbackQueryId: Data.Id,
                     text: $"{replyText}");
 
-                return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
+                if (page == SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT)
+                {
+                    return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
                                                             text: replyText,
                                                             replyMarkup: new ReplyKeyboardRemove());
+
+                }
+                var emptyKeyboard = InlineKeyboardMarkup.Empty().WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, mbid, page);
+                return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
+                                                            text: replyText,
+                                                            replyMarkup: emptyKeyboard);
             }
 
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetSetlistsInlineKeyboardMenu(setlists.Items)
-                .WithDeleteButton();
+                .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, mbid, page);
+
+            if (page != SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT)
+                return await TelegramBotClient.EditMessageTextAsync(chatId: Data.Message.Chat.Id,
+                                                           messageId: Data.Message.MessageId,
+                                                           text: replyText,
+                                                           replyMarkup: inlineKeyboard,
+                                                           parseMode: ParseMode.Html);
+
 
             return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
                                                        text: replyText,

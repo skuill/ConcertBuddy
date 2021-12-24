@@ -35,7 +35,7 @@ namespace SetlistFmAPI
         /// <returns>A list of matching artist.</returns>
         public async Task<Artists> SearchArtists(Artist searchFields, int page = 1)
         {
-            return await _httpClient.Load<Artists>(SetlistFmUrls.Artists(searchFields), _apiKey, _language);
+            return await _httpClient.Load<Artists>(SetlistFmUrls.Artists(searchFields, page:page), _apiKey, _language);
         }
 
         public async Task<Artists> SearchArtists(string artistName, int page = 1)

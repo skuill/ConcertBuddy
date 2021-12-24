@@ -37,7 +37,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (artists.Count() == 1)
             {
-                // TODO: answer immediately without inlineKeyboardButtons choice.
+                // TODO return artist immediately
+                //Data.Data = artists.First().Name;
+                //return await new ArtistCommand(SearchHandler, TelegramBotClient, artistName).Execute();
             }
 
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists)

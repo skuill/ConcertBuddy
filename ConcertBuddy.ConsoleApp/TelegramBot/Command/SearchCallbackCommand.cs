@@ -31,9 +31,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             int offset = 0;
             int limit = 5;
 
-            var split_message = Data.GetSplitMessageText();
+            var splitMessage = Data.GetSplitMessageText();
 
-            if (split_message.Count() == 1)
+            if (splitMessage.Count() == 1)
             {
                 replyText = $"Please pass artist's name as a parameter. For example: [{CommandList.COMMAND_SEARCH} The Beatles]";
                 return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
@@ -47,29 +47,23 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             var artists = await SearchHandler.SearchArtistsByName(artistName, limit, offset);
 
-            if ((artists == null || !artists.Any()) && offset == 0)
+            if (artists == null || !artists.Any() && offset == 0)
             {
-                _logger.LogError($"Can't find artist [{artistName}]");
+                if (offset == SearchConstants.SEARCH_ARTISTS_OFFSET_DEFAULT)
+                {
+                    _logger.LogError($"Can't find artist [{artistName}]");
 
-                replyText = "Something goes wrong :(! Please try to find another artist..";
-                return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
-                                                            text: replyText,
-                                                            replyMarkup: new ReplyKeyboardRemove());
-            }
-
-            if ((artists == null || !artists.Any()) && offset > 0)
-            {
+                    replyText = "Something goes wrong :(! Please try to find another artist..";
+                    return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
+                                                                text: replyText,
+                                                                replyMarkup: new ReplyKeyboardRemove());
+                }
                 replyText = "Nothing found there! Try another search or go back:";
                 InlineKeyboardMarkup navigationKeyboard = InlineKeyboardMarkup.Empty().WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, offset, limit);
                 return await TelegramBotClient.EditMessageTextAsync(chatId: Data.Message.Chat.Id,
                                                             messageId: Data.Message.MessageId,
                                                             text: replyText,
                                                             replyMarkup: navigationKeyboard);
-            }
-
-            if (artists.Count() == 1)
-            {
-                // TODO: answer immediately without inlineKeyboardButtons choice.
             }
 
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists, offset + 1)

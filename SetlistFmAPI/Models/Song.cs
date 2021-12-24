@@ -36,12 +36,19 @@ namespace SetlistFmAPI.Models
         #endregion
 
         /// <summary>
-        /// Returns the <paramref name="Name"/> propertu of the object.
+        /// Returns the <paramref name="Name"/> property of the object.
         /// </summary>
         /// <returns>A string that represents <paramref name="Name"/> property.</returns>
         public override string ToString()
         {
-            return "Name = " + Name;
+            string result = $"{Name}";
+            if (Cover != null)
+                result += $" ({Cover.Name} cover)";
+            if (With != null)
+                result += $" (with {With.Name})";
+            if (Info != null)
+                result += $" ({Info})";
+            return result;
         }
     }
 }

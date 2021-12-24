@@ -17,6 +17,18 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         public async Task<Message> Execute()
         {
+            var splitMessage = Data.GetSplitMessageText();
+
+            if (splitMessage.Count() != 1)
+            {
+                var messageIds = Data.GetParametersFromMessageText(CommandList.COMMAND_DELETE);
+
+                foreach (var messageId in messageIds)
+                {
+                    await TelegramBotClient.DeleteMessageAsync(Data.Message.Chat.Id, int.Parse(messageId));
+                }
+            }
+
             await TelegramBotClient.DeleteMessageAsync(Data.Message.Chat.Id, Data.Message.MessageId);
             return null;
         }

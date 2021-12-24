@@ -61,10 +61,13 @@ namespace SetlistFmAPI.Models
 
         public override string ToString()
         {
-            string encore = "";
+            string result = "";
             if (EncoreSpecified)
-                encore = "[Encore " + Encore + "] ";
-            return string.Format("{0}Songs = {1}", encore, Songs.Count);
+                result = "[Encore " + Encore + "] ";
+            else
+                result = "Set ";
+            
+            return $"{result}{Name}. Songs = {Songs.Count}";
         }
     }
 }

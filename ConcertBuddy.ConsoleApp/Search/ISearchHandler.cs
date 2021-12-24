@@ -9,7 +9,9 @@ namespace ConcertBuddy.ConsoleApp.Search
 
         Task<MusicArtist> SearchArtistByMBID(string mbid);
 
-        Task<Setlists> SearchArtistSetlists(string artistName, int page = 1);
+        Task<Setlists> SearchArtistSetlists(string mbid, int page = 1);
+
+        Task<Setlist> SearchSetlist(string setlistId);
 
         string SearchLyric(string artistName, string songName);
     }

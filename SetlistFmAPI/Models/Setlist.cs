@@ -149,9 +149,25 @@ namespace SetlistFmAPI.Models
                 return 0;
         }
 
+        public bool IsSetsExist()
+        {
+            return Sets != null && Sets.Items != null && Sets.Items.Any();
+        }
+
         public override string ToString()
         {
-            return $"[{EventDate}] {Artist.Name} @ {Venue.Name}";
+            string result = $"[{EventDate}]";
+            if (!string.IsNullOrEmpty(TourName))
+                result += $"({TourName})";
+            result += $" {Artist.Name} @";
+            if (!string.IsNullOrEmpty(Venue.Name))
+                result += $" {Venue.Name}";
+
+            var cityInfo = Venue.City.ToString();
+            if (!string.IsNullOrEmpty(cityInfo))
+                result += $"\r\nat {cityInfo}";
+
+            return $"[{EventDate}]({TourName}) {Artist.Name} @ {Venue.Name} {Venue.City.ToString()}";
         }
     }
 }

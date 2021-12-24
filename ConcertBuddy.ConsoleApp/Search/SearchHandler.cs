@@ -36,18 +36,9 @@ namespace ConcertBuddy.ConsoleApp.Search
             _lyricsScraperUtil = lyricsScraperUtil;
         }
 
-        public Task<Setlists> SearchArtistSetlists(string artistName, int page = 1)
+        public Task<Setlists> SearchArtistSetlists(string mbid, int page = 1)
         {
-            var artists = _setlistFmClient.SearchArtists(artistName, page).GetAwaiter().GetResult();
-            if (artists == null || artists.IsEmpty())
-            {
-                _logger.LogError($"Can't find artist's [{artistName}] setlists from SetlistFM");
-                return null;
-            }
-
-            var artist = artists.Items.FirstOrDefault();
-
-            return _setlistFmClient.SearchArtistSetlists(artist.MBID, page);
+            return _setlistFmClient.SearchArtistSetlists(mbid, page);
         }
 
         public Task<IEnumerable<MusicArtist>> SearchArtistsByName(string artistName, int limit = 5, int offset = 0)
@@ -63,6 +54,11 @@ namespace ConcertBuddy.ConsoleApp.Search
         public Task<MusicArtist> SearchArtistByMBID(string mbid)
         {
             return _musicSearcherClient.SearchArtistByMBID(mbid);
+        }
+
+        public Task<Setlist> SearchSetlist(string setlistId)
+        {
+            return _setlistFmClient.SearchSetlist(setlistId);
         }
     }
 }

@@ -34,7 +34,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 replyText = artist.Biography;
             }
 
-            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(mbid);
+            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton();
 
             return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
                                                        text: replyText,
