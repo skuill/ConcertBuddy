@@ -58,8 +58,11 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                                                                 text: replyText,
                                                                 replyMarkup: new ReplyKeyboardRemove());
                 }
+
+                InlineKeyboardMarkup navigationKeyboard = InlineKeyboardMarkup.Empty()
+                    .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, offset, limit);
+
                 replyText = "Nothing found there! Try another search or go back:";
-                InlineKeyboardMarkup navigationKeyboard = InlineKeyboardMarkup.Empty().WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, offset, limit);
                 return await TelegramBotClient.EditMessageTextAsync(chatId: Data.Message.Chat.Id,
                                                             messageId: Data.Message.MessageId,
                                                             text: replyText,

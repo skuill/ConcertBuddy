@@ -1,5 +1,6 @@
 ﻿using MusicSearcher.Model;
 using SetlistFmAPI.Models;
+using SpotifyAPI.Web;
 
 namespace ConcertBuddy.ConsoleApp.Search
 {
@@ -14,5 +15,7 @@ namespace ConcertBuddy.ConsoleApp.Search
         Task<Setlist> SearchSetlist(string setlistId);
 
         string SearchLyric(string artistName, string songName);
+
+        Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName);
     }
 }

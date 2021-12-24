@@ -151,7 +151,7 @@ namespace MusicSearcher.Tests
             client.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
 
             // Act
-            var result = await client.GetSpotifyTrack(artist, trackSearch);
+            var result = await client.SearchSpotifyTrack(artist, trackSearch);
 
             // Assert
             Assert.IsNotNull(result);

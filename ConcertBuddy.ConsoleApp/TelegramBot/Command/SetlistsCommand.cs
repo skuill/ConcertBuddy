@@ -49,7 +49,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                                                             replyMarkup: new ReplyKeyboardRemove());
 
                 }
-                var emptyKeyboard = InlineKeyboardMarkup.Empty().WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, mbid, page);
+
+                var emptyKeyboard = InlineKeyboardMarkup.Empty()
+                    .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, mbid, page);
                 return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
                                                             text: replyText,
                                                             replyMarkup: emptyKeyboard);

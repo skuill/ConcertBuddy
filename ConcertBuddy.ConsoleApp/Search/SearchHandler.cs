@@ -5,6 +5,7 @@ using MusicSearcher.Abstract;
 using MusicSearcher.Model;
 using SetlistFmAPI;
 using SetlistFmAPI.Models;
+using SpotifyAPI.Web;
 
 namespace ConcertBuddy.ConsoleApp.Search
 {
@@ -20,8 +21,7 @@ namespace ConcertBuddy.ConsoleApp.Search
             IMusicSearcherClient musicSearcherClient, 
             ISetlistFmClient setlistFmClient, 
             ILyricsScraperUtil lyricsScraperUtil,
-            ILyricGetter lyricGetter
-            )
+            ILyricGetter lyricGetter)
         {
             _logger = logger;
             musicSearcherClient.WithLastFmClient(Configuration.LastFmApiKey, Configuration.LastFmApiSecret);
@@ -59,6 +59,11 @@ namespace ConcertBuddy.ConsoleApp.Search
         public Task<Setlist> SearchSetlist(string setlistId)
         {
             return _setlistFmClient.SearchSetlist(setlistId);
+        }
+
+        public Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName)
+        {
+            return _musicSearcherClient.SearchSpotifyTrack(artistName, trackName);
         }
     }
 }

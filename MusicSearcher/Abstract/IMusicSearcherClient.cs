@@ -16,6 +16,6 @@ namespace MusicSearcher.Abstract
 
         Task WithSpotifyClient(string cliendID, string clientSecret);
 
-        Task<FullTrack> GetSpotifyTrack(string artistName, string trackName);
+        Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName);
     }
 }

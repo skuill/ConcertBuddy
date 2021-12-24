@@ -171,7 +171,7 @@ namespace MusicSearcher
             return result;
         }
 
-        public async Task<FullTrack> GetSpotifyTrack(string artistName, string trackName)
+        public async Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName)
         {
             FullTrack result = null;
             if (IsSpotifyClientEnabled())
