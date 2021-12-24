@@ -171,6 +171,24 @@ namespace MusicSearcher
             return result;
         }
 
+        public async Task<FullTrack> GetSpotifyTrack(string artistName, string trackName)
+        {
+            FullTrack result = null;
+            if (IsSpotifyClientEnabled())
+            {
+                var searchTrack = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Track, $"{artistName} - {trackName}"));
+                if (searchTrack == null
+                    || searchTrack.Tracks == null
+                    || searchTrack.Tracks.Total == 0)
+                {
+                    _logger.LogError($"Can't get track [{trackName}] for artist [{artistName}] from Spotify.");
+                    return null;
+                }
+                result = searchTrack.Tracks.Items.First(t => t.Artists.Any(a => string.Equals(a.Name, artistName)));
+            }
+            return result;
+        }
+
         private bool IsLastFmClientEnabled() => _lastFmClient != null;
 
         private bool IsSpotifyClientEnabled() => _spotifyClient != null;

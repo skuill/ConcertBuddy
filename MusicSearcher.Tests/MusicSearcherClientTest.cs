@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using MusicSearcher.Abstract;
 using MusicSearcher.MusicBrainz;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MusicSearcher.Tests
@@ -137,6 +138,26 @@ namespace MusicSearcher.Tests
             Assert.IsTrue(string.Equals(artist, result.Name));
             Assert.IsTrue(string.Equals(artist, result.SpotifyArtist.Name));
             Assert.IsNotNull(result.ImageUri);
+        }
+
+        [TestMethod]
+        public async Task SearchSpotifyTrack_DefaultExample_AreEqual()
+        {
+            // Arrange
+            string artist = "Parkway Drive";
+            string trackSearch = "wishing wells";
+            string trackExpected = "Wishing Wells";
+            var client = InitClient();
+            client.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
+
+            // Act
+            var result = await client.GetSpotifyTrack(artist, trackSearch);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.IsTrue(string.Equals(trackExpected, result.Name));
+            Assert.IsNotNull(result.Artists);
+            Assert.IsTrue(result.Artists.Any(x => string.Equals(x.Name, artist)));
         }
 
         private IMusicSearcherClient InitClient()

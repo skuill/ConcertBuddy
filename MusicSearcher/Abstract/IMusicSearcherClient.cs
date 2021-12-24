@@ -1,5 +1,6 @@
 ﻿using MusicSearcher.Model;
 using MusicSearcher.MusicBrainz;
+using SpotifyAPI.Web;
 
 namespace MusicSearcher.Abstract
 {
@@ -14,5 +15,7 @@ namespace MusicSearcher.Abstract
         void WithLastFmClient(string apiKey, string secret);
 
         Task WithSpotifyClient(string cliendID, string clientSecret);
+
+        Task<FullTrack> GetSpotifyTrack(string artistName, string trackName);
     }
 }
