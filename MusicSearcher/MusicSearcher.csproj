@@ -14,4 +14,8 @@
     <PackageReference Include="SpotifyAPI.Web.Auth" Version="6.2.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SetlistFmApi\SetlistFmAPI.csproj" />
+  </ItemGroup>
+
 </Project>

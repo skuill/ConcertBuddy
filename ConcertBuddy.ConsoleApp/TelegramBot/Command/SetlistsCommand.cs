@@ -30,9 +30,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var parameters = Data.GetParametersFromMessageText(CommandList.COMMAND_SETLISTS);
             var page = int.Parse(parameters[0]);
             // ingore limit in parameters[1]. NOT USED BY LAST.FM
-            var mbid = parameters[2];
+            var artistMBID = parameters[2];
             
-            var setlists = await SearchHandler.SearchArtistSetlists(mbid, page);
+            var setlists = await SearchHandler.SearchArtistSetlists(artistMBID, page);
 
             if (setlists == null || setlists.IsEmpty())
             {
@@ -51,14 +51,14 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 }
 
                 var emptyKeyboard = InlineKeyboardMarkup.Empty()
-                    .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, mbid, page);
+                    .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page);
                 return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
                                                             text: replyText,
                                                             replyMarkup: emptyKeyboard);
             }
 
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetSetlistsInlineKeyboardMenu(setlists.Items)
-                .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, mbid, page);
+                .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page);
 
             if (page != SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT)
                 return await TelegramBotClient.EditMessageTextAsync(chatId: Data.Message.Chat.Id,

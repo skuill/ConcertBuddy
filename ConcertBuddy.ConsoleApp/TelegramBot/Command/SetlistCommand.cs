@@ -29,14 +29,14 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var replyText = string.Empty;
 
             var parameters = Data.GetParametersFromMessageText(CommandList.COMMAND_SETLIST);            
-            var mbid = parameters[0];
+            var artistMBID = parameters[0];
             var setlistId = parameters[1];
 
             var setlist = await SearchHandler.SearchSetlist(setlistId);
 
             if (setlist == null || !setlist.IsSetsExist())
             {
-                _logger.LogError($"Can't find setlist. Id: [{setlistId}], mbid: [{mbid}]");
+                _logger.LogError($"Can't find setlist. Id: [{setlistId}], mbid: [{artistMBID}]");
 
                 replyText = "Something goes wrong :(! Please try another setlist..";
                 return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
@@ -55,7 +55,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             foreach (var set in setlist.Sets.Items)
             {
                 replyText = $"{set.ToString()}";
-                InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetTracksInlineKeyboardMenu(set, mbid);
+                InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetTracksInlineKeyboardMenu(set, artistMBID);
                 messageIds.Add((await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
                                                        text: replyText,
                                                        replyMarkup: inlineKeyboard)).MessageId);

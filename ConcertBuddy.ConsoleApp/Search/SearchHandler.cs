@@ -1,4 +1,5 @@
-﻿using LyricsScraper;
+﻿using Hqub.MusicBrainz.API.Entities;
+using LyricsScraper;
 using LyricsScraper.Abstract;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
@@ -64,6 +65,16 @@ namespace ConcertBuddy.ConsoleApp.Search
         public Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName)
         {
             return _musicSearcherClient.SearchSpotifyTrack(artistName, trackName);
+        }
+
+        public Task<Recording> SearchSongByName(string artistMBID, string name)
+        {
+            return _musicSearcherClient.SearchSongByName(artistMBID, name);
+        }
+
+        public Task<Recording> SearchSongByMBID(string songMBID)
+        {
+            return _musicSearcherClient.SearchSongByMBID(songMBID);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Hqub.MusicBrainz.API;
+using Hqub.MusicBrainz.API.Entities;
 using IF.Lastfm.Core.Api;
 using IF.Lastfm.Core.Objects;
 using Microsoft.Extensions.Logging;
@@ -189,8 +190,39 @@ namespace MusicSearcher
             return result;
         }
 
+        public async Task<Recording> SearchSongByName(string artistMBID, string name)
+        {
+            Recording result = null;
+            try
+            {
+                QueryParameters<Recording> query = new QueryParameters<Recording>();
+                query.Add("arid", artistMBID);
+                query.Add("recording", name);
+                var recordings = await _musicBrainzClient.Recordings.SearchAsync(query);
+                if (recordings == null || !recordings.Any())
+                {
+                    _logger.LogError($"Can't find recording for artist mbid [{artistMBID}] and song name [{name}]");
+                    return result;
+                }
+
+                _logger.LogDebug($"Find recording for artist [{artistMBID}] with song name [{name}]");
+                return recordings.First();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Can't find recording for artist mbid [{artistMBID}] and song name [{name}]");
+            }
+            return result;
+        }
+
+        public async Task<Recording> SearchSongByMBID(string songMBID)
+        {
+            return await _musicBrainzClient.Recordings.GetAsync(songMBID);
+        }
+
         private bool IsLastFmClientEnabled() => _lastFmClient != null;
 
         private bool IsSpotifyClientEnabled() => _spotifyClient != null;
+
     }
 }

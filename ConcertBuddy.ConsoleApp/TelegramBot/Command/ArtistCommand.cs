@@ -29,9 +29,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             string replyText = string.Empty;
 
-            var mbid = Data.GetParameterFromMessageText(CommandList.COMMAND_ARTIST);
+            var artistMBID = Data.GetParameterFromMessageText(CommandList.COMMAND_ARTIST);
 
-            var artist = await SearchHandler.SearchArtistByMBID(mbid);
+            var artist = await SearchHandler.SearchArtistByMBID(artistMBID);
 
             replyText = $"<b>{artist.Name}</b>. ";
             if (artist.LastFmUrl != null || artist.SpotifyUrl != null)
@@ -41,7 +41,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             if (artist.SpotifyUrl != null)
                 replyText = replyText + "<a href=\"" + artist.SpotifyUrl.ToString() + "\">spotify</a>";
 
-            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(mbid)
+            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(artistMBID)
                 .WithDeleteButton();
 
             await TelegramBotClient.AnswerCallbackQueryAsync(

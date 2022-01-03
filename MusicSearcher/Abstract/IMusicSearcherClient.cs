@@ -1,4 +1,5 @@
-﻿using MusicSearcher.Model;
+﻿using Hqub.MusicBrainz.API.Entities;
+using MusicSearcher.Model;
 using MusicSearcher.MusicBrainz;
 using SpotifyAPI.Web;
 
@@ -17,5 +18,9 @@ namespace MusicSearcher.Abstract
         Task WithSpotifyClient(string cliendID, string clientSecret);
 
         Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName);
+
+        Task<Recording> SearchSongByName(string artistMBID, string name);
+
+        Task<Recording> SearchSongByMBID(string songMBID);
     }
 }

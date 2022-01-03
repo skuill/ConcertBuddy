@@ -27,8 +27,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             string replyText = "Sorry, but the biography of this artist was not found ☹️";
 
-            var mbid = Data.GetParameterFromMessageText(CommandList.COMMAND_BIOGRAPHY);
-            var artist = await SearchHandler.SearchArtistByMBID(mbid);
+            var artistMBID = Data.GetParameterFromMessageText(CommandList.COMMAND_BIOGRAPHY);
+            
+            var artist = await SearchHandler.SearchArtistByMBID(artistMBID);
             if (artist.Biography != null)
             {
                 replyText = artist.Biography;

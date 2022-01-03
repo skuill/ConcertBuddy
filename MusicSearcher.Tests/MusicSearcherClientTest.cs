@@ -160,6 +160,26 @@ namespace MusicSearcher.Tests
             Assert.IsTrue(result.Artists.Any(x => string.Equals(x.Name, artist)));
         }
 
+        [TestMethod]
+        public async Task SearchSongByName_DefaultExample_AreEqual()
+        {
+            // Arrange
+            string artistMBID = "a436dd02-0549-4c91-b608-df451217fdeb";
+            string songName = "Wishing Wells";
+
+            var expectedArtistName = "ParkwayDrive";
+            var expectedRecordingMBID = "a99d7f83-75b1-46f6-8b71-cd230b7c3060";
+
+            var client = InitClient();
+
+            // Act
+            var result = await client.SearchSongByName(artistMBID, songName);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.IsTrue(string.Equals(expectedRecordingMBID, result.Id));
+        }
+
         private IMusicSearcherClient InitClient()
         {
             var loggerMock = Mock.Of<ILogger<MusicSearcherClient>>();
