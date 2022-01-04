@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ConcertBuddy.ConsoleApp": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

@@ -33,13 +33,16 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var trackName = String.Join(' ', parameters.Skip(1));
 
             var artist = await SearchHandler.SearchArtistByMBID(mbid);
-            var track = await SearchHandler.SearchSpotifyTrack(artist.Name, trackName);
 
-            var lyric = SearchHandler.SearchLyric(artist.Name, track.Name);
+            // Return actual name from MusicBrainz. Because other platform can use additional information in name.
+            var recording = await SearchHandler.SearchSongByName(mbid, trackName);
+            string trackActualName = recording != null ? recording.Title : (await SearchHandler.SearchSpotifyTrack(artist.Name, trackName)).Name;
+
+            var lyric = SearchHandler.SearchLyric(artist.Name, trackActualName);
 
             if (lyric == null)
             {
-                _logger.LogError($"Can't find lyric for track [{artist.Name} - {track.Name}]");
+                _logger.LogError($"Can't find lyric for track [{artist.Name} - {trackActualName}]");
 
                 replyText = "Something goes wrong :(! Please choose another track.";
                 return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
