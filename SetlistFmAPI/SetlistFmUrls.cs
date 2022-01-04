@@ -9,6 +9,13 @@ namespace SetlistFmAPI
 
         public static Uri Artist(string mbid) => RelativeUri($"artist/{mbid}");
 
+        /// <summary>
+        /// Generate relative uri with query from <paramref name="searchFields"/>
+        /// </summary>
+        /// <param name="searchFields"></param>
+        /// <param name="sort"></param>
+        /// <param name="page"></param>
+        /// <returns></returns>
         public static Uri Artists(Artist searchFields, string sort = "relevance", int page = 1)
         {
             StringBuilder query = new StringBuilder();

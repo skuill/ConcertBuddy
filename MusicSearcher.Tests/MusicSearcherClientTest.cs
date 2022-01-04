@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using MusicSearcher.Abstract;
-using MusicSearcher.MusicBrainz;
 using System.Linq;
 using System.Threading.Tasks;
 

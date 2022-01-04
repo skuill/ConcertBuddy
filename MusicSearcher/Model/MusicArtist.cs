@@ -26,6 +26,9 @@ namespace MusicSearcher.Model
 
         public Uri SpotifyUrl => SpotifyArtist?.ExternalUrls != null && SpotifyArtist.ExternalUrls.TryGetValue("spotify", out string uriString) ? new Uri(uriString) : null;
 
+        /// <summary>
+        /// Areas are geographic regions or settlements.
+        /// </summary>
         public string Area => MusicBrainzArtist?.Area?.Name;
 
         public string ActiveYears => $"{MusicBrainzArtist?.LifeSpan?.Begin} - {MusicBrainzArtist?.LifeSpan?.End}";
