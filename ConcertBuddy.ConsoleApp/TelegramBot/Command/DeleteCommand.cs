@@ -17,6 +17,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         public async Task<Message> Execute()
         {
+            _logger.LogDebug($"Handle [{CommandList.COMMAND_DELETE}] command: [{Data?.Data}]");
+
             var splitMessage = Data.GetSplitMessageText();
 
             if (splitMessage.Count() != 1)

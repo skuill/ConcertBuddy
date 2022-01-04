@@ -25,7 +25,8 @@ namespace LyricsScraper.AZLyrics
         public override string SearchLyric(string artist, string song)
         {
             // http://www.azlyrics.com/lyrics/youngthug/richniggashit.htm
-            var artistStripped = StringUtils.StripRedundantChars(artist.ToLowerInvariant());
+            // remove articles from artist on start. For example for band [The Devil Wears Prada]: https://www.azlyrics.com/d/devilwearsprada.html
+            var artistStripped = StringUtils.StripRedundantChars(artist.ToLowerInvariant(), true);
             var titleStripped = StringUtils.StripRedundantChars(song.ToLowerInvariant());
 
             return SearchLyric(new Uri(BaseUri, $"{artistStripped}/{titleStripped}.html"));

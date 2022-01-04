@@ -19,7 +19,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         public async Task<Message> Execute()
         {
-            _logger.LogDebug($"Handle search command: [{Data.Text}]");
+            _logger.LogDebug($"Handle [{CommandList.COMMAND_SEARCH}] message command: [{Data.Text}]");
 
             string replyText = string.Empty;
             string artistName = Data.GetClearMessage();

@@ -7,6 +7,15 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
 {
     public static class InlineKeyboardHelper
     {
+        public static InlineKeyboardMarkup GetLyricInlineKeyboardMenu(string mbid, string songName)
+        {
+            List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
+            inlineKeyboardButtons.Add(new[] {
+                InlineKeyboardButton.WithCallbackData("🎼 Lyric", string.Format(CommandList.CALLBACK_DATA_FORMAT_LYRIC, mbid, songName)),
+            });
+            return new InlineKeyboardMarkup(inlineKeyboardButtons).WithDeleteButton();
+        }
+
         public static InlineKeyboardMarkup GetTracksInlineKeyboardMenu(Set set, string mbid)
         {
             List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();

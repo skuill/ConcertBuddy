@@ -23,7 +23,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         public async Task<Message> Execute()
         {
-            _logger.LogDebug($"Handle track command: [{Data.Data}]");
+            _logger.LogDebug($"Handle [{CommandList.COMMAND_TRACK}] command: [{Data.Data}]");
 
             var isValidQuery = await CallbackQueryValidation.Validate(TelegramBotClient, Data, CommandList.COMMAND_TRACK);
             if (!isValidQuery)
@@ -48,11 +48,12 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                                                             replyMarkup: new ReplyKeyboardRemove());
             }
 
+            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetLyricInlineKeyboardMenu(mbid, trackName);
 
             return await TelegramBotClient.SendTextMessageAsync(
                 chatId: Data.Message.Chat.Id,                
                 text: GetTrackMarkdown(track),
-                replyMarkup: new ReplyKeyboardRemove(),
+                replyMarkup: inlineKeyboard,
                 parseMode: ParseMode.Html);
         }
 

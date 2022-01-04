@@ -85,6 +85,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
                 $"{CommandList.COMMAND_SETLISTS}" => new SetlistsCommand(_searchHandler, botClient, callbackQuery).Execute(),
                 $"{CommandList.COMMAND_SETLIST}" => new SetlistCommand(_searchHandler, botClient, callbackQuery).Execute(),
                 $"{CommandList.COMMAND_TRACK}" => new TrackCommand(_searchHandler, botClient, callbackQuery).Execute(),
+                $"{CommandList.COMMAND_LYRIC}" => new LyricCommand(_searchHandler, botClient, callbackQuery).Execute(),
                 $"{CommandList.COMMAND_DELETE}" => new DeleteCommand(_searchHandler, botClient, callbackQuery).Execute(),
                 _ => new UsageCommand(_searchHandler, botClient, callbackQuery.Message).Execute()
             };

@@ -2,6 +2,8 @@
 {
     public static class StringUtils
     {
+        private static readonly string[] ARTICLES = { "a", "on", "the" };
+
         public static string RemoveHtmlTags(string text)
         {
             int idx = text.IndexOf('<');
@@ -18,9 +20,20 @@
             return text;
         }
 
-        public static string StripRedundantChars(string input)
+        public static string StripRedundantChars(string input, bool removeArticle = false)
         {
-            return new string(input.Where(c => char.IsLetterOrDigit(c)).ToArray());
+            var result = input.ToLowerInvariant().Trim();
+            if (removeArticle)
+                foreach (var article in ARTICLES)
+                {
+                    if (result.StartsWith($"{article} ", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        result = result.Remove(0, article.Length);
+                        break;
+                    }
+                }
+            result = new string(result.Where(c => char.IsLetterOrDigit(c)).ToArray());
+            return result;
         }
 
     }

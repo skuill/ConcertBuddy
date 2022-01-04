@@ -21,7 +21,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         public async Task<Message> Execute()
         {
-            _logger.LogDebug($"Handle artist command: [{Data.Data}]");
+            _logger.LogDebug($"Handle [{CommandList.COMMAND_ARTIST}] command: [{Data.Data}]");
 
             var isValidQuery = await CallbackQueryValidation.Validate(TelegramBotClient, Data, CommandList.COMMAND_ARTIST);
             if (!isValidQuery)
