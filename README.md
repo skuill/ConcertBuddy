@@ -35,6 +35,8 @@ Feel free to send me feedback on [Telegram](https://t.me/skuill) or [file an iss
 ## Technologies
 Project is created with:
 * `.NET: 6.0`
+* `Microsoft Visual Studio Community 2022`
+* `docker`
 
 ## Built with
 * [Telegram.Bot](https://github.com/TelegramBots/telegram.bot) -  the most popular .NET Client for 🤖 Telegram Bot API. 
