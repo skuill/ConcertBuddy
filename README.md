@@ -17,10 +17,14 @@ Just write the artist / gang name to the **[ConcertBuddy](https://t.me/concert_b
 ## Features
 
 A few of the things you can do with ConcertBuddy:
-* Read artist / band biography
-* View setlists from recent concerts
-* Listen to tracks
-* Read the lyrics of the tracks
+* ✅ Read artist / band biography
+  * `Last.fm`
+* ✅ View setlists from recent concerts
+  * `Setlist.fm`
+* ✅ Listen to tracks
+  * `Spotify`
+* ✅ Read the lyrics of the tracks
+  * `AZLyrics`
 
 ## Feedback
 
@@ -31,18 +35,18 @@ Project is created with:
 * .NET: 6.0
 
 ## Built with
-[Telegram.Bot](https://github.com/TelegramBots/telegram.bot) -  the most popular .NET Client for 🤖 Telegram Bot API.
-[SpotifyAPI-NET](https://github.com/JohnnyCrazy/SpotifyAPI-NET) - a client for Spotify's Web API, written in .NET
-[MusicBrainzAPI](https://github.com/avatar29A/MusicBrainz) - Implementation of the MuzicBrainz API v2
-[Inflatable.Lastfm](https://github.com/inflatablefriends/lastfm) - Last.fm SDK for modern .NET platforms
-[Genius.NET](https://github.com/prajjwaldimri/Genius.NET) - C# library to access the Genius REST API in .NET
+[Telegram.Bot](https://github.com/TelegramBots/telegram.bot) -  the most popular .NET Client for 🤖 Telegram Bot API. 
+[SpotifyAPI-NET](https://github.com/JohnnyCrazy/SpotifyAPI-NET) - a client for Spotify's Web API, written in .NET 
+[MusicBrainzAPI](https://github.com/avatar29A/MusicBrainz) - Implementation of the MuzicBrainz API v2 
+[Inflatable.Lastfm](https://github.com/inflatablefriends/lastfm) - Last.fm SDK for modern .NET platforms 
+[Genius.NET](https://github.com/prajjwaldimri/Genius.NET) - C# library to access the Genius REST API in .NET 
 [HtmlAgilityPack](https://html-agility-pack.net/) - agile HTML parser that builds a read/write DOM and supports plain XPATH or XSLT (you actually don't HAVE to understand XPATH nor XSLT to use it, don't worry...)
 
 
 ## TODO
-- Add scraping lyrics from sites:
--- [Genius](https://www.genius.com)
--- [Musixmatch](https://www.musixmatch.com/)
-- Add integration with other audio services to receive tracks:
--- [YandexMusic](https://music.yandex.ru/home)
--- [itunes](https://www.apple.com/ru/itunes/)
+- Add scraping lyrics from sites: 
+-- [Genius](https://www.genius.com) 
+-- [Musixmatch](https://www.musixmatch.com/) 
+- Add integration with other audio services to receive tracks: 
+-- [YandexMusic](https://music.yandex.ru/home) 
+-- [itunes](https://www.apple.com/ru/itunes/) 
