@@ -1,4 +1,4 @@
-# ConcertBuddy - your telegram bot buddy
+# ConcertBuddy
 
 ## Table of contents
 - [General info](#general-info)
@@ -6,6 +6,7 @@
 - [Feedback](#feedback)
 - [Technologies](#technologies)
 - [Built with](#built-with)
+- [Hosting](#hosting)
 - [TODO](#to-do)
 
 ## General info
@@ -46,6 +47,9 @@ Project is created with:
 * [Genius.NET](https://github.com/prajjwaldimri/Genius.NET) - C# library to access the Genius REST API in .NET 
 * [HtmlAgilityPack](https://html-agility-pack.net/) - agile HTML parser that builds a read/write DOM and supports plain XPATH or XSLT (you actually don't HAVE to understand XPATH nor XSLT to use it, don't worry...)
 
+## Hosting
+The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.selectel.ru/) in a docker container.
+
 ## TODO
 * Add scraping lyrics from sites: 
   * [Genius](https://www.genius.com)
@@ -53,3 +57,4 @@ Project is created with:
 * Add integration with other audio services to receive tracks: 
   * [YandexMusic](https://music.yandex.ru/home)
   * [itunes](https://www.apple.com/ru/itunes/)
+* Configure docker restart policy on server
