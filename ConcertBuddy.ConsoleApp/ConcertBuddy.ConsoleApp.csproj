@@ -1,5 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk;Microsoft.NET.Sdk.Publish">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
@@ -7,7 +6,6 @@
     <Nullable>enable</Nullable>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Genius.NET" Version="4.0.1" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.39" />
@@ -22,17 +20,17 @@
     <PackageReference Include="Telegram.Bot" Version="17.0.0" />
     <PackageReference Include="Telegram.Bot.Extensions.Polling" Version="1.0.0" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\LyricsScraper\LyricsScraper.csproj" />
     <ProjectReference Include="..\MusicSearcher\MusicSearcher.csproj" />
-    <ProjectReference Include="..\SetlistFmApi\SetlistFmAPI.csproj" />
+    <ProjectReference Include="..\SetlistFmAPI\SetlistFmAPI.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <None Update="app.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Dockerfile">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
-
 </Project>

@@ -6,7 +6,7 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 COPY ["ConcertBuddy.ConsoleApp/ConcertBuddy.ConsoleApp.csproj", "ConcertBuddy.ConsoleApp/"]
-COPY ["SetlistFmApi/SetlistFmAPI.csproj", "SetlistFmApi/"]
+COPY ["SetlistFmAPI/SetlistFmAPI.csproj", "SetlistFmAPI/"]
 COPY ["MusicSearcher/MusicSearcher.csproj", "MusicSearcher/"]
 COPY ["LyricsScraper/LyricsScraper.csproj", "LyricsScraper/"]
 RUN dotnet restore "ConcertBuddy.ConsoleApp/ConcertBuddy.ConsoleApp.csproj"
