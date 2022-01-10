@@ -60,3 +60,4 @@ The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.
 * Add receiving top 5 tracks from spotify
 * Configure docker restart policy on server
 * Add temporary cache for requested artists to reduce the number of api calls
+* Configure pipeline to continuously build and deliver docker images to the server
