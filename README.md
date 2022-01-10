@@ -10,8 +10,10 @@
 
 ## General info
 Are you planning to go to the concert? 
-This telegram bot will be your companion, like a good buddy!
+This telegram bot will be your companion, like a good buddy! 😎 
+
 He can tell you the biography of the artist/band, find out the actual setlist from the last concerts, play the track and show the lyrics.
+
 Just write the artist/band name to the **[ConcertBuddy](https://t.me/concert_buddy_bot)** bot and enjoy!
 
 ## Features
@@ -41,7 +43,6 @@ Project is created with:
 * [Inflatable.Lastfm](https://github.com/inflatablefriends/lastfm) - Last.fm SDK for modern .NET platforms 
 * [Genius.NET](https://github.com/prajjwaldimri/Genius.NET) - C# library to access the Genius REST API in .NET 
 * [HtmlAgilityPack](https://html-agility-pack.net/) - agile HTML parser that builds a read/write DOM and supports plain XPATH or XSLT (you actually don't HAVE to understand XPATH nor XSLT to use it, don't worry...)
-
 
 ## TODO
 * Add scraping lyrics from sites: 
