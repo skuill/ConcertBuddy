@@ -58,7 +58,7 @@ The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.
   * [YandexMusic](https://music.yandex.ru/home)
   * [itunes](https://www.apple.com/ru/itunes/)
 * Add receiving top 5 tracks from spotify
-* Configure docker restart policy on server
+* ~~Configure docker restart policy on server~~ (11.01.22. Configured restart docker service and containers always)
 * Add temporary cache for requested artists to reduce the number of api calls
 * Configure pipeline to continuously build and deliver docker images to the server
 * Configure system observability (opentelemetry): traces, logs and metrics
