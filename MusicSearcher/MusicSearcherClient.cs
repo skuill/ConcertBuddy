@@ -2,6 +2,7 @@
 using Hqub.MusicBrainz.API.Entities;
 using IF.Lastfm.Core.Api;
 using IF.Lastfm.Core.Objects;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
 using MusicSearcher.Model;
@@ -15,13 +16,27 @@ namespace MusicSearcher
     public class MusicSearcherClient : IMusicSearcherClient
     {
         private readonly ILogger<MusicSearcherClient> _logger;
+
         private MusicBrainzClient _musicBrainzClient;
         private LastfmClient _lastFmClient;
         private SpotifyClient _spotifyClient;
 
+        private const int MEMORY_CACHE_SIZE = 256;
+        private bool _isMemoryCacheEnabled;
+        private IMemoryCache _artistMemoryCache;
+        private readonly MemoryCacheEntryOptions _memoryCacheEntryOptions;
+
         public MusicSearcherClient(ILogger<MusicSearcherClient> logger)
         {
             _logger = logger;
+
+            _isMemoryCacheEnabled = false;
+            _memoryCacheEntryOptions = new MemoryCacheEntryOptions {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
+                SlidingExpiration = TimeSpan.FromMinutes(5),
+                Size = 1
+            };
+
             Init();
         }
 
@@ -78,97 +93,34 @@ namespace MusicSearcher
             return result;
         }
 
-        public async Task<MusicArtist> SearchArtistByMBID(string mbid)
+        public async Task<MusicArtist> SearchArtistByMBID(string artistMBID)
         {
             var result = new MusicArtist();
             try
             {
-                result.MusicBrainzArtist = await _musicBrainzClient.Artists.GetAsync(mbid);
+                bool isResultFromCache = false;
+                if (IsMemoryCacheEnabled())
+                    isResultFromCache = _artistMemoryCache.TryGetValue(artistMBID, out result);
+                if (isResultFromCache)
+                    return result;
 
-                result.LastFmArtist = await GetLastFmArtist(mbid);
+                result = new MusicArtist();
+
+                result.MusicBrainzArtist = await _musicBrainzClient.Artists.GetAsync(artistMBID);
+
+                result.LastFmArtist = await GetLastFmArtist(artistMBID);
 
                 result.SpotifyArtist = await GetSpotifyArtist(result.Name);
             } 
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Can't get artist by mbid [{mbid}] from LastFM");
+                _logger.LogError(ex, $"Can't get artist by mbid [{artistMBID}] from LastFM");
+                return new MusicArtist();
             }
 
-            return result;
-        }
+            if (IsMemoryCacheEnabled())
+                _artistMemoryCache.Set(artistMBID, result, _memoryCacheEntryOptions);
 
-        public void WithLastFmClient(string apiKey, string secret)
-        {
-            if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(secret))
-            {
-                _logger.LogWarning($"Please set apiKey [{apiKey}] and secret [{secret}] properly!");
-                return;
-            }
-            try
-            {
-                _lastFmClient = new LastfmClient(apiKey, secret);
-            } 
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Can't initialize LastFM client!");
-            }
-        }
-
-        public async Task WithSpotifyClient(string cliendID, string clientSecret)
-        {
-            if (string.IsNullOrEmpty(cliendID) || string.IsNullOrEmpty(clientSecret))
-            {
-                _logger.LogWarning($"Please set cliendID [{cliendID}] and clientSecret [{clientSecret}] properly!");
-                return;
-            }
-            try
-            {
-                var config = SpotifyClientConfig
-                    .CreateDefault()
-                    .WithRetryHandler(new SimpleRetryHandler() { RetryAfter = TimeSpan.FromSeconds(1) })
-                    .WithAuthenticator(new ClientCredentialsAuthenticator(cliendID, clientSecret));
-
-                _spotifyClient = new SpotifyClient(config);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Can't initialize Spotify client!");
-            }
-        }
-
-        private async Task<LastArtist> GetLastFmArtist(string mbid)
-        {
-            LastArtist result = null;
-            if (IsLastFmClientEnabled())
-            {
-                var lastFmArtist = await _lastFmClient.Artist.GetInfoByMbidAsync(mbid);
-                if (lastFmArtist != null && lastFmArtist.Success)
-                {
-                    result = lastFmArtist.Content;
-                }
-                else
-                {
-                    _logger.LogError($"Can't get artist by mbid [{mbid}] from LastFM. Status: {lastFmArtist?.Status}.");
-                }
-            }
-            return result;
-        }
-
-        private async Task<FullArtist> GetSpotifyArtist(string artistName)
-        {
-            FullArtist result = null;
-            if (IsSpotifyClientEnabled())
-            {
-                var searchArtist = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Artist, artistName));
-                if (searchArtist == null
-                    || searchArtist.Artists == null
-                    || searchArtist.Artists.Total == 0)
-                {
-                    _logger.LogError($"Can't get artist by name [{artistName}] from Spotify.");
-                    return null;
-                }
-                result = searchArtist.Artists.Items.First(x => string.Equals(x.Name, artistName));
-            }
             return result;
         }
 
@@ -220,9 +172,101 @@ namespace MusicSearcher
             return await _musicBrainzClient.Recordings.GetAsync(songMBID);
         }
 
+        public void WithLastFmClient(string apiKey, string secret)
+        {
+            _logger.LogInformation($"Enable LastFM client for artist search");
+            if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(secret))
+            {
+                _logger.LogWarning($"Please set apiKey [{apiKey}] and secret [{secret}] properly!");
+                return;
+            }
+            try
+            {
+                _lastFmClient = new LastfmClient(apiKey, secret);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Can't initialize LastFM client!");
+            }
+        }
+
+        public async Task WithSpotifyClient(string cliendID, string clientSecret)
+        {
+            _logger.LogInformation($"Enable Spotify client for artist search");
+            if (string.IsNullOrEmpty(cliendID) || string.IsNullOrEmpty(clientSecret))
+            {
+                _logger.LogWarning($"Please set cliendID [{cliendID}] and clientSecret [{clientSecret}] properly!");
+                return;
+            }
+            try
+            {
+                var config = SpotifyClientConfig
+                    .CreateDefault()
+                    .WithRetryHandler(new SimpleRetryHandler() { RetryAfter = TimeSpan.FromSeconds(1) })
+                    .WithAuthenticator(new ClientCredentialsAuthenticator(cliendID, clientSecret));
+
+                _spotifyClient = new SpotifyClient(config);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Can't initialize Spotify client!");
+            }
+        }
+
+        public void WithMemoryCache()
+        {
+            _logger.LogInformation($"Enable memory cache for artist search with size {MEMORY_CACHE_SIZE}");
+            _isMemoryCacheEnabled = true;
+            var memoryCacheOptions = new MemoryCacheOptions { SizeLimit = MEMORY_CACHE_SIZE };
+            _artistMemoryCache = new MemoryCache(memoryCacheOptions);
+        }
+
+        private async Task<LastArtist> GetLastFmArtist(string mbid)
+        {
+            LastArtist result = null;
+            if (IsLastFmClientEnabled())
+            {
+                var lastFmArtist = await _lastFmClient.Artist.GetInfoByMbidAsync(mbid);
+                if (lastFmArtist != null && lastFmArtist.Success)
+                {
+                    result = lastFmArtist.Content;
+                }
+                else
+                {
+                    _logger.LogError($"Can't get artist by mbid [{mbid}] from LastFM. Status: {lastFmArtist?.Status}.");
+                }
+            }
+            return result;
+        }
+
+        private async Task<FullArtist> GetSpotifyArtist(string artistName)
+        {
+            FullArtist result = null;
+            if (IsSpotifyClientEnabled())
+            {
+                var searchArtist = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Artist, artistName));
+                if (searchArtist == null
+                    || searchArtist.Artists == null
+                    || searchArtist.Artists.Total == 0)
+                {
+                    _logger.LogError($"Can't get artist by name [{artistName}] from Spotify.");
+                    return null;
+                }
+                result = searchArtist.Artists.Items.First(x => string.Equals(x.Name, artistName));
+            }
+            return result;
+        }
+
         private bool IsLastFmClientEnabled() => _lastFmClient != null;
 
         private bool IsSpotifyClientEnabled() => _spotifyClient != null;
 
+        private bool IsMemoryCacheEnabled() => _isMemoryCacheEnabled;
+
+        public void Dispose()
+        {
+            if (_isMemoryCacheEnabled)
+                _artistMemoryCache.Dispose();
+        }
     }
 }

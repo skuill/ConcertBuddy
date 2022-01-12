@@ -61,7 +61,6 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
 
         private async Task BotOnMessageReceived(ITelegramBotClient botClient, Message message)
         {
-            _logger.LogInformation($"Receive message type: {message.Type}");
             if (message.Type != MessageType.Text)
                 return;
             var action = message.GetSplitMessageText()[0] switch
@@ -70,7 +69,6 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
                 _ => new SearchMessageCommand(_searchHandler, botClient, message).Execute()
             };
             Message sentMessage = await action;
-            _logger.LogInformation($"The message was sent with id: {sentMessage?.MessageId}");
 
         }
 

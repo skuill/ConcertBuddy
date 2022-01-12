@@ -27,6 +27,7 @@ namespace ConcertBuddy.ConsoleApp.Search
             _logger = logger;
             musicSearcherClient.WithLastFmClient(Configuration.LastFmApiKey, Configuration.LastFmApiSecret);
             musicSearcherClient.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
+            musicSearcherClient.WithMemoryCache();
             _musicSearcherClient = musicSearcherClient;
 
             setlistFmClient.WithApiKey(Configuration.SetlistFmApiKey);

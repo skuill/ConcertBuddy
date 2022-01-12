@@ -33,7 +33,11 @@ namespace ConcertBuddy.ConsoleApp
 
         private void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(configure => configure.AddConsole())
+            services.AddLogging(configure => configure.AddConsole(options =>
+                        {
+                            options.IncludeScopes = true;
+                            options.TimestampFormat = "[yyyy-MM-dd HH:mm:ss] ";
+                        }))
                     .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
                     .AddScoped<ISetlistFmClient, SetlistFmClient>()
                     .AddScoped<ISetlistHttpClient, SetlistHttpWebClient>()
