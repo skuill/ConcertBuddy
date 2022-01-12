@@ -8,6 +8,7 @@
 - [Built with](#built-with)
 - [Hosting](#hosting)
 - [TODO](#to-do)
+- [Release Notes](#release-notes)
 
 ## General info
 Are you planning to go to the concert? 
@@ -51,15 +52,21 @@ Project is created with:
 The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.selectel.ru/) in a docker container.
 
 ## TODO
-* Add scraping lyrics from sites: 
-  * [Genius](https://www.genius.com)
-  * [Musixmatch](https://www.musixmatch.com/) 
-* Add integration with other audio services to receive tracks: 
-  * [YandexMusic](https://music.yandex.ru/home)
-  * [itunes](https://www.apple.com/ru/itunes/)
-* Add receiving top 5 tracks from spotify
-* ~~Configure docker restart policy on server~~ (11.01.22. Configured restart docker service and containers always)
-* Add temporary cache for requested artists to reduce the number of api calls
-* Configure pipeline to continuously build and deliver docker images to the server
-* Configure system observability (opentelemetry): traces, logs and metrics
-* Set up a release policy, versioning
+* [ ] Add scraping lyrics from sites: 
+  * [ ] [Genius](https://www.genius.com)
+  * [ ] [Musixmatch](https://www.musixmatch.com/) 
+* [ ] Add integration with other audio services to receive tracks: 
+  * [ ] [YandexMusic](https://music.yandex.ru/home)
+  * [ ] [itunes](https://www.apple.com/ru/itunes/)
+* [ ] Add receiving top 5 tracks from spotify
+* [x] Configure docker restart policy on server (**11.01.22. Configured restart docker service and containers always**)
+* [x] Add temporary cache for requested artists to reduce the number of api calls (**12.01.22. Release v0.0.1**)
+* [ ] Configure pipeline to continuously build and deliver docker images to the server
+* [ ] Configure system observability (opentelemetry): traces, logs and metrics
+* [ ] Set up a release policy, versioning
+
+## Release Notes
+#### v0.0.1 (12.01.22):
+ * Added MemoryCache when searching for artists by mbid to reduce API calls. 
+ * Fixed logs format with date and scope. 
+ * Publish docker version 0.0.1 and deploy on server. 🎉
