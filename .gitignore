@@ -363,7 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Credentionals
-app.config
+app*.config
 
 # Hosting settings and credentionals
 vscale/
