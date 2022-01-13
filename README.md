@@ -8,7 +8,7 @@
 - [Feedback](#feedback)
 - [Technologies](#technologies)
 - [Built with](#built-with)
-- [Hosting](#hosting)
+- [Documentation](#documentation)
 - [TODO](#to-do)
 - [Release Notes](#release-notes)
 
@@ -23,6 +23,8 @@ Just write the artist/band name to the **[ConcertBuddy](https://t.me/concert_bud
 ## Features
 
 A few of the things you can do with ConcertBuddy:
+* ✅ Search artist / band by name
+  * `MusicBrainz`
 * ✅ Read artist / band biography
   * `Last.fm`
 * ✅ View setlists from recent concerts
@@ -50,8 +52,19 @@ Project is created with:
 * [Genius.NET](https://github.com/prajjwaldimri/Genius.NET) - C# library to access the Genius REST API in .NET 
 * [HtmlAgilityPack](https://html-agility-pack.net/) - agile HTML parser that builds a read/write DOM and supports plain XPATH or XSLT (you actually don't HAVE to understand XPATH nor XSLT to use it, don't worry...)
 
-## Hosting
+## Documentation
+
+#### Hosting
 The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.selectel.ru/) in a docker container.
+
+#### Deployment
+Use [docker-compose.yml](docker-compose.yml) to run container
+
+#### Environments
+| Name            | Link               |
+| --------------- |:------------------:|
+| Development     | **[TestConcertBuddy](https://t.me/test_concert_buddy_bot)** |
+| Production      | **[ConcertBuddy](https://t.me/concert_buddy_bot)** |
 
 ## TODO
 * [ ] Add scraping lyrics from sites: 
