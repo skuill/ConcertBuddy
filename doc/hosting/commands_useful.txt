@@ -1,0 +1,5 @@
+1) Check docker status:
+sudo systemctl status docker
+
+2) Get docker service configuration:
+cat /lib/systemd/system/docker.service

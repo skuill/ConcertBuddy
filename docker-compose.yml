@@ -1,0 +1,22 @@
+version: '3.4'
+
+services:
+  concertbuddy.consoleapp:
+    image: skuill/concertbuddyconsoleapp:latest
+    tty: true
+    stdin_open: true
+    container_name: CONCERT_BUDDY
+    deploy:
+      #replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+    volumes:
+      - ./app.config:/app/app.config

@@ -1,0 +1,28 @@
+1) Run docker container simple way:
+docker pull skuill/concertbuddyconsoleapp:latest
+docker stop CONCERT_BUDDY
+docker rm CONCERT_BUDDY
+docker run -dit --restart=always --name CONCERT_BUDDY skuill/concertbuddyconsoleapp:latest
+
+2) Update contaner restart policy:
+docker update --restart always CONCERT_BUDDY
+
+3) Check container status and logs
+docker ps -a
+docker logs CONCERT_BUDDY 
+
+4) Display a live stream of container(s) resource usage statistics
+docker container stats CONCERT_BUDDY
+
+5) Display all docker events
+docker events
+
+6) run docker container via docker-compose file.
+docker-compose down
+cd /srv/docker/concert_buddy
+docker-compose up -d
+
+7) go in container
+docker exec -it CONCERT_BUDDY bash
+
+

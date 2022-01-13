@@ -15,7 +15,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LyricsScraper.Test", "Lyric
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MusicSearcher", "MusicSearcher\MusicSearcher.csproj", "{1D5CCB83-2E9F-40FD-B7DE-20F8906E6950}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicSearcher.Tests", "MusicSearcher.Tests\MusicSearcher.Tests.csproj", "{037E8C06-84E3-4AE1-BEB1-88EDF0B10A83}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MusicSearcher.Tests", "MusicSearcher.Tests\MusicSearcher.Tests.csproj", "{037E8C06-84E3-4AE1-BEB1-88EDF0B10A83}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{BAA4915A-F5EB-494D-84C4-AFE314C8271F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hosting", "hosting", "{A0B9F211-C43F-42B6-9014-8FFD76EE82EB}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\Users\sativ\Desktop\vscale\docker\commands_docker.txt = ..\..\..\Users\sativ\Desktop\vscale\docker\commands_docker.txt
+		..\..\..\Users\sativ\Desktop\vscale\docker\commands_useful.txt = ..\..\..\Users\sativ\Desktop\vscale\docker\commands_useful.txt
+		..\..\..\Users\sativ\Desktop\vscale\docker\install_docker.txt = ..\..\..\Users\sativ\Desktop\vscale\docker\install_docker.txt
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,6 +63,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A0B9F211-C43F-42B6-9014-8FFD76EE82EB} = {BAA4915A-F5EB-494D-84C4-AFE314C8271F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6557B377-3201-44A3-8BD9-87B908F354C4}
