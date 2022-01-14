@@ -58,7 +58,9 @@ Project is created with:
 The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.selectel.ru/) in a docker container.
 
 #### Deployment
-Use [docker-compose.yml](docker-compose.yml) to run container
+1. Create and configure `ConcertBuddy/ConcertBuddy.ConsoleApp/app.config` file with settings from [Configuration.cs](ConcertBuddy.ConsoleApp/Configuration.cs).
+2. Build and publish docker image with [Dockerfile](ConcertBuddy.ConsoleApp/Dockerfile).
+3. Use [docker-compose.yml](docker-compose.yml) to run container.
 
 #### Environments
 | Name            | Link               |
@@ -80,6 +82,7 @@ Use [docker-compose.yml](docker-compose.yml) to run container
 * [ ] CI/CD (Configure pipeline to continuously build and deliver docker images to the server)
 * [ ] Configure system observability (opentelemetry): traces, logs and metrics
 * [ ] Set up a release policy, versioning
+* [ ] Creating a setlist for a playlist in a music service
 
 ## Release Notes
 #### v0.0.1 (12.01.22):
