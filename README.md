@@ -73,10 +73,11 @@ Use [docker-compose.yml](docker-compose.yml) to run container
 * [ ] Add integration with other audio services to receive tracks: 
   * [ ] [YandexMusic](https://music.yandex.ru/home)
   * [ ] [itunes](https://www.apple.com/ru/itunes/)
+* [ ] Listening to the track directly in the telegram
 * [ ] Add receiving top 5 tracks from spotify
 * [x] Configure docker restart policy on server (**11.01.22. Configured restart docker service and containers always**)
 * [x] Add temporary cache for requested artists to reduce the number of api calls (**12.01.22. Release v0.0.1**)
-* [ ] Configure pipeline to continuously build and deliver docker images to the server
+* [ ] CI/CD (Configure pipeline to continuously build and deliver docker images to the server)
 * [ ] Configure system observability (opentelemetry): traces, logs and metrics
 * [ ] Set up a release policy, versioning
 
