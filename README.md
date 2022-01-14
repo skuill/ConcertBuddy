@@ -9,7 +9,7 @@
 - [Technologies](#technologies)
 - [Built with](#built-with)
 - [Documentation](#documentation)
-- [TODO](#to-do)
+- [TODO](#todo)
 - [Release Notes](#release-notes)
 
 ## General info
