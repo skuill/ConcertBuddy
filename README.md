@@ -69,6 +69,7 @@ The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.
 | Production      | **[ConcertBuddy](https://t.me/concert_buddy_bot)** |
 
 ## TODO
+* [ ] Move TODO section to [GitHub projects board](https://docs.github.com/en/issues/trying-out-the-new-projects-experience/about-projects) with grouping by priority
 * [ ] Add scraping lyrics from sites: 
   * [ ] [Genius](https://www.genius.com)
   * [ ] [Musixmatch](https://www.musixmatch.com/) 
