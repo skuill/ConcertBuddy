@@ -18,8 +18,8 @@ docker container stats CONCERT_BUDDY
 docker events
 
 6) run docker container via docker-compose file.
-docker-compose down
 cd /srv/docker/concert_buddy
+docker-compose down
 docker-compose up -d
 
 7) go in container
