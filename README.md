@@ -55,7 +55,7 @@ Project is created with:
 ## Documentation
 
 #### Hosting
-The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.selectel.ru/) in a docker container.
+The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.selectel.ru/) in a docker container from [docker hub repository](https://hub.docker.com/repository/docker/skuill/concertbuddyconsoleapp).
 
 #### Deployment
 1. Create and configure `ConcertBuddy/ConcertBuddy.ConsoleApp/app.config` file with settings from [Configuration.cs](ConcertBuddy.ConsoleApp/Configuration.cs).
@@ -82,9 +82,19 @@ The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.
 * [ ] CI/CD (Configure pipeline to continuously build and deliver docker images to the server)
 * [ ] Configure system observability (opentelemetry): traces, logs and metrics
 * [ ] Set up a release policy, versioning
-* [ ] Creating a setlist for a playlist in a music service
+* [ ] Creating a playlist for a setlist in a music service
+* [ ] Read about inline mode
+* [ ] Think about polling or webhook. Make comparison.
+* [ ] Make SearchLyric async.
+* [ ] Move SetlistFM library to separeta solution and publish nuget package
+* [ ] Remove async from telegram messages validation. Move callback messages in case of error in another place.
+* [ ] Make SetlistFM tests as a unit, through a mock web client. Move integration tests to a separate project.
 
 ## Release Notes
+#### v0.0.2 (19.01.22):
+ * Fixed async task order in SearchArtistByMBID method. 
+ * Rename methods with Async. 
+ * Added some TODO comments.
 #### v0.0.1 (12.01.22):
  * Added MemoryCache when searching for artists by mbid to reduce API calls. 
  * Fixed logs format with date and scope. 
