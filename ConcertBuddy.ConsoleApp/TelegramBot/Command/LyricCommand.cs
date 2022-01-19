@@ -18,11 +18,11 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
         {
         }
 
-        public async Task<Message> Execute()
+        public override async Task<Message> ExecuteAsync()
         {
             _logger.LogDebug($"Handle [{CommandList.COMMAND_LYRIC}] command: [{Data.Data}]");
 
-            var isValidQuery = await CallbackQueryValidation.Validate(TelegramBotClient, Data, CommandList.COMMAND_LYRIC);
+            var isValidQuery = await CallbackQueryValidation.ValidateAsync(TelegramBotClient, Data, CommandList.COMMAND_LYRIC);
             if (!isValidQuery)
                 return null;
 
@@ -32,10 +32,13 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var mbid = parameters[0];
             var trackName = String.Join(' ', parameters.Skip(1));
 
-            var artist = await SearchHandler.SearchArtistByMBID(mbid);
+            var artistTast = SearchHandler.SearchArtistByMBID(mbid);
 
             // Return actual name from MusicBrainz. Because other platform can use additional information in name.
-            var recording = await SearchHandler.SearchSongByName(mbid, trackName);
+            var recordingTask = SearchHandler.SearchSongByName(mbid, trackName);
+
+            var artist = await artistTast;
+            var recording = await recordingTask;
             string trackActualName = recording != null ? recording.Title : (await SearchHandler.SearchSpotifyTrack(artist.Name, trackName)).Name;
 
             var lyric = SearchHandler.SearchLyric(artist.Name, trackActualName);

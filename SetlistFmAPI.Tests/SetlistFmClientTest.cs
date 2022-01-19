@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace SetlistFmAPI.Tests
 {
+    // TODO:  Make these tests as a Unit, through a mock web client.
+    // Move integration tests to a separate project.
     [TestClass]
     public class SetlistFmClientTest
     {

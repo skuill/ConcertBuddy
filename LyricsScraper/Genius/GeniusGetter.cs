@@ -35,6 +35,7 @@ namespace LyricsScraper.Genius
         }
 
         // TODO: add parsing for dynamic site. Try to use Selenium webdriver scraping c#
+        // TODO: Make SearchLyric async.
         // scrapysharp not working. Return 503 error. https://github.com/rflechner/ScrapySharp
         [Obsolete("Do not call this method.")]
         public override string SearchLyric(string artist, string song)

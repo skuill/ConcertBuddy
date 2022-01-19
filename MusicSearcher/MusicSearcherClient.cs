@@ -106,11 +106,13 @@ namespace MusicSearcher
 
                 result = new MusicArtist();
 
-                result.MusicBrainzArtist = await _musicBrainzClient.Artists.GetAsync(artistMBID);
+                var musicBrainzArtistTask = _musicBrainzClient.Artists.GetAsync(artistMBID);
+                var lastFmArtistTask = GetLastFmArtist(artistMBID);
 
-                result.LastFmArtist = await GetLastFmArtist(artistMBID);
-
+                result.MusicBrainzArtist = await musicBrainzArtistTask;
+                result.LastFmArtist = await lastFmArtistTask;
                 result.SpotifyArtist = await GetSpotifyArtist(result.Name);
+
             } 
             catch (Exception ex)
             {

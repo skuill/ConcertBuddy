@@ -15,7 +15,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
         {
         }
 
-        public async Task<Message> Execute()
+        public override async Task<Message> ExecuteAsync()
         {
             _logger.LogDebug($"Handle [{CommandList.COMMAND_DELETE}] command: [{Data?.Data}]");
 

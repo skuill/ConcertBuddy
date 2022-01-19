@@ -3,7 +3,7 @@ using Telegram.Bot;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract
 {
-    public class AbstractCommand<TResult, TData> : ICommand<TResult>
+    public abstract class AbstractCommand<TResult, TData> : ICommand<TResult>
     {
         protected ISearchHandler SearchHandler { get; set; }
 
@@ -18,7 +18,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract
             Data = data;
         }
 
-        public Task<TResult> Execute()
+        public virtual Task<TResult> ExecuteAsync()
         {
             throw new NotImplementedException();
         }

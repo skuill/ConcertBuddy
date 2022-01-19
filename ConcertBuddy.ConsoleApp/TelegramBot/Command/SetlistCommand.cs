@@ -18,11 +18,11 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
         {
         }
 
-        public async Task<Message> Execute()
+        public override async Task<Message> ExecuteAsync()
         {
             _logger.LogDebug($"Handle [{CommandList.COMMAND_SETLIST}] command: [{Data.Data}]");
 
-            var isValidQuery = await CallbackQueryValidation.Validate(TelegramBotClient, Data, CommandList.COMMAND_SETLIST);
+            var isValidQuery = await CallbackQueryValidation.ValidateAsync(TelegramBotClient, Data, CommandList.COMMAND_SETLIST);
             if (!isValidQuery)
                 return null;
 
@@ -43,8 +43,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                                                             text: replyText,
                                                             replyMarkup: new ReplyKeyboardRemove());
             }
-
-            List<int> messageIds = new List<int>();
+            
+            // Save message ids for delete command 
+            var messageIds = new List<int>();
 
             replyText = setlist.ToString();
 
@@ -52,14 +53,18 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                                                        text: replyText,
                                                        replyMarkup: new ReplyKeyboardRemove())).MessageId);
 
+            var sendTextMessageTasks = new List<Task<Message>>();
             foreach (var set in setlist.Sets.Items)
             {
                 replyText = $"{set.ToString()}";
                 InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetTracksInlineKeyboardMenu(set, artistMBID);
-                messageIds.Add((await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
+                sendTextMessageTasks.Add(TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
                                                        text: replyText,
-                                                       replyMarkup: inlineKeyboard)).MessageId);
+                                                       replyMarkup: inlineKeyboard));
             }
+
+            
+            messageIds = Task.WhenAll(sendTextMessageTasks).Result.Select(x => x.MessageId).ToList();
 
             InlineKeyboardMarkup deleteKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton(messageIds.ToArray());
             return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,

@@ -36,7 +36,7 @@ namespace ConcertBuddy.ConsoleApp
             var botUser = botClient.GetMeAsync().GetAwaiter().GetResult();
             
             Console.Title = botUser.Username ?? "My awesome Bot";
-            _logger.LogInformation($"Start listening for user {botUser.Id} with name {botUser.FirstName}.");
+            _logger.LogInformation($"Bot {botUser.FirstName} [{botUser.Id}] start listening.");
 
             Console.ReadLine();
 

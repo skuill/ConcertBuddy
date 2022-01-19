@@ -21,11 +21,11 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
         {
         }
 
-        public async Task<Message> Execute()
+        public override async Task<Message> ExecuteAsync()
         {
             _logger.LogDebug($"Handle [{CommandList.COMMAND_TRACK}] command: [{Data.Data}]");
 
-            var isValidQuery = await CallbackQueryValidation.Validate(TelegramBotClient, Data, CommandList.COMMAND_TRACK);
+            var isValidQuery = await CallbackQueryValidation.ValidateAsync(TelegramBotClient, Data, CommandList.COMMAND_TRACK);
             if (!isValidQuery)
                 return null;
 

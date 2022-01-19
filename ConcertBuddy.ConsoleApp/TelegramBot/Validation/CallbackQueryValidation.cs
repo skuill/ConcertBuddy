@@ -5,7 +5,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Validation
 {
     public static class CallbackQueryValidation
     {
-        public static async Task<bool> Validate(ITelegramBotClient botClient, CallbackQuery callbackQuery, string command = "/SOME_COMMAND")
+        // TODO: remove async from validate.
+        // Move callback messages in another place.
+        public static async Task<bool> ValidateAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery, string command = "/SOME_COMMAND")
         {
             var splitMessage = callbackQuery.GetSplitMessageText();
 

@@ -15,6 +15,7 @@ namespace ConcertBuddy.ConsoleApp.Search
 
         Task<Setlist> SearchSetlist(string setlistId);
 
+        //TODO: Make LyricSearch async.
         string SearchLyric(string artistName, string songName);
 
         Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName);

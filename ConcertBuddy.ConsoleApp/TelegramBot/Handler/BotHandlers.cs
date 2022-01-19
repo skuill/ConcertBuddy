@@ -65,11 +65,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
                 return;
             var action = message.GetSplitMessageText()[0] switch
             {
-                $"{CommandList.COMMAND_START}" => new UsageCommand(_searchHandler, botClient, message).Execute(),
-                _ => new SearchMessageCommand(_searchHandler, botClient, message).Execute()
+                $"{CommandList.COMMAND_START}" => new UsageCommand(_searchHandler, botClient, message).ExecuteAsync(),
+                _ => new SearchMessageCommand(_searchHandler, botClient, message).ExecuteAsync()
             };
-            Message sentMessage = await action;
-
         }
 
         // Process Inline Keyboard callback data
@@ -77,15 +75,15 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
         {
             var action = callbackQuery.GetSplitMessageText()[0] switch
             {
-                $"{CommandList.COMMAND_ARTIST}" => new ArtistCommand(_searchHandler, botClient, callbackQuery).Execute(),
-                $"{CommandList.COMMAND_SEARCH}" => new SearchCallbackCommand(_searchHandler, botClient, callbackQuery).Execute(),
-                $"{CommandList.COMMAND_BIOGRAPHY}" => new BiographyCommand(_searchHandler, botClient, callbackQuery).Execute(),
-                $"{CommandList.COMMAND_SETLISTS}" => new SetlistsCommand(_searchHandler, botClient, callbackQuery).Execute(),
-                $"{CommandList.COMMAND_SETLIST}" => new SetlistCommand(_searchHandler, botClient, callbackQuery).Execute(),
-                $"{CommandList.COMMAND_TRACK}" => new TrackCommand(_searchHandler, botClient, callbackQuery).Execute(),
-                $"{CommandList.COMMAND_LYRIC}" => new LyricCommand(_searchHandler, botClient, callbackQuery).Execute(),
-                $"{CommandList.COMMAND_DELETE}" => new DeleteCommand(_searchHandler, botClient, callbackQuery).Execute(),
-                _ => new UsageCommand(_searchHandler, botClient, callbackQuery.Message).Execute()
+                $"{CommandList.COMMAND_ARTIST}" => new ArtistCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_SEARCH}" => new SearchCallbackCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_BIOGRAPHY}" => new BiographyCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_SETLISTS}" => new SetlistsCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_SETLIST}" => new SetlistCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_TRACK}" => new TrackCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_LYRIC}" => new LyricCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_DELETE}" => new DeleteCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
+                _ => new UsageCommand(_searchHandler, botClient, callbackQuery.Message).ExecuteAsync()
             };
         }
 

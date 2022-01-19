@@ -16,7 +16,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
         {
         }
 
-        public async Task<Message> Execute()
+        public override async Task<Message> ExecuteAsync()
         {
             string usage = $"Hi, {Data.From?.FirstName}! 👋\n" +
                 $"Please, write any artist and I will find him! 🔍";
