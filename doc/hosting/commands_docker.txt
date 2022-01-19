@@ -19,6 +19,7 @@ docker events
 
 6) run docker container via docker-compose file.
 cd /srv/docker/concert_buddy
+docker-compose pull
 docker-compose down
 docker-compose up -d
 
