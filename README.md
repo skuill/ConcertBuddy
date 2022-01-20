@@ -69,28 +69,8 @@ The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.
 | Production      | **[ConcertBuddy](https://t.me/concert_buddy_bot)** |
 
 ## TODO
-* [ ] Move TODO section to [GitHub projects board](https://docs.github.com/en/issues/trying-out-the-new-projects-experience/about-projects) with grouping by priority
-* [ ] Add scraping lyrics from sites: 
-  * [ ] [Genius](https://www.genius.com)
-  * [ ] [Musixmatch](https://www.musixmatch.com/) 
-* [ ] Add integration with other audio services to receive tracks: 
-  * [ ] [YandexMusic](https://music.yandex.ru/home)
-  * [ ] [itunes](https://www.apple.com/ru/itunes/)
-* [ ] Listening to the track directly in the telegram
-* [ ] Add receiving top 5 tracks from spotify
-* [x] Configure docker restart policy on server (**11.01.22. Configured restart docker service and containers always**)
-* [x] Add temporary cache for requested artists to reduce the number of api calls (**12.01.22. Release v0.0.1**)
-* [ ] CI/CD (Configure pipeline to continuously build and deliver docker images to the server)
-* [ ] Configure system observability (opentelemetry): traces, logs and metrics
-* [ ] Set up a release policy, versioning
-* [ ] Creating a playlist for a setlist in a music service
-* [ ] Read about inline mode
-* [ ] Think about polling or webhook. Make comparison.
-* [ ] Make SearchLyric async.
-* [ ] Move SetlistFM library to separeta solution and publish nuget package
-* [ ] Remove async from telegram messages validation. Move callback messages in case of error in another place.
-* [ ] Make SetlistFM tests as a unit, through a mock web client. Move integration tests to a separate project.
-* [x] Migrate app.config to appsettings.json with DI (**21.01.22. Release v0.0.3**)
+Visit [github project page](https://github.com/users/skuill/projects/1) or [issue board](https://github.com/skuill/ConcertBuddy/issues)
+
 
 ## Release Notes
 #### v0.0.3 (21.01.22):
