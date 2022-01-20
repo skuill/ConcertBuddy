@@ -364,6 +364,7 @@ FodyWeavers.xsd
 
 # Credentionals
 app*.config
+appsetting*.json
 
 # Hosting settings and credentionals
 vscale/

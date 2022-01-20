@@ -19,4 +19,4 @@ services:
         max-size: "10m"
         max-file: "10"
     volumes:
-      - ./app.config:/app/app.config
+      - ./appsettings.json:/app/appsettings.json

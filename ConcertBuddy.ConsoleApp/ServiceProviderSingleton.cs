@@ -4,6 +4,7 @@ using LyricsScraper;
 using LyricsScraper.Abstract;
 using LyricsScraper.AZLyrics;
 using LyricsScraper.Common;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MusicSearcher;
@@ -48,6 +49,21 @@ namespace ConcertBuddy.ConsoleApp
                     .AddScoped<IBotHandlers, BotHandlers>()
                     .AddScoped<IMusicSearcherClient, MusicSearcherClient>()
                     .AddScoped<ISearchHandler, SearchHandler>();
+
+            IConfigurationRoot configurationRoot = GetConfiguration();
+            services.AddSingleton<IConfigurationRoot>(configurationRoot);
+
+            var appConfiguration = new Configuration();
+            configurationRoot.GetSection("Configuration").Bind(appConfiguration);
+            services.AddSingleton<Configuration>(appConfiguration);
+        }
+
+        private IConfigurationRoot GetConfiguration()
+        {
+            return new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
         }
     }
 }

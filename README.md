@@ -58,7 +58,7 @@ Project is created with:
 The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.selectel.ru/) in a docker container from [docker hub repository](https://hub.docker.com/repository/docker/skuill/concertbuddyconsoleapp).
 
 #### Deployment
-1. Create and configure `ConcertBuddy/ConcertBuddy.ConsoleApp/app.config` file with settings from [Configuration.cs](ConcertBuddy.ConsoleApp/Configuration.cs).
+1. Create and configure `ConcertBuddy/ConcertBuddy.ConsoleApp/appsettings.json` file with settings from [Configuration.cs](ConcertBuddy.ConsoleApp/Configuration.cs).
 2. Build and publish docker image with [Dockerfile](ConcertBuddy.ConsoleApp/Dockerfile).
 3. Use [docker-compose.yml](docker-compose.yml) to run container.
 
@@ -90,8 +90,11 @@ The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.
 * [ ] Move SetlistFM library to separeta solution and publish nuget package
 * [ ] Remove async from telegram messages validation. Move callback messages in case of error in another place.
 * [ ] Make SetlistFM tests as a unit, through a mock web client. Move integration tests to a separate project.
+* [x] Migrate app.config to appsettings.json with DI (**21.01.22. Release v0.0.3**)
 
 ## Release Notes
+#### v0.0.3 (21.01.22):
+ * Migrate app.config to appsettings.json with DI 
 #### v0.0.2 (19.01.22):
  * Fixed async task order in SearchArtistByMBID method. 
  * Rename methods with Async. 
