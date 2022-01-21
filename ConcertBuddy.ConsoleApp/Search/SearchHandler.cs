@@ -48,9 +48,9 @@ namespace ConcertBuddy.ConsoleApp.Search
             return _musicSearcherClient.SearchArtistsByName(artistName, limit:limit, offset:offset);
         }
 
-        public string SearchLyric(string artistName, string songName)
+        public Task<string> SearchLyric(string artistName, string songName)
         {
-            return _lyricsScraperUtil.SearchLyric(artistName, songName);
+            return _lyricsScraperUtil.SearchLyricAsync(artistName, songName);
         }
 
         public Task<MusicArtist> SearchArtistByMBID(string mbid)

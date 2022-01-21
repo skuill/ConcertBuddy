@@ -12,5 +12,13 @@ namespace LyricsScraper.Common
 
             return document?.ParsedText;
         }
+
+        public async Task<string> LoadAsync(Uri uri)
+        {
+            var htmlPage = new HtmlWeb();
+            var document = await htmlPage.LoadFromWebAsync(uri.ToString());
+
+            return document?.ParsedText;
+        }
     }
 }

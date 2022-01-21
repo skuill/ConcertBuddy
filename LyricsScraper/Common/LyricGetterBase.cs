@@ -15,6 +15,10 @@ namespace LyricsScraper.Common
 
         public abstract string SearchLyric(string artist, string song);
 
+        public abstract Task<string> SearchLyricAsync(Uri uri);
+
+        public abstract Task<string> SearchLyricAsync(string artist, string song);
+
         public void WithParser(ILyricParser parser)
         {
             if (parser != null)

@@ -24,6 +24,8 @@ namespace LyricsScraper.Genius
         [Obsolete("Do not call this method.")]
         public override string SearchLyric(Uri uri)
         {
+            throw new NotImplementedException();
+
             var htmlPage = new HtmlWeb();
             var document = htmlPage.Load(uri, "GET");
             IEnumerable<HtmlNode> nodes =
@@ -35,11 +37,12 @@ namespace LyricsScraper.Genius
         }
 
         // TODO: add parsing for dynamic site. Try to use Selenium webdriver scraping c#
-        // TODO: Make SearchLyric async.
         // scrapysharp not working. Return 503 error. https://github.com/rflechner/ScrapySharp
         [Obsolete("Do not call this method.")]
         public override string SearchLyric(string artist, string song)
         {
+            throw new NotImplementedException();
+
             var artistAndSong = $"{artist} {song}";
 
             var geniusClient = new GeniusClient(_apiKey);
@@ -63,6 +66,16 @@ namespace LyricsScraper.Genius
             var lyricUrl = artistAndSongHit.Result.Url;
 
             return SearchLyric(new Uri(lyricUrl));
+        }
+
+        public override Task<string> SearchLyricAsync(Uri uri)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task<string> SearchLyricAsync(string artist, string song)
+        {
+            throw new NotImplementedException();
         }
     }
 }

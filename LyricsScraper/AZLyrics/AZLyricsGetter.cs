@@ -24,12 +24,7 @@ namespace LyricsScraper.AZLyrics
 
         public override string SearchLyric(string artist, string song)
         {
-            // http://www.azlyrics.com/lyrics/youngthug/richniggashit.htm
-            // remove articles from artist on start. For example for band [The Devil Wears Prada]: https://www.azlyrics.com/d/devilwearsprada.html
-            var artistStripped = StringUtils.StripRedundantChars(artist.ToLowerInvariant(), true);
-            var titleStripped = StringUtils.StripRedundantChars(song.ToLowerInvariant());
-
-            return SearchLyric(new Uri(BaseUri, $"{artistStripped}/{titleStripped}.html"));
+            return SearchLyric(GetLyricUri(artist, song));
         }
 
         public override string SearchLyric(Uri uri)
@@ -39,8 +34,36 @@ namespace LyricsScraper.AZLyrics
                 _logger?.LogError($"Please set up WebClient and Parser at first");
                 return null;
             }
-
             var text = WebClient.Load(uri);
+            return PostProcessLyric(uri, text);
+        }
+        public override async Task<string> SearchLyricAsync(string artist, string song)
+        {
+            return await SearchLyricAsync(GetLyricUri(artist, song));
+        }
+
+        public override async Task<string> SearchLyricAsync(Uri uri)
+        {
+            if (WebClient == null || Parser == null)
+            {
+                _logger?.LogError($"Please set up WebClient and Parser at first");
+                return null;
+            }
+            var text = await WebClient.LoadAsync(uri);
+            return PostProcessLyric(uri, text);
+        }
+
+        private Uri GetLyricUri(string artist, string song)
+        {
+            // http://www.azlyrics.com/lyrics/youngthug/richniggashit.htm
+            // remove articles from artist on start. For example for band [The Devil Wears Prada]: https://www.azlyrics.com/d/devilwearsprada.html
+            var artistStripped = StringUtils.StripRedundantChars(artist.ToLowerInvariant(), true);
+            var titleStripped = StringUtils.StripRedundantChars(song.ToLowerInvariant());
+            return new Uri(BaseUri, $"{artistStripped}/{titleStripped}.html");
+        }
+
+        private string PostProcessLyric(Uri uri, string text)
+        {
             if (string.IsNullOrEmpty(text))
             {
                 _logger?.LogError($"Text is empty for {uri}");

@@ -51,6 +51,44 @@ namespace LyricsScraper
             return null;
         }
 
+        public async Task<string> SearchLyricAsync(Uri uri)
+        {
+            if (IsEmptyGetters())
+            {
+                _logger.LogError("Empty getter list! Please set any getter frist.");
+            }
+            foreach (var lyricGetter in _lyricGetters)
+            {
+                var lyric = await lyricGetter.SearchLyricAsync(uri);
+                if (!string.IsNullOrEmpty(lyric))
+                {
+                    return lyric;
+                }
+                _logger.LogWarning($"Can't find lyric by getter: {lyricGetter}.");
+            }
+            _logger.LogError($"Can't find lyrics for {uri}.");
+            return null;
+        }
+
+        public async Task<string> SearchLyricAsync(string artist, string song)
+        {
+            if (IsEmptyGetters())
+            {
+                _logger.LogError("Empty getter list! Please set any getter frist.");
+            }
+            foreach (var lyricGetter in _lyricGetters)
+            {
+                var lyric = await lyricGetter.SearchLyricAsync(artist, song);
+                if (!string.IsNullOrEmpty(lyric))
+                {
+                    return lyric;
+                }
+                _logger.LogWarning($"Can't find lyric by getter: {lyricGetter}.");
+            }
+            _logger.LogError($"Can't find lyrics! Artist: {artist}. Song: {song}");
+            return null;
+        }
+
         public void AddGetter(ILyricGetter getter)
         {
             if (IsEmptyGetters())
@@ -59,5 +97,6 @@ namespace LyricsScraper
         }
 
         private bool IsEmptyGetters() => _lyricGetters == null || !_lyricGetters.Any();
+
     }
 }
