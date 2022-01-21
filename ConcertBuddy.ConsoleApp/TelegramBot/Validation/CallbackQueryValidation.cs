@@ -5,26 +5,24 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Validation
 {
     public static class CallbackQueryValidation
     {
-        // TODO: remove async from validate.
-        // Move callback messages in another place.
-        public static async Task<bool> ValidateAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery, string command = "/SOME_COMMAND")
+        public static bool Validate(ITelegramBotClient botClient, CallbackQuery callbackQuery, string command, out string errorMessage)
         {
             var splitMessage = callbackQuery.GetSplitMessageText();
 
+            errorMessage = string.Empty;
+
             if (splitMessage.Count() == 1)
             {
-                string replyText = $"Please pass any parameters for command {command}!";
-
-                await botClient.AnswerCallbackQueryAsync(
-                    callbackQueryId: callbackQuery.Id,
-                    text: replyText);
-
-                await botClient.SendTextMessageAsync(
-                    chatId: callbackQuery.Message.Chat.Id,
-                    text: replyText);
-
+                errorMessage = $"Please pass any parameters for command {command}!";
                 return false;
             }
+
+            if (!splitMessage.Contains(command))
+            {
+                errorMessage = $"Wrong command handler! The correct one should be {command}.";
+                return false;
+            }
+
             return true;
         }
     }

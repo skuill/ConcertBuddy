@@ -23,9 +23,13 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
         {
             _logger.LogDebug($"Handle [{CommandList.COMMAND_BIOGRAPHY}] command: [{Data.Data}]");
 
-            var isValidQuery = await CallbackQueryValidation.ValidateAsync(TelegramBotClient, Data, CommandList.COMMAND_BIOGRAPHY);
+            var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CommandList.COMMAND_BIOGRAPHY, out string errorMessage);
             if (!isValidQuery)
+            {
+                _logger.LogError(errorMessage);
+                await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
                 return null;
+            }
 
             string replyText = "Sorry, but the biography of this artist was not found ☹️";
 
