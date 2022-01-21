@@ -73,6 +73,10 @@ Visit [github project page](https://github.com/users/skuill/projects/1) or [issu
 
 
 ## Release Notes
+#### v0.0.4 (21.01.22):
+Bugfixes:
+ * Made SearchLyric async ([Issue 16](https://github.com/skuill/ConcertBuddy/issues/16))
+ * Remove async from telegram messages validation. Move callback messages in MessageHelper. ([Issue 18](https://github.com/skuill/ConcertBuddy/issues/18))
 #### v0.0.3 (21.01.22):
  * Migrate app.config to appsettings.json with DI 
 #### v0.0.2 (19.01.22):
