@@ -25,8 +25,12 @@ namespace ConcertBuddy.ConsoleApp.Search
             ILyricGetter lyricGetter)
         {
             _logger = logger;
-            musicSearcherClient.WithLastFmClient(Configuration.LastFmApiKey, Configuration.LastFmApiSecret);
-            musicSearcherClient.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
+            if (Configuration.IsLastFmAvailable())
+                musicSearcherClient.WithLastFmClient(Configuration.LastFmApiKey, Configuration.LastFmApiSecret);
+            if (Configuration.IsSpotifyAvailable())
+                musicSearcherClient.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
+            if (Configuration.IsYandexAvailable())
+                musicSearcherClient.WithYandexClient(Configuration.YandexLogin, Configuration.YandexPassword);
             musicSearcherClient.WithMemoryCache();
             _musicSearcherClient = musicSearcherClient;
 
@@ -63,9 +67,9 @@ namespace ConcertBuddy.ConsoleApp.Search
             return _setlistFmClient.SearchSetlist(setlistId);
         }
 
-        public Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName)
+        public Task<MusicTrack> SearchTrack(string artistName, string trackName)
         {
-            return _musicSearcherClient.SearchSpotifyTrack(artistName, trackName);
+            return _musicSearcherClient.SearchTrack(artistName, trackName);
         }
 
         public Task<Recording> SearchSongByName(string artistMBID, string name)

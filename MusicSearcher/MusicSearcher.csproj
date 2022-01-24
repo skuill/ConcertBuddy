@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SetlistFmApi\SetlistFmAPI.csproj" />
+    <ProjectReference Include="..\Yandex.Music.Client\Yandex.Music.Client.csproj" />
   </ItemGroup>
 
 </Project>

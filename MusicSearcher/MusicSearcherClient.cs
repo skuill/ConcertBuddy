@@ -10,6 +10,9 @@ using MusicSearcher.MusicBrainz;
 using SpotifyAPI.Web;
 using System.Net;
 using System.Reflection;
+using Yandex.Music.Api.Models.Common;
+using Yandex.Music.Api.Models.Track;
+using Yandex.Music.Client;
 
 namespace MusicSearcher
 {
@@ -20,6 +23,7 @@ namespace MusicSearcher
         private MusicBrainzClient _musicBrainzClient;
         private LastfmClient _lastFmClient;
         private SpotifyClient _spotifyClient;
+        private YandexMusicClient _yandexClient;
 
         private const int MEMORY_CACHE_SIZE = 256;
         private bool _isMemoryCacheEnabled;
@@ -126,22 +130,51 @@ namespace MusicSearcher
             return result;
         }
 
-        public async Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName)
+        public async Task<MusicTrack> SearchTrack(string artistName, string trackName)
         {
-            FullTrack result = null;
+            MusicTrack result = new MusicTrack();
+
             if (IsSpotifyClientEnabled())
             {
-                var searchTrack = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Track, $"{artistName} - {trackName}"));
-                if (searchTrack == null
-                    || searchTrack.Tracks == null
-                    || searchTrack.Tracks.Total == 0)
-                {
-                    _logger.LogError($"Can't get track [{trackName}] for artist [{artistName}] from Spotify.");
-                    return null;
-                }
-                result = searchTrack.Tracks.Items.First(t => t.Artists.Any(a => string.Equals(a.Name, artistName)));
+                result.SpotifyTrack = await SearchSpotifyTrack(artistName, trackName);
+            }
+            if (IsYandexClientEnabled())
+            {
+                result.YandexTrack = await SearchYandexTrack(artistName, trackName);
             }
             return result;
+        }
+
+        private async Task<YTrack> SearchYandexTrack(string artistName, string trackName)
+        {
+            var searchResult = _yandexClient.Search($"{artistName} - {trackName}", YSearchType.Track);
+            if (searchResult == null 
+                || searchResult.Tracks == null 
+                || searchResult.Tracks.Total == 0)
+            {
+                _logger.LogError($"Can't search track [{trackName}] for artist [{artistName}] from Yandex.");
+                return null;
+            }
+            var searchTrackResult = searchResult.Tracks.Results.FirstOrDefault(t => t.Artists != null && t.Artists.Any(a => string.Equals(a.Name, artistName)));
+            if (searchTrackResult == null)
+            {
+                _logger.LogError($"Can't get track [{trackName}] for artist [{artistName}] from Yandex.");
+                return null;
+            }
+            return _yandexClient.GetTrack(searchTrackResult.Id);
+        }
+
+        private async Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName)
+        {
+            var searchTrack = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Track, $"{artistName} - {trackName}"));
+            if (searchTrack == null
+                || searchTrack.Tracks == null
+                || searchTrack.Tracks.Total == 0)
+            {
+                _logger.LogError($"Can't get track [{trackName}] for artist [{artistName}] from Spotify.");
+                return null;
+            }
+            return searchTrack.Tracks.Items.First(t => t.Artists != null && t.Artists.Any(a => string.Equals(a.Name, artistName)));
         }
 
         public async Task<Recording> SearchSongByName(string artistMBID, string name)
@@ -223,6 +256,25 @@ namespace MusicSearcher
             _artistMemoryCache = new MemoryCache(memoryCacheOptions);
         }
 
+        public async Task WithYandexClient(string login, string password)
+        {
+            _logger.LogInformation($"Enable Yandex client for artist search");
+            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
+            {
+                _logger.LogWarning($"Please set Yandex credentials: user login [{login}] and password [{password}] properly!");
+                return;
+            }
+            try
+            {
+                _yandexClient = new YandexMusicClient();
+                _yandexClient.Authorize(login, password);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Can't initialize Yandex client!");
+            }
+        }
+
         private async Task<LastArtist> GetLastFmArtist(string mbid)
         {
             LastArtist result = null;
@@ -262,6 +314,8 @@ namespace MusicSearcher
         private bool IsLastFmClientEnabled() => _lastFmClient != null;
 
         private bool IsSpotifyClientEnabled() => _spotifyClient != null;
+
+        private bool IsYandexClientEnabled() => _yandexClient != null;
 
         private bool IsMemoryCacheEnabled() => _isMemoryCacheEnabled;
 

@@ -1,7 +1,6 @@
 ﻿using Hqub.MusicBrainz.API.Entities;
 using MusicSearcher.Model;
 using SetlistFmAPI.Models;
-using SpotifyAPI.Web;
 
 namespace ConcertBuddy.ConsoleApp.Search
 {
@@ -17,7 +16,7 @@ namespace ConcertBuddy.ConsoleApp.Search
 
         Task<string> SearchLyric(string artistName, string songName);
 
-        Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName);
+        Task<MusicTrack> SearchTrack(string artistName, string trackName);
 
         Task<Recording> SearchSongByName(string artistMBID, string name);
 

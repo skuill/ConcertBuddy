@@ -1,4 +1,6 @@
-﻿namespace ConcertBuddy.ConsoleApp
+﻿using System;
+
+namespace ConcertBuddy.ConsoleApp
 {
     public class Configuration
     {
@@ -15,5 +17,17 @@
         public static string SpotifyClientID { get; set; }
 
         public static string SpotifyClientSecret { get; set; }
+
+        public static string YandexLogin { get; set; }
+
+        public static string YandexPassword { get; set; }
+
+        public static bool IsSetlistFmAvailable() => !string.IsNullOrWhiteSpace(SetlistFmApiKey);
+
+        public static bool IsLastFmAvailable() => !string.IsNullOrWhiteSpace(LastFmApiKey) && !string.IsNullOrWhiteSpace(LastFmApiSecret);
+        
+        public static bool IsSpotifyAvailable() => !string.IsNullOrWhiteSpace(SpotifyClientID) && !string.IsNullOrWhiteSpace(SpotifyClientSecret);
+
+        public static bool IsYandexAvailable() => !string.IsNullOrWhiteSpace(YandexLogin) && !string.IsNullOrWhiteSpace(YandexPassword);
     }
 }

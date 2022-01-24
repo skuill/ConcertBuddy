@@ -14,7 +14,7 @@ namespace MusicSearcher.Abstract
 
         Task<IEnumerable<MusicArtist>> SearchArtistsByName(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5, int offset = 0);
 
-        Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName);
+        Task<MusicTrack> SearchTrack(string artistName, string trackName);
 
         Task<Recording> SearchSongByName(string artistMBID, string name);
 
@@ -23,6 +23,8 @@ namespace MusicSearcher.Abstract
         void WithLastFmClient(string apiKey, string secret);
 
         Task WithSpotifyClient(string cliendID, string clientSecret);
+
+        Task WithYandexClient(string login, string password);
 
         void WithMemoryCache();
     }
