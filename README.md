@@ -11,6 +11,7 @@
 - [Documentation](#documentation)
 - [TODO](#todo)
 - [Release Notes](#release-notes)
+- [Project support](#project-support)
 
 ## General info
 Are you planning to go to the concert? 
@@ -71,7 +72,6 @@ The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.
 ## TODO
 Visit [github project page](https://github.com/users/skuill/projects/1) or [issue board](https://github.com/skuill/ConcertBuddy/issues)
 
-
 ## Release Notes
 #### v0.0.4 (21.01.22):
 Bugfixes:
@@ -87,3 +87,10 @@ Bugfixes:
  * Added MemoryCache when searching for artists by mbid to reduce API calls. 
  * Fixed logs format with date and scope. 
  * Publish docker version 0.0.1 and deploy on server. 🎉
+
+## Project support
+If you want to support this project or my work in general, you can donate via the link below. 
+
+This will always be optional! Thank you! 😉
+
+[![Tinkoff Donate Button](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.tinkoff.ru/cf/3MNYeRds3s)
