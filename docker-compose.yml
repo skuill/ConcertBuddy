@@ -17,6 +17,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "10"
+        max-file: "20"
     volumes:
       - ./appsettings.json:/app/appsettings.json
+      - ./logs:/app/logs

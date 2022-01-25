@@ -13,6 +13,8 @@ namespace ConcertBuddy.ConsoleApp
         {
             _logger = ServiceProviderSingleton.Source.GetService<ILogger<Program>>();
 
+            _logger.LogInformation($"Start ConcertBoddy application.");
+
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(UnhandledExceptionsHandler);
 
             var botClient = new TelegramBotClient(Configuration.TelegramToken);
@@ -39,6 +41,7 @@ namespace ConcertBuddy.ConsoleApp
 
             Console.ReadLine();
 
+            _logger.LogInformation($"Stop ConcertBoddy application.");
             // Send cancellation request to stop bot
             cts.Cancel();
             return;

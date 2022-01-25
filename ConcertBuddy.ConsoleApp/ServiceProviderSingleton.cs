@@ -11,6 +11,7 @@ using MusicSearcher;
 using MusicSearcher.Abstract;
 using SetlistFmAPI;
 using SetlistFmAPI.Http;
+using Serilog;
 
 namespace ConcertBuddy.ConsoleApp
 {
@@ -34,11 +35,7 @@ namespace ConcertBuddy.ConsoleApp
 
         private void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(configure => configure.AddConsole(options =>
-                        {
-                            options.IncludeScopes = true;
-                            options.TimestampFormat = "[yyyy-MM-dd HH:mm:ss] ";
-                        }))
+            services.AddLogging(configure => configure.AddSerilog(dispose:true))
                     .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
                     .AddScoped<ISetlistFmClient, SetlistFmClient>()
                     .AddScoped<ISetlistHttpClient, SetlistHttpWebClient>()
@@ -56,6 +53,10 @@ namespace ConcertBuddy.ConsoleApp
             var appConfiguration = new Configuration();
             configurationRoot.GetSection("Configuration").Bind(appConfiguration);
             services.AddSingleton<Configuration>(appConfiguration);
+
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(configurationRoot)
+                .CreateLogger();
         }
 
         private IConfigurationRoot GetConfiguration()
