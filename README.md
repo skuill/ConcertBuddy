@@ -11,7 +11,7 @@
 - [Documentation](#documentation)
 - [TODO](#todo)
 - [Release Notes](#release-notes)
-- [Project support](#project-support)
+- [Support](#support)
 
 ## General info
 Are you planning to go to the concert? 
@@ -53,6 +53,7 @@ Project is created with:
 * [Inflatable.Lastfm](https://github.com/inflatablefriends/lastfm) - Last.fm SDK for modern .NET platforms 
 * [Genius.NET](https://github.com/prajjwaldimri/Genius.NET) - C# library to access the Genius REST API in .NET 
 * [HtmlAgilityPack](https://html-agility-pack.net/) - agile HTML parser that builds a read/write DOM and supports plain XPATH or XSLT (you actually don't HAVE to understand XPATH nor XSLT to use it, don't worry...)
+* [Serilog](https://serilog.net/) - simple .NET logging with fully-structured events
 
 ## Documentation
 
@@ -60,8 +61,8 @@ Project is created with:
 The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.selectel.ru/) in a docker container from [docker hub repository](https://hub.docker.com/repository/docker/skuill/concertbuddyconsoleapp).
 
 #### Deployment
-1. Create and configure `ConcertBuddy/ConcertBuddy.ConsoleApp/appsettings.json` file with settings from [Configuration.cs](ConcertBuddy.ConsoleApp/Configuration.cs).
-2. Build and publish docker image with [Dockerfile](ConcertBuddy.ConsoleApp/Dockerfile).
+1. Create and configure `ConcertBuddy/ConcertBuddy.ConsoleApp/appsettings.json` file with settings [Configuration.cs](ConcertBuddy.ConsoleApp/Configuration.cs) from template [appsettings.template.json](ConcertBuddy.ConsoleApp/appsettings.template.json). 
+2. Build and publish docker image with [Dockerfile](ConcertBuddy.ConsoleApp/Dockerfile) to [docker hub registry](https://hub.docker.com/). 
 3. Use [docker-compose.yml](docker-compose.yml) to run container.
 
 #### Environments
@@ -70,10 +71,16 @@ The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.
 | Development     | **[TestConcertBuddy](https://t.me/test_concert_buddy_bot)** |
 | Production      | **[ConcertBuddy](https://t.me/concert_buddy_bot)** |
 
+#### Logging
+The serilog adapter is used for event logging. Logs are written to the console, debug, file. Log rotation is configured. Logging settings are set in appsettings.json. Example: [appsettings.template.json](ConcertBuddy.ConsoleApp/appsettings.template.json)
+
 ## TODO
 Visit [github project page](https://github.com/users/skuill/projects/1) or [issue board](https://github.com/skuill/ConcertBuddy/issues)
 
 ## Release Notes
+#### v0.0.6 (25.01.22):
+ * Catch unhandled exceptions and log them. ([Issue 24](https://github.com/skuill/ConcertBuddy/issues/24))
+ * Configure write logs to file with rotation with docker volume. ([Issue 25](https://github.com/skuill/ConcertBuddy/issues/25))
 #### v0.0.5 (24.01.22):
  * Listening to the track directly in the telegram. Use Yandex track storage. ([Issue 8](https://github.com/skuill/ConcertBuddy/issues/8))
 #### v0.0.4 (21.01.22):
@@ -91,7 +98,7 @@ Bugfixes:
  * Fixed logs format with date and scope. 
  * Publish docker version 0.0.1 and deploy on server. 🎉
 
-## Project support
+## Support
 If you want to support this project or my work in general, you can donate via the link below. 
 
 This will always be optional! Thank you! 😉
