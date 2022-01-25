@@ -147,34 +147,48 @@ namespace MusicSearcher
 
         private async Task<YTrack> SearchYandexTrack(string artistName, string trackName)
         {
-            var searchResult = _yandexClient.Search($"{artistName} - {trackName}", YSearchType.Track);
-            if (searchResult == null 
-                || searchResult.Tracks == null 
-                || searchResult.Tracks.Total == 0)
+            try
             {
-                _logger.LogError($"Can't search track [{trackName}] for artist [{artistName}] from Yandex.");
+                var searchResult = _yandexClient.Search($"{artistName} - {trackName}", YSearchType.Track);
+                if (searchResult == null
+                    || searchResult.Tracks == null
+                    || searchResult.Tracks.Total == 0)
+                {
+                    throw new Exception($"Can't search track [{trackName}] for artist [{artistName}] from Yandex.");
+                }
+                var searchTrackResult = searchResult.Tracks.Results.FirstOrDefault(t => t.Artists != null && t.Artists.Any(a => string.Equals(a.Name, artistName)));
+                if (searchTrackResult == null)
+                {
+                    throw new Exception($"Can't get track [{trackName}] for artist [{artistName}] from Yandex.");
+                }
+                return _yandexClient.GetTrack(searchTrackResult.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Can't search track [{trackName}] for artist [{artistName}] from Yandex.");
                 return null;
             }
-            var searchTrackResult = searchResult.Tracks.Results.FirstOrDefault(t => t.Artists != null && t.Artists.Any(a => string.Equals(a.Name, artistName)));
-            if (searchTrackResult == null)
-            {
-                _logger.LogError($"Can't get track [{trackName}] for artist [{artistName}] from Yandex.");
-                return null;
-            }
-            return _yandexClient.GetTrack(searchTrackResult.Id);
         }
 
         private async Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName)
         {
-            var searchTrack = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Track, $"{artistName} - {trackName}"));
-            if (searchTrack == null
-                || searchTrack.Tracks == null
-                || searchTrack.Tracks.Total == 0)
+            try
             {
-                _logger.LogError($"Can't get track [{trackName}] for artist [{artistName}] from Spotify.");
+                var searchTrack = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Track, $"{artistName} - {trackName}"));
+                if (searchTrack == null
+                    || searchTrack.Tracks == null
+                    || searchTrack.Tracks.Total == 0)
+                {
+                    throw new Exception($"Can't get track [{trackName}] for artist [{artistName}] from Spotify.");
+                }
+                return searchTrack.Tracks.Items.First(t => t.Artists != null && t.Artists.Any(a => string.Equals(a.Name, artistName)));
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Can't search track [{trackName}] for artist [{artistName}] from Spotify.");
                 return null;
             }
-            return searchTrack.Tracks.Items.First(t => t.Artists != null && t.Artists.Any(a => string.Equals(a.Name, artistName)));
         }
 
         public async Task<Recording> SearchSongByName(string artistMBID, string name)

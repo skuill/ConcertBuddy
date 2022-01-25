@@ -7,14 +7,13 @@ namespace ConcertBuddy.ConsoleApp
 {
     public class Program
     {
-        // Spotify
-        // Client ID c75856d9e7454368aca6fe620a103d29
-
         private static ILogger<Program> _logger = null;
 
         public static void Main(string[] args)
         {
             _logger = ServiceProviderSingleton.Source.GetService<ILogger<Program>>();
+
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(UnhandledExceptionsHandler);
 
             var botClient = new TelegramBotClient(Configuration.TelegramToken);
 
@@ -43,6 +42,11 @@ namespace ConcertBuddy.ConsoleApp
             // Send cancellation request to stop bot
             cts.Cancel();
             return;
+        }
+
+        static void UnhandledExceptionsHandler(object sender, UnhandledExceptionEventArgs ex)
+        {
+            _logger.LogCritical((ex.ExceptionObject as Exception).ToString());
         }
     }
 }
