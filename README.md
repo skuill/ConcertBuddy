@@ -54,6 +54,7 @@ Project is created with:
 * [Genius.NET](https://github.com/prajjwaldimri/Genius.NET) - C# library to access the Genius REST API in .NET 
 * [HtmlAgilityPack](https://html-agility-pack.net/) - agile HTML parser that builds a read/write DOM and supports plain XPATH or XSLT (you actually don't HAVE to understand XPATH nor XSLT to use it, don't worry...)
 * [Serilog](https://serilog.net/) - simple .NET logging with fully-structured events
+* [Yandex.Music API](https://github.com/K1llMan/Yandex.Music.Api) - unofficial wrapper for the Yandex.Music API
 
 ## Documentation
 
