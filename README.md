@@ -31,7 +31,8 @@ A few of the things you can do with ConcertBuddy:
 * ✅ View setlists from recent concerts
   * `Setlist.fm`
 * ✅ Listen to tracks
-  * `Spotify`
+  * Directly from: `Yandex`
+  * External link: `Spotify`
 * ✅ Read the lyrics of the tracks
   * `AZLyrics`
 
@@ -73,12 +74,14 @@ The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.
 Visit [github project page](https://github.com/users/skuill/projects/1) or [issue board](https://github.com/skuill/ConcertBuddy/issues)
 
 ## Release Notes
+#### v0.0.5 (24.01.22):
+ * Listening to the track directly in the telegram. Use Yandex track storage. ([Issue 8](https://github.com/skuill/ConcertBuddy/issues/8))
 #### v0.0.4 (21.01.22):
 Bugfixes:
- * Made SearchLyric async ([Issue 16](https://github.com/skuill/ConcertBuddy/issues/16))
+ * Made SearchLyric async. ([Issue 16](https://github.com/skuill/ConcertBuddy/issues/16))
  * Remove async from telegram messages validation. Move callback messages in MessageHelper. ([Issue 18](https://github.com/skuill/ConcertBuddy/issues/18))
 #### v0.0.3 (21.01.22):
- * Migrate app.config to appsettings.json with DI 
+ * Migrate app.config to appsettings.json with DI.
 #### v0.0.2 (19.01.22):
  * Fixed async task order in SearchArtistByMBID method. 
  * Rename methods with Async. 
