@@ -31,12 +31,12 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 return null;
             }
 
-            string replyText = "Sorry, but the biography of this artist was not found ☹️";
+            string replyText = "Sorry, but the biography of the artist was not found 😕";
 
             var artistMBID = Data.GetParameterFromMessageText(CommandList.COMMAND_BIOGRAPHY);
             
             var artist = await SearchHandler.SearchArtistByMBID(artistMBID);
-            if (artist.Biography != null)
+            if (artist != null && !string.IsNullOrWhiteSpace(artist.Biography))
             {
                 replyText = artist.Biography;
             }

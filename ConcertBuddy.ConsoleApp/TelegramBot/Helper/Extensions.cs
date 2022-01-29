@@ -40,5 +40,10 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot
         {
             return callbackQuery.Data!.Trim().Replace(command, "").Trim().Split(MESSAGE_TEXT_DELIMETER);
         }
+
+        public static String ConvertToString(this Enum obj)
+        {
+            return Enum.GetName(obj.GetType(), obj).ToLowerInvariant();
+        }
     }
 }

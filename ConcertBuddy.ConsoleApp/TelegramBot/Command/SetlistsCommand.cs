@@ -31,7 +31,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 return null;
             }
 
-            var replyText = "Please select a setlist:";
+            string replyText = string.Empty;
             
             var parameters = Data.GetParametersFromMessageText(CommandList.COMMAND_SETLISTS);
             var page = int.Parse(parameters[0]);
@@ -42,7 +42,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (setlists == null || setlists.IsEmpty())
             {
-                replyText = $"Nothing found there! Try another search or go back:";
+                replyText = $"Nothing found here 😕! Try another search or go back:";
 
                 await TelegramBotClient.AnswerCallbackQueryAsync(
                     callbackQueryId: Data.Id,
@@ -63,6 +63,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                                                             replyMarkup: emptyKeyboard);
             }
 
+            replyText = $"Found {setlists.Total} setlists 📝 .Please select a setlist:";
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetSetlistsInlineKeyboardMenu(setlists.Items)
                 .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page);
 

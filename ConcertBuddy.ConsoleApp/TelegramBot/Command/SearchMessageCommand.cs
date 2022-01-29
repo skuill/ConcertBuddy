@@ -29,11 +29,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             if (artists == null || !artists.Any())
             {
                 _logger.LogError($"Can't find artist [{artistName}]");
-
-                replyText = "Something goes wrong :(! Please try to find another artist. ";
-                return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Chat.Id,
-                                                            text: replyText,
-                                                            replyMarkup: new ReplyKeyboardRemove());
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Chat.Id);
             }
 
             if (artists.Count() == 1)
@@ -46,7 +42,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists)
                 .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, 0, SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT);
 
-            replyText = "Choose the right artist:";
+            replyText = "Choose the correct artist 💭:";
             return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Chat.Id,
                                                         text: replyText,
                                                         replyMarkup: inlineKeyboard);

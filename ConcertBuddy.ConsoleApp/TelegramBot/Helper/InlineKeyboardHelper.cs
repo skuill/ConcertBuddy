@@ -1,4 +1,5 @@
-﻿using ConcertBuddy.ConsoleApp.Search;
+﻿using ConcertBuddy.ConsoleApp.Model;
+using ConcertBuddy.ConsoleApp.Search;
 using MusicSearcher.Model;
 using SetlistFmAPI.Models;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -23,14 +24,33 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
             foreach (var song in set.Songs)
             {
                 string callbackText = $"{counter++}. {song.ToString()}";
-                // substring because:
-                //callback_data String  Optional.Data to be sent in a callback query to the bot when button is pressed, 1 - 64 bytes                
-                string callbackData = string.Format(CommandList.CALLBACK_DATA_FORMAT_TRACK, mbid, song.Name);
-                if (callbackData.Length > 64)
-                    callbackData = callbackData.Substring(0, 64);
+                string callbackData = GetTrackCallbackData(song.Name, mbid);
                 inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
             }
             return new InlineKeyboardMarkup(inlineKeyboardButtons);
+        }
+
+        public static InlineKeyboardMarkup GetTracksInlineKeyboardMenu(MusicTrack[] tracks, string mbid)
+        {
+            List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
+            int counter = 1;
+            foreach (var track in tracks)
+            {
+                string callbackText = $"{counter++}. {track.Name}";
+                string callbackData = GetTrackCallbackData(track.Name, mbid);
+                inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
+            }
+            return new InlineKeyboardMarkup(inlineKeyboardButtons);
+        }
+
+        private static string GetTrackCallbackData(string trackName, string mbid)
+        {
+            // substring because:
+            //callback_data String  Optional.Data to be sent in a callback query to the bot when button is pressed, 1 - 64 bytes                
+            string callbackData = string.Format(CommandList.CALLBACK_DATA_FORMAT_TRACK, mbid, trackName);
+            if (callbackData.Length > 64)
+                callbackData = callbackData.Substring(0, 64);
+            return callbackData;
         }
 
         public static InlineKeyboardMarkup GetSetlistsInlineKeyboardMenu(IEnumerable<Setlist> setlists)
@@ -64,6 +84,11 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
                 InlineKeyboardButton.WithCallbackData("🎓 Biography", string.Format(CommandList.CALLBACK_DATA_FORMAT_BIOGRAPHY, mbid)),
                 InlineKeyboardButton.WithCallbackData("📝 Setlists", string.Format(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT, 0, mbid)),
             });
+
+            if (Configuration.IsSpotifyAvailable())
+                inlineKeyboardButtons.Add(new[] {
+                    InlineKeyboardButton.WithCallbackData("📻 Top tracks", string.Format(CommandList.CALLBACK_DATA_FORMAT_TOP, SearchType.Track.ConvertToString(), mbid))
+                });
             return new InlineKeyboardMarkup(inlineKeyboardButtons);
         }
 

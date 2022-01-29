@@ -42,6 +42,13 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var recordingTask = SearchHandler.SearchSongByName(mbid, trackName);
 
             var artist = await artistTast;
+
+            if (artist == null)
+            {
+                _logger.LogError($"Can't find artist with mbid [{mbid}]");
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            }
+
             var recording = await recordingTask;
             string trackActualName = recording != null ? recording.Title : (await SearchHandler.SearchTrack(artist.Name, trackName)).Name;
 
@@ -50,11 +57,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             if (lyric == null)
             {
                 _logger.LogError($"Can't find lyric for track [{artist.Name} - {trackActualName}]");
-
-                replyText = "Something goes wrong :(! Please choose another track.";
-                return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
-                                                            text: replyText,
-                                                            replyMarkup: new ReplyKeyboardRemove());
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton();

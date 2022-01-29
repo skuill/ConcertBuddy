@@ -3,8 +3,6 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;
-using MusicSearcher.Model;
-using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -40,22 +38,23 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var trackName = String.Join(' ', parameters.Skip(1));
 
             var artist = await SearchHandler.SearchArtistByMBID(mbid);
+            if (artist == null)
+            {
+                _logger.LogError($"Can't find artist with mbid [{mbid}]");
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            }
             var track = await SearchHandler.SearchTrack(artist.Name, trackName);
 
             if (track == null)
             {
                 _logger.LogError($"Can't find track [{artist} - {trackName}]");
-
-                replyText = "Something goes wrong :(! Please choose another track.";
-                return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
-                                                            text: replyText,
-                                                            replyMarkup: new ReplyKeyboardRemove());
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetLyricInlineKeyboardMenu(mbid, trackName);
 
             var trackLink = track.DownloadLink;
-            var trackMarkdown = GetTrackMarkdown(track);
+            var trackMarkdown = track.GetTrackMarkdown();
             Message sendAudioResult = null;
 
             // Setting performer and title parameters has no effect.
@@ -80,22 +79,6 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 text: trackMarkdown,
                 replyMarkup: inlineKeyboard,
                 parseMode: ParseMode.Html);
-        }
-
-        public static string GetTrackArtistsLinks(MusicTrack track)
-        {
-            return string.Join(", ", track.SpotifyTrack.Artists
-                .Select(artist => $"<a href=\"{artist.ExternalUrls["spotify"]}\">{artist.Name}</a>"));
-        }
-
-        public static string GetTrackMarkdown(MusicTrack track)
-        {
-            return new StringBuilder()
-                .AppendLine($"<a href=\"{track.SpotifyTrack.ExternalUrls["spotify"]}\">{track.Name}</a>")
-                .AppendLine($"Artists: {GetTrackArtistsLinks(track)}")
-                .AppendLine($"Album: <a href=\"{track.SpotifyTrack.Album.ExternalUrls["spotify"]}\">{track.SpotifyTrack.Album.Name}</a>")
-                .AppendLine($"Duration: {TimeSpan.FromMilliseconds(track.SpotifyTrack.DurationMs):m\\:ss}")
-                .ToString();
         }
     }
 }

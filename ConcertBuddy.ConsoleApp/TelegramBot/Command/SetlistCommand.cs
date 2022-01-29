@@ -41,11 +41,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             if (setlist == null || !setlist.IsSetsExist())
             {
                 _logger.LogError($"Can't find setlist. Id: [{setlistId}], mbid: [{artistMBID}]");
-
-                replyText = "Something goes wrong :(! Please try another setlist..";
-                return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
-                                                            text: replyText,
-                                                            replyMarkup: new ReplyKeyboardRemove());
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
             
             // Save message ids for delete command 

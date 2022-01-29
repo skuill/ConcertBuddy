@@ -58,17 +58,13 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 if (offset == SearchConstants.SEARCH_ARTISTS_OFFSET_DEFAULT)
                 {
                     _logger.LogError($"Can't find artist [{artistName}]");
-
-                    replyText = "Something goes wrong :(! Please try to find another artist..";
-                    return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
-                                                                text: replyText,
-                                                                replyMarkup: new ReplyKeyboardRemove());
+                    return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
                 }
 
                 InlineKeyboardMarkup navigationKeyboard = InlineKeyboardMarkup.Empty()
                     .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, offset, limit);
 
-                replyText = "Nothing found there! Try another search or go back:";
+                replyText = "Nothing found here 😕! Try another search or go back:";
                 return await TelegramBotClient.EditMessageTextAsync(chatId: Data.Message.Chat.Id,
                                                             messageId: Data.Message.MessageId,
                                                             text: replyText,
@@ -78,7 +74,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists, offset + 1)
                 .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, offset, limit);
 
-            replyText = "Choose the right artist:";
+            replyText = "Choose the correct artist 💭:";
             return await TelegramBotClient.EditMessageTextAsync(chatId: Data.Message.Chat.Id,
                                                         messageId: Data.Message.MessageId,
                                                         text: replyText,

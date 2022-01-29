@@ -166,7 +166,7 @@ namespace MusicSearcher
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Can't search track [{trackName}] for artist [{artistName}] from Yandex.");
-                return null;
+                return await Task.FromResult<YTrack>(null);
             }
         }
 
@@ -187,7 +187,29 @@ namespace MusicSearcher
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Can't search track [{trackName}] for artist [{artistName}] from Spotify.");
-                return null;
+                return await Task.FromResult<FullTrack>(null);
+            }
+        }
+
+
+        private async Task<FullArtist> SearchSpotifyArtist(string artistName)
+        {
+            try
+            {
+                var searchTrack = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Artist, artistName));
+                if (searchTrack == null
+                    || searchTrack.Artists == null
+                    || searchTrack.Artists.Total == 0)
+                {
+                    throw new Exception($"Can't get artist [{artistName}] from Spotify.");
+                }
+                return searchTrack.Artists.Items.First(a => string.Equals(a.Name, artistName));
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Can't get artist [{artistName}] from Spotify.");
+                return await Task.FromResult<FullArtist>(null);
             }
         }
 
@@ -216,9 +238,42 @@ namespace MusicSearcher
             return result;
         }
 
+        private async Task<IEnumerable<FullTrack>> GetSpotifyTopTracks(FullArtist artist)
+        {
+            var topTracks = await _spotifyClient.Artists.GetTopTracks(artist.Id, new ArtistsTopTracksRequest("US"));
+            if (topTracks != null && topTracks.Tracks != null && topTracks.Tracks.Any())
+            {
+                return topTracks.Tracks;
+            }
+            else
+            {
+                _logger.LogError($"Can't get top tracks from Spotify for artist [{artist.Name}] with id [{artist.Id}]");
+                return await Task.FromResult<IEnumerable<FullTrack>>(null);
+            }
+        }
+
         public async Task<Recording> SearchSongByMBID(string songMBID)
         {
             return await _musicBrainzClient.Recordings.GetAsync(songMBID);
+        }
+
+        public async Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistName)
+        {
+            List<MusicTrack> result = new List<MusicTrack>();
+
+            if (IsSpotifyClientEnabled())
+            {
+                var spotifyArtist = await SearchSpotifyArtist(artistName);
+                if (spotifyArtist != null)
+                {
+                    var spotifyTracks = await GetSpotifyTopTracks(spotifyArtist);
+                    if (spotifyTracks != null )
+                    {
+                        return spotifyTracks.Select(t => new MusicTrack() { SpotifyTrack = t });
+                    }
+                }
+            }
+            return result;
         }
 
         public void WithLastFmClient(string apiKey, string secret)

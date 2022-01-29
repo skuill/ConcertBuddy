@@ -83,6 +83,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
                 $"{CommandList.COMMAND_TRACK}" => new TrackCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
                 $"{CommandList.COMMAND_LYRIC}" => new LyricCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
                 $"{CommandList.COMMAND_DELETE}" => new DeleteCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_TOP}" => new TopCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
                 _ => new UsageCommand(_searchHandler, botClient, callbackQuery.Message).ExecuteAsync()
             };
         }

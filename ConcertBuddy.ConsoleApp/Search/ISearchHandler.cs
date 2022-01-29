@@ -18,6 +18,8 @@ namespace ConcertBuddy.ConsoleApp.Search
 
         Task<MusicTrack> SearchTrack(string artistName, string trackName);
 
+        Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistName);
+
         Task<Recording> SearchSongByName(string artistMBID, string name);
 
         Task<Recording> SearchSongByMBID(string songMBID);

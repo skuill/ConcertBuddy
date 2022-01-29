@@ -37,6 +37,12 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             var artist = await SearchHandler.SearchArtistByMBID(artistMBID);
 
+            if (artist == null)
+            {
+                _logger.LogError($"Can't find artist with mbid [{artistMBID}]");
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            }
+
             replyText = $"<b>{artist.Name}</b>. ";
             if (artist.LastFmUrl != null || artist.SpotifyUrl != null)
                 replyText = replyText + "<i>Links</i>: ";
