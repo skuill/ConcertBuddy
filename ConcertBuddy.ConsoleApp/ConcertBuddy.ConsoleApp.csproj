@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <AssemblyVersion>0.0.6</AssemblyVersion>
+    <AssemblyVersion>0.0.7</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="logs\**" />
