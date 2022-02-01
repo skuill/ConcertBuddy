@@ -1,8 +1,6 @@
 ﻿using Hqub.MusicBrainz.API.Entities;
-using Microsoft.Extensions.Caching.Memory;
 using MusicSearcher.Model;
 using MusicSearcher.MusicBrainz;
-using SpotifyAPI.Web;
 
 namespace MusicSearcher.Abstract
 {
@@ -16,7 +14,13 @@ namespace MusicSearcher.Abstract
 
         Task<MusicTrack> SearchTrack(string artistName, string trackName);
 
-        Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistName);
+        /// <summary>
+        /// Return TOP tracks from available music service (Spotify,..) that popular in country <paramref name="country"/>
+        /// </summary>
+        /// <param name="artistName"></param>
+        /// <param name="country">country code in ISO 3166-1</param>
+        /// <returns></returns>
+        Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistName, string country);
 
         Task<Recording> SearchSongByName(string artistMBID, string name);
 

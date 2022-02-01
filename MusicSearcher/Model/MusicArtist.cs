@@ -35,6 +35,8 @@ namespace MusicSearcher.Model
 
         public string Type => MusicBrainzArtist?.Type;
 
+        public string Country => MusicBrainzArtist?.Country;
+
         private Uri TryGetSpotifyArtistImage()
         {
             if (SpotifyArtist is null || SpotifyArtist.Images is null || !SpotifyArtist.Images.Any())

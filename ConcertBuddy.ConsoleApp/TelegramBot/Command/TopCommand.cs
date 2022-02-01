@@ -64,7 +64,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
-            var topTracks = await SearchHandler.SearchTopTracks(artist.Name);
+            var topTracks = await SearchHandler.SearchTopTracks(artist.Name, artist.Country);
 
             if (topTracks == null || !topTracks.Any())
             {

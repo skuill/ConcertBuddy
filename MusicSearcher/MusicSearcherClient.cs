@@ -5,6 +5,7 @@ using IF.Lastfm.Core.Objects;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
+using MusicSearcher.Converter;
 using MusicSearcher.Model;
 using MusicSearcher.MusicBrainz;
 using SpotifyAPI.Web;
@@ -114,8 +115,14 @@ namespace MusicSearcher
                 var lastFmArtistTask = GetLastFmArtist(artistMBID);
 
                 result.MusicBrainzArtist = await musicBrainzArtistTask;
-                result.LastFmArtist = await lastFmArtistTask;
-                result.SpotifyArtist = await GetSpotifyArtist(result.Name);
+                if (IsLastFmClientEnabled())
+                {
+                    result.LastFmArtist = await lastFmArtistTask;
+                }
+                if (IsSpotifyClientEnabled())
+                {
+                    result.SpotifyArtist = await SearchSpotifyArtist(result.Name);
+                }
 
             } 
             catch (Exception ex)
@@ -191,19 +198,19 @@ namespace MusicSearcher
             }
         }
 
-
         private async Task<FullArtist> SearchSpotifyArtist(string artistName)
         {
             try
             {
-                var searchTrack = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Artist, artistName));
-                if (searchTrack == null
-                    || searchTrack.Artists == null
-                    || searchTrack.Artists.Total == 0)
+                var searchArtist = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Artist, artistName));
+                if (searchArtist == null
+                    || searchArtist.Artists == null
+                    || searchArtist.Artists.Total == 0)
                 {
                     throw new Exception($"Can't get artist [{artistName}] from Spotify.");
                 }
-                return searchTrack.Artists.Items.First(a => string.Equals(a.Name, artistName));
+                // We can't compare artistName. For example for artist "ноганно" actual spotify name is "noganno".
+                return searchArtist.Artists.Items.First();
 
             }
             catch (Exception ex)
@@ -238,9 +245,9 @@ namespace MusicSearcher
             return result;
         }
 
-        private async Task<IEnumerable<FullTrack>> GetSpotifyTopTracks(FullArtist artist)
+        private async Task<IEnumerable<FullTrack>> GetSpotifyTopTracks(FullArtist artist, string country)
         {
-            var topTracks = await _spotifyClient.Artists.GetTopTracks(artist.Id, new ArtistsTopTracksRequest("US"));
+            var topTracks = await _spotifyClient.Artists.GetTopTracks(artist.Id, new ArtistsTopTracksRequest(country));
             if (topTracks != null && topTracks.Tracks != null && topTracks.Tracks.Any())
             {
                 return topTracks.Tracks;
@@ -257,7 +264,8 @@ namespace MusicSearcher
             return await _musicBrainzClient.Recordings.GetAsync(songMBID);
         }
 
-        public async Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistName)
+        /// <inheritdoc />
+        public async Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistName, string country)
         {
             List<MusicTrack> result = new List<MusicTrack>();
 
@@ -266,7 +274,8 @@ namespace MusicSearcher
                 var spotifyArtist = await SearchSpotifyArtist(artistName);
                 if (spotifyArtist != null)
                 {
-                    var spotifyTracks = await GetSpotifyTopTracks(spotifyArtist);
+                    string formattedCountry = RegionConverter.ConvertToTwoLetterISO(country);
+                    var spotifyTracks = await GetSpotifyTopTracks(spotifyArtist, formattedCountry);
                     if (spotifyTracks != null )
                     {
                         return spotifyTracks.Select(t => new MusicTrack() { SpotifyTrack = t });
@@ -358,24 +367,6 @@ namespace MusicSearcher
                 {
                     _logger.LogError($"Can't get artist by mbid [{mbid}] from LastFM. Status: {lastFmArtist?.Status}.");
                 }
-            }
-            return result;
-        }
-
-        private async Task<FullArtist> GetSpotifyArtist(string artistName)
-        {
-            FullArtist result = null;
-            if (IsSpotifyClientEnabled())
-            {
-                var searchArtist = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Artist, artistName));
-                if (searchArtist == null
-                    || searchArtist.Artists == null
-                    || searchArtist.Artists.Total == 0)
-                {
-                    _logger.LogError($"Can't get artist by name [{artistName}] from Spotify.");
-                    return null;
-                }
-                result = searchArtist.Artists.Items.First(x => string.Equals(x.Name, artistName));
             }
             return result;
         }

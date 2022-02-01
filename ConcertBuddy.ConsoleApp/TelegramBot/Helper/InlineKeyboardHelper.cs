@@ -45,12 +45,13 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
 
         private static string GetTrackCallbackData(string trackName, string mbid)
         {
-            // substring because:
-            //callback_data String  Optional.Data to be sent in a callback query to the bot when button is pressed, 1 - 64 bytes                
+            // Substring because:
+            // callback_data (String) - Optional.Data to be sent in a callback query to the bot when button is pressed, 1 - 64 bytes    
+            // There is problem with encoding. For example: "/track 827e1b52-1782-4e73-b8e7-a7b6939370f5 Стволок за поясок"
+            // string.Length is 61. But byte size in UTF-8 encoding is 76!
+            // https://core.telegram.org/bots/api#making-requests . All queries must be made using UTF-8.
             string callbackData = string.Format(CommandList.CALLBACK_DATA_FORMAT_TRACK, mbid, trackName);
-            if (callbackData.Length > 64)
-                callbackData = callbackData.Substring(0, 64);
-            return callbackData;
+            return StringHelper.SubstringByByteLength(callbackData, 64);
         }
 
         public static InlineKeyboardMarkup GetSetlistsInlineKeyboardMenu(IEnumerable<Setlist> setlists)
