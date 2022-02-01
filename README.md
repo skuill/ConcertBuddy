@@ -79,6 +79,8 @@ The serilog adapter is used for event logging. Logs are written to the console, 
 Visit [github project page](https://github.com/users/skuill/projects/1) or [issue board](https://github.com/skuill/ConcertBuddy/issues)
 
 ## Release Notes
+#### v0.0.7 (30.01.22):
+ * Added receiving artist's top 10 tracks from Spotify ([Issue 9](https://github.com/skuill/ConcertBuddy/issues/9))
 #### v0.0.6 (25.01.22):
  * Catch unhandled exceptions and log them. ([Issue 24](https://github.com/skuill/ConcertBuddy/issues/24))
  * Configure write logs to file with rotation with docker volume. ([Issue 25](https://github.com/skuill/ConcertBuddy/issues/25))
