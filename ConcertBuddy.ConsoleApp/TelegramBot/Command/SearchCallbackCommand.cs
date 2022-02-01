@@ -53,7 +53,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             var artists = await SearchHandler.SearchArtistsByName(artistName, limit, offset);
 
-            if (artists == null || !artists.Any() && offset == 0)
+            if ((artists == null || !artists.Any()) && offset == 0)
             {
                 if (offset == SearchConstants.SEARCH_ARTISTS_OFFSET_DEFAULT)
                 {
@@ -64,15 +64,16 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 InlineKeyboardMarkup navigationKeyboard = InlineKeyboardMarkup.Empty()
                     .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, offset, limit);
 
-                replyText = "Nothing found here 😕! Try another search or go back:";
+                replyText = "Nothing found here 😕! Try another search or go back";
                 return await TelegramBotClient.EditMessageTextAsync(chatId: Data.Message.Chat.Id,
                                                             messageId: Data.Message.MessageId,
                                                             text: replyText,
                                                             replyMarkup: navigationKeyboard);
             }
 
+            bool isForwardNavigationEnabled = artists.Count() == limit;
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists, offset + 1)
-                .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, offset, limit);
+                .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, offset, limit, isForwardNavigationEnabled);
 
             replyText = "Choose the correct artist 💭:";
             return await TelegramBotClient.EditMessageTextAsync(chatId: Data.Message.Chat.Id,

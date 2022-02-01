@@ -92,7 +92,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
             return new InlineKeyboardMarkup(inlineKeyboardButtons);
         }
 
-        public static InlineKeyboardMarkup WithNavigationButtons(this InlineKeyboardMarkup inlineKeyboardMarkup, string commandFormat, string data, int page, int limit = 0)
+        public static InlineKeyboardMarkup WithNavigationButtons(this InlineKeyboardMarkup inlineKeyboardMarkup, string commandFormat, string data, int page, int limit = 0, bool isForwardNavigationEnabled = true)
         {
             var inlineKeyboard = inlineKeyboardMarkup.InlineKeyboard;
             var navigationButtons = new List<InlineKeyboardButton>();
@@ -101,7 +101,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
             if (page - shift >= 0 && !(limit == 0 && page == 1))
                 navigationButtons.Add(InlineKeyboardButton.WithCallbackData("⬅️", string.Format(commandFormat, page - shift, limit, data)));
             navigationButtons.Add(GetDeleteButton());
-            navigationButtons.Add(InlineKeyboardButton.WithCallbackData("➡️", string.Format(commandFormat, page + shift, limit, data)));
+            if (isForwardNavigationEnabled)
+                navigationButtons.Add(InlineKeyboardButton.WithCallbackData("➡️", string.Format(commandFormat, page + shift, limit, data)));
 
             inlineKeyboard = inlineKeyboard.Append(navigationButtons);
             return new InlineKeyboardMarkup(inlineKeyboard);

@@ -42,7 +42,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (setlists == null || setlists.IsEmpty())
             {
-                replyText = $"Nothing found here 😕! Try another search or go back:";
+                replyText = $"Nothing found here 😕! Try another search or go back";
 
                 await TelegramBotClient.AnswerCallbackQueryAsync(
                     callbackQueryId: Data.Id,
@@ -50,22 +50,25 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
                 if (page == SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT)
                 {
+                    var deleteKeyboard = InlineKeyboardMarkup.Empty()
+                        .WithDeleteButton();
                     return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
                                                             text: replyText,
-                                                            replyMarkup: new ReplyKeyboardRemove());
-
+                                                            replyMarkup: deleteKeyboard);
                 }
-
-                var emptyKeyboard = InlineKeyboardMarkup.Empty()
-                    .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page);
+                                
+                var navigationKeyboard = InlineKeyboardMarkup.Empty()
+                    .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page, isForwardNavigationEnabled: false);
                 return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
                                                             text: replyText,
-                                                            replyMarkup: emptyKeyboard);
+                                                            replyMarkup: navigationKeyboard);
             }
 
             replyText = $"Found {setlists.Total} setlists 📝 .Please select a setlist:";
+
+            bool isForwardNavigationEnabled = setlists.ItemsPerPage == setlists.Items.Count;
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetSetlistsInlineKeyboardMenu(setlists.Items)
-                .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page);
+                .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page, isForwardNavigationEnabled: isForwardNavigationEnabled);
 
             if (page != SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT)
                 return await TelegramBotClient.EditMessageTextAsync(chatId: Data.Message.Chat.Id,

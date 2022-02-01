@@ -39,8 +39,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 //return await new ArtistCommand(SearchHandler, TelegramBotClient, artistName).Execute();
             }
 
+            bool isForwardNavigationEnabled = artists.Count() == SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT;
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists)
-                .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, 0, SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT);
+                .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, 0, SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT, isForwardNavigationEnabled);
 
             replyText = "Choose the correct artist 💭:";
             return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Chat.Id,
