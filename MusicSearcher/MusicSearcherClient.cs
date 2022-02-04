@@ -188,7 +188,8 @@ namespace MusicSearcher
                 {
                     throw new Exception($"Can't get track [{trackName}] for artist [{artistName}] from Spotify.");
                 }
-                return searchTrack.Tracks.Items.First(t => t.Artists != null && t.Artists.Any(a => string.Equals(a.Name, artistName)));
+                // We can't compare artistName. For example for artist "ноганно" actual spotify name is "noganno".
+                return searchTrack.Tracks.Items.First(t => t.Artists != null);
 
             }
             catch (Exception ex)

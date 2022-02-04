@@ -36,8 +36,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
             int counter = 1;
             foreach (var track in tracks)
             {
-                string callbackText = $"{counter++}. {track.Name}";
-                string callbackData = GetTrackCallbackData(track.Name, mbid);
+                string callbackText = $"{counter++}. {track.TrackName}";
+                string callbackData = GetTrackCallbackData(track.TrackName, mbid);
                 inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
             }
             return new InlineKeyboardMarkup(inlineKeyboardButtons);

@@ -154,7 +154,7 @@ namespace MusicSearcher.Tests
 
             // Assert
             Assert.IsNotNull(result);
-            Assert.IsTrue(string.Equals(trackExpected, result.Name));
+            Assert.IsTrue(string.Equals(trackExpected, result.TrackName));
             Assert.IsNotNull(result.SpotifyTrack.Artists);
             Assert.IsTrue(result.SpotifyTrack.Artists.Any(x => string.Equals(x.Name, artist)));
         }

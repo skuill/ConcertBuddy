@@ -50,7 +50,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             }
 
             var recording = await recordingTask;
-            string trackActualName = recording != null ? recording.Title : (await SearchHandler.SearchTrack(artist.Name, trackName)).Name;
+            string trackActualName = recording != null ? recording.Title : (await SearchHandler.SearchTrack(artist.Name, trackName)).TrackName;
 
             var lyric = await SearchHandler.SearchLyric(artist.Name, trackActualName);
 
