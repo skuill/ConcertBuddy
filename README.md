@@ -79,6 +79,10 @@ The serilog adapter is used for event logging. Logs are written to the console, 
 Visit [github project page](https://github.com/users/skuill/projects/1) or [issue board](https://github.com/skuill/ConcertBuddy/issues)
 
 ## Release Notes
+#### v0.0.8 (04.02.22. It's my Bday 🎂):
+Bugfixes:
+ * Track searching will return nothing if track not found in spotify ([Issue 27](https://github.com/skuill/ConcertBuddy/issues/27))
+ * Disable page navigation if nothing found ([Issue 26](https://github.com/skuill/ConcertBuddy/issues/26))
 #### v0.0.7 (30.01.22):
  * Added receiving artist's top 10 tracks from Spotify ([Issue 9](https://github.com/skuill/ConcertBuddy/issues/9))
 #### v0.0.6 (25.01.22):
