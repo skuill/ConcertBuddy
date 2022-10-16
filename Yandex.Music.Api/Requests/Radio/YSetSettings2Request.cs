@@ -6,15 +6,16 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 using Yandex.Music.Api.Common;
+using Yandex.Music.Api.Models.Common;
 using Yandex.Music.Api.Models.Radio;
 
-namespace Yandex.Music.Api.Requests.Track
+namespace Yandex.Music.Api.Requests.Radio
 {
-    internal class YSetSettings2Request : YRequest
+    internal class YSetSettings2Request : YRequest<YResponse<string>>
     {
-        #region Поля
+        #region РџРѕР»СЏ
 
-        private JsonSerializerSettings settings = new JsonSerializerSettings
+        private JsonSerializerSettings settings = new()
         {
             Converters = new List<JsonConverter> {
                 new StringEnumConverter {
@@ -25,15 +26,16 @@ namespace Yandex.Music.Api.Requests.Track
             ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
 
-        #endregion Поля
+        #endregion РџРѕР»СЏ
 
         public YSetSettings2Request(YandexMusicApi yandex, AuthStorage storage) : base(yandex, storage)
         {
         }
 
-        public YRequest Create(YStationDescription station, YStationSettings2 settings2)
+        public YRequest<YResponse<string>> Create(YStationDescription station, YStationSettings2 settings2)
         {
-            var headers = new List<KeyValuePair<string, string>> {
+            List<KeyValuePair<string, string>> headers = new()
+            {
                 YRequestHeaders.Get(YHeader.ContentType, storage)
             };
 

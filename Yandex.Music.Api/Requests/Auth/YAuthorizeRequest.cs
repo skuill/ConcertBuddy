@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Net;
 
 using Yandex.Music.Api.Common;
+using Yandex.Music.Api.Models.Account;
 
 namespace Yandex.Music.Api.Requests.Auth
 {
-    internal class YAuthorizeRequest : YRequest
+    internal class YAuthorizeRequest : YRequest<YAuth>
     {
         #region Поля
 
@@ -14,18 +15,20 @@ namespace Yandex.Music.Api.Requests.Auth
 
         #endregion Поля
 
-        public YRequest Create(string login, string password)
+        public YRequest<YAuth> Create(string login, string password)
         {
-            var headers = new List<KeyValuePair<string, string>> {
+            List<KeyValuePair<string, string>> headers = new()
+            {
                 YRequestHeaders.Get(YHeader.ContentType, "application/x-www-form-urlencoded")
             };
 
-            var body = new Dictionary<string, string> {
+            Dictionary<string, string> body = new()
+            {
                 { "grant_type", "password" },
                 { "client_id", CLIENT_ID },
                 { "client_secret", CLIENT_SECRET },
                 { "username", login },
-                { "password", password },
+                { "password", password }
             };
 
             FormRequest($"{YEndpoints.OAuth}/token", WebRequestMethods.Http.Post, headers: headers, body: GetQueryString(body));

@@ -72,9 +72,9 @@ namespace ConcertBuddy.ConsoleApp.Search
             return _musicSearcherClient.SearchTrack(artistName, trackName);
         }
 
-        public Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistName, string country)
+        public Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistMBID)
         {
-            return _musicSearcherClient.SearchTopTracks(artistName, country);
+            return _musicSearcherClient.SearchTopTracks(artistMBID);
         }
 
         public Task<Recording> SearchSongByName(string artistMBID, string name)

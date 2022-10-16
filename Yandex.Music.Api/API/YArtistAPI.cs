@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Yandex.Music.Api.Common;
 using Yandex.Music.Api.Models.Artist;
 using Yandex.Music.Api.Models.Common;
-using Yandex.Music.Api.Requests.Album;
+using Yandex.Music.Api.Requests.Artist;
 
 namespace Yandex.Music.Api.API
 {
@@ -28,7 +28,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YGetArtistRequest(api, storage)
                 .Create(artistId)
-                .GetResponseAsync<YResponse<YArtistBriefInfo>>();
+                .GetResponseAsync();
         }
 
         /// <summary>

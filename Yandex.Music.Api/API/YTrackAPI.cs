@@ -23,20 +23,20 @@ namespace Yandex.Music.Api.API
         private string BuildLinkForDownload(YTrackDownloadInfo mainDownloadResponse,
             YStorageDownloadFile storageDownload)
         {
-            var path = storageDownload.Path;
-            var host = storageDownload.Host;
-            var ts = storageDownload.Ts;
-            var s = storageDownload.S;
-            var codec = mainDownloadResponse.Codec;
+            string path = storageDownload.Path;
+            string host = storageDownload.Host;
+            string ts = storageDownload.Ts;
+            string s = storageDownload.S;
+            string codec = mainDownloadResponse.Codec;
 
-            var secret = $"XGRlBW9FXlekgbPrRHuSiA{path.Substring(1, path.Length - 1)}{s}";
-            var md5 = MD5.Create();
-            var md5Hash = md5.ComputeHash(Encoding.UTF8.GetBytes(secret));
-            var hmacsha1 = new HMACSHA1();
-            var hmasha1Hash = hmacsha1.ComputeHash(md5Hash);
-            var sign = BitConverter.ToString(hmasha1Hash).Replace("-", "").ToLower();
+            string secret = $"XGRlBW9FXlekgbPrRHuSiA{path.Substring(1, path.Length - 1)}{s}";
+            MD5 md5 = MD5.Create();
+            byte[] md5Hash = md5.ComputeHash(Encoding.UTF8.GetBytes(secret));
+            HMACSHA1 hmacsha1 = new();
+            byte[] hmasha1Hash = hmacsha1.ComputeHash(md5Hash);
+            string sign = BitConverter.ToString(hmasha1Hash).Replace("-", "").ToLower();
 
-            var link = $"https://{host}/get-{codec}/{sign}/{ts}{path}";
+            string link = $"https://{host}/get-{codec}/{sign}/{ts}{path}";
 
             return link;
         }
@@ -59,7 +59,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YGetTrackRequest(api, storage)
                 .Create(trackId)
-                .GetResponseAsync<YResponse<List<YTrack>>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YTrackDownloadInfoRequest(api, storage)
                 .Create(trackKey, direct)
-                .GetResponseAsync<YResponse<List<YTrackDownloadInfo>>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YStorageDownloadFileRequest(api, storage)
                 .Create(metadataInfo.DownloadInfoUrl)
-                .GetResponseAsync<YStorageDownloadFile>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -151,12 +151,15 @@ namespace Yandex.Music.Api.API
         /// Получение ссылки для загрузки
         /// </summary>
         /// <param name="storage">Хранилище</param>
-        /// <param name="trackKey">Ключ трека в формате {идентифактор трека:идентификатор альбома}</param>
+        /// <param name="trackKey">Ключ трека в формате {идентификатор трека:идентификатор альбома}</param>
         /// <returns></returns>
         public string GetFileLink(AuthStorage storage, string trackKey)
         {
-            var mainDownloadResponse = GetMetadataForDownload(storage, trackKey).Result.First(m => m.Codec == "mp3");
-            var storageDownloadResponse = GetDownloadFileInfo(storage, mainDownloadResponse);
+            YTrackDownloadInfo mainDownloadResponse = GetMetadataForDownload(storage, trackKey)
+                .Result
+                .OrderByDescending(i => i.BitrateInKbps)
+                .First(m => m.Codec == "mp3");
+            YStorageDownloadFile storageDownloadResponse = GetDownloadFileInfo(storage, mainDownloadResponse);
 
             return BuildLinkForDownload(mainDownloadResponse, storageDownloadResponse);
         }
@@ -169,10 +172,7 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public string GetFileLink(AuthStorage storage, YTrack track)
         {
-            var mainDownloadResponse = GetMetadataForDownload(storage, track).Result.First(m => m.Codec == "mp3");
-            var storageDownloadResponse = GetDownloadFileInfo(storage, mainDownloadResponse);
-
-            return BuildLinkForDownload(mainDownloadResponse, storageDownloadResponse);
+            return GetFileLink(storage, track.GetKey().ToString());
         }
 
         #region Получение данных трека
@@ -185,12 +185,12 @@ namespace Yandex.Music.Api.API
         /// <param name="filePath">Путь для файла</param>
         public void ExtractToFile(AuthStorage storage, string trackKey, string filePath)
         {
-            var fileLink = GetFileLink(storage, trackKey);
+            string fileLink = GetFileLink(storage, trackKey);
 
-            try {
-                using (var client = new WebClient()) {
-                    client.DownloadFile(fileLink, filePath);
-                }
+            try
+            {
+                using WebClient client = new();
+                client.DownloadFile(fileLink, filePath);
             }
             catch (Exception ex) {
                 Console.WriteLine(ex.ToString());
@@ -205,19 +205,7 @@ namespace Yandex.Music.Api.API
         /// <param name="filePath">Путь для файла</param>
         public void ExtractToFile(AuthStorage storage, YTrack track, string filePath)
         {
-            var fileLink = GetFileLink(storage, track.GetKey().ToString());
-
-            try
-            {
-                using (var client = new WebClient())
-                {
-                    client.DownloadFile(fileLink, filePath);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
+            ExtractToFile(storage, track.GetKey().ToString(), filePath);
         }
 
         /// <summary>
@@ -228,14 +216,14 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public byte[] ExtractData(AuthStorage storage, string trackKey)
         {
-            var fileLink = GetFileLink(storage, trackKey);
+            string fileLink = GetFileLink(storage, trackKey);
 
-            var bytes = default(byte[]);
+            byte[] bytes = default;
 
-            try {
-                using (var client = new WebClient()) {
-                    bytes = client.DownloadData(fileLink);
-                }
+            try
+            {
+                using WebClient client = new();
+                bytes = client.DownloadData(fileLink);
             }
             catch (Exception ex) {
                 Console.WriteLine(ex.ToString());
@@ -252,23 +240,7 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public byte[] ExtractData(AuthStorage storage, YTrack track)
         {
-            var fileLink = GetFileLink(storage, track.GetKey().ToString());
-
-            var bytes = default(byte[]);
-
-            try
-            {
-                using (var client = new WebClient())
-                {
-                    bytes = client.DownloadData(fileLink);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-
-            return bytes;
+            return ExtractData(storage, track.GetKey().ToString());
         }
 
         #endregion Получение данных трека

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 using Yandex.Music.Api.Models.Artist;
@@ -14,6 +15,7 @@ namespace Yandex.Music.Api.Models.Album
         public bool AvailableForMobile { get; set; }
         public bool AvailableForPremiumUsers { get; set; }
         public bool AvailablePartially { get; set; }
+        public string BackgroundImageUrl { get; set; }
         public List<string> Bests { get; set; }
         public List<string> Buy { get; set; }
         public bool ChildContent { get; set; }
@@ -24,13 +26,15 @@ namespace Yandex.Music.Api.Models.Album
         public string Id { get; set; }
         public List<YLabel> Labels { get; set; }
         public int LikesCount { get; set; }
-        public string MetaType { get; set; }
+        public string MetaTagId { get; set; }
+        public YMetaType MetaType { get; set; }
         public string OgImage { get; set; }
         public YPager Pager { get; set; }
         public List<YPrerolls> Prerolls { get; set; }
         public bool Recent { get; set; }
-        public string ReleaseDate { get; set; }
+        public DateTime ReleaseDate { get; set; }
         public YSortOrder SortOrder { get; set; }
+        public string StorageDir { get; set; }
         public string Title { get; set; }
         public int TrackCount { get; set; }
         public YTrackPosition TrackPosition { get; set; }

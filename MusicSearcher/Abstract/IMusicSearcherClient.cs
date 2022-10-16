@@ -15,12 +15,9 @@ namespace MusicSearcher.Abstract
         Task<MusicTrack> SearchTrack(string artistName, string trackName);
 
         /// <summary>
-        /// Return TOP tracks from available music service (Spotify,..) that popular in country <paramref name="country"/>
+        /// Return TOP tracks from available music services (Spotify,..)
         /// </summary>
-        /// <param name="artistName"></param>
-        /// <param name="country">country code in ISO 3166-1</param>
-        /// <returns></returns>
-        Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistName, string country);
+        Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistMBID);
 
         Task<Recording> SearchSongByName(string artistMBID, string name);
 

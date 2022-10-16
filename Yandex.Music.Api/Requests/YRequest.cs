@@ -14,7 +14,7 @@ using Yandex.Music.Api.Models.Common;
 
 namespace Yandex.Music.Api.Requests
 {
-    internal class YRequest
+    internal class YRequest<T>
     {
         public YRequest(YandexMusicApi yandex, AuthStorage auth)
         {
@@ -40,24 +40,23 @@ namespace Yandex.Music.Api.Requests
         protected virtual void FormRequest(string url, string method = WebRequestMethods.Http.Get,
             Dictionary<string, string> query = null, List<KeyValuePair<string, string>> headers = null, string body = null)
         {
-            var queryStr = string.Empty;
-            if (query != null && query.Count > 0)
+            string queryStr = string.Empty;
+            if (query is { Count: > 0 })
                 queryStr = "?" + GetQueryString(query);
 
-            var uri = new Uri($"{url}{queryStr}");
-            var request = WebRequest.CreateHttp(uri);
+            Uri uri = new($"{url}{queryStr}");
+            HttpWebRequest request = WebRequest.CreateHttp(uri);
 
             if (storage.Context.WebProxy != null)
                 request.Proxy = storage.Context.WebProxy;
 
             request.Method = method;
-            if (storage.Context.Cookies == null)
-                storage.Context.Cookies = new CookieContainer();
+            storage.Context.Cookies ??= new CookieContainer();
 
             storage.SetHeaders(request);
 
-            if (headers != null && headers.Count > 0)
-                foreach (var header in headers)
+            if (headers is { Count: > 0 })
+                foreach (KeyValuePair<string, string> header in headers)
                     request.Headers.Add(header.Key, header.Value);
 
             if (!string.IsNullOrEmpty(body)) {
@@ -77,31 +76,47 @@ namespace Yandex.Music.Api.Requests
             fullRequest = request;
         }
 
-        protected async Task<T> GetDataFromResponseAsync<T>(HttpWebResponse response)
+        protected async Task<T> GetDataFromResponseAsync(HttpWebResponse response)
         {
             try {
                 string result;
-                using (var stream = response.GetResponseStream()) {
-                    var reader = new StreamReader(stream);
+                await using (Stream stream = response.GetResponseStream()) {
+                    StreamReader reader = new(stream);
                     result = await reader.ReadToEndAsync();
                 }
 
                 storage.Context.Cookies.Add(response.Cookies);
 
-                JsonSerializerSettings settings = new JsonSerializerSettings {
+                JsonSerializerSettings settings = new()
+                {
                     Converters = new List<JsonConverter> {
                         new YExecutionContextConverter(api, storage)
                     }
                 };
 
-                if (storage.Debug != null)
-                    return storage.Debug.Deserialize<T>(response.ResponseUri.AbsolutePath, result, settings);
-
-                return JsonConvert.DeserializeObject<T>(result, settings);
+                return storage.Debug != null 
+                    ? storage.Debug.Deserialize<T>(response.ResponseUri.AbsolutePath, result, settings) 
+                    : JsonConvert.DeserializeObject<T>(result, settings);
             }
             catch (Exception ex) {
                 Console.WriteLine(ex);
-                return default(T);
+                return default;
+            }
+        }
+
+        private async Task<HttpWebResponse> GetWebResponseAsync()
+        {
+            try
+            {
+                return (HttpWebResponse)await fullRequest.GetResponseAsync();
+            }
+            catch (Exception ex)
+            {
+                using StreamReader sr = new(((WebException)ex).Response.GetResponseStream());
+                string result = await sr.ReadToEndAsync();
+                Console.WriteLine(result);
+
+                throw;
             }
         }
 
@@ -109,29 +124,17 @@ namespace Yandex.Music.Api.Requests
 
         #region Основные функции
 
-        public async Task<HttpWebResponse> GetResponseAsync()
-        {
-            try {
-                return (HttpWebResponse) await fullRequest.GetResponseAsync();
-            }
-            catch (Exception ex) {
-                using (StreamReader sr = new StreamReader(((WebException)ex).Response.GetResponseStream())) {
-                    string result = await sr.ReadToEndAsync();
-                    Console.WriteLine(result);
-                }
 
-                throw;
-            }
-        }
-
-        public async Task<T> GetResponseAsync<T>()
+        public async Task<T> GetResponseAsync()
         {
             if (fullRequest == null)
-                return default(T);
+                return default;
 
-            using (var response = await GetResponseAsync()) {
-                return await GetDataFromResponseAsync<T>(response);
-            }
+            using HttpWebResponse response = await GetWebResponseAsync();
+
+            return typeof(T) == typeof(HttpWebResponse)
+                ? (T)(object)response
+                : await GetDataFromResponseAsync(response);
         }
 
         #endregion Основные функции

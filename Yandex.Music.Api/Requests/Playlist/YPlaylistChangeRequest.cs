@@ -6,15 +6,17 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 using Yandex.Music.Api.Common;
+using Yandex.Music.Api.Models.Common;
 using Yandex.Music.Api.Models.Playlist;
 
 namespace Yandex.Music.Api.Requests.Playlist
 {
-    internal class YPlaylistChangeRequest : YRequest
+    internal class YPlaylistChangeRequest : YRequest<YResponse<YPlaylist>>
     {
-        #region Поля
+        #region РџРѕР»СЏ
 
-        private JsonSerializerSettings settings = new JsonSerializerSettings {
+        private JsonSerializerSettings settings = new()
+        {
             Converters = new List<JsonConverter> {
                 new StringEnumConverter {
                     NamingStrategy = new CamelCaseNamingStrategy()
@@ -24,21 +26,23 @@ namespace Yandex.Music.Api.Requests.Playlist
             ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
 
-        #endregion Поля
+        #endregion РџРѕР»СЏ
 
         public YPlaylistChangeRequest(YandexMusicApi yandex, AuthStorage storage) : base(yandex, storage)
         {
         }
 
-        public YRequest Create(YPlaylist playlist, List<YPlaylistChange> changes)
+        public YRequest<YResponse<YPlaylist>> Create(YPlaylist playlist, List<YPlaylistChange> changes)
         {
-            Dictionary<string, string> query = new Dictionary<string, string> {
+            Dictionary<string, string> query = new()
+            {
                 { "kind", playlist.Kind },
                 { "revision", playlist.Revision.ToString() },
                 { "diff", JsonConvert.SerializeObject(changes, settings) }
             };
 
-            var headers = new List<KeyValuePair<string, string>> {
+            List<KeyValuePair<string, string>> headers = new()
+            {
                 YRequestHeaders.Get(YHeader.ContentType, "application/x-www-form-urlencoded")
             };
 

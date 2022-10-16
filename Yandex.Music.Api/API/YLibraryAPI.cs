@@ -29,9 +29,9 @@ namespace Yandex.Music.Api.API
         /// <returns>Список объектов из секции</returns>
         private async Task<YResponse<T>> GetLibrarySection<T>(AuthStorage storage, YLibrarySection section, YLibrarySectionType type = YLibrarySectionType.Likes)
         {
-            return await new YGetLibrarySectionRequest(api, storage)
+            return await new YGetLibrarySectionRequest<T>(api, storage)
                 .Create(section, type)
-                .GetResponseAsync<YResponse<T>>();
+                .GetResponseAsync();
         }
 
         #endregion Вспомогательные функции
@@ -160,9 +160,9 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public async Task<YResponse<YPlaylist>> AddTrackLikeAsync(AuthStorage storage, YTrack track)
         {
-            return await new YLibraryAddRequest(api, storage)
+            return await new YLibraryAddRequest<YPlaylist>(api, storage)
                 .Create(track.GetKey().ToString(), YLibrarySection.Tracks)
-                .GetResponseAsync<YResponse<YPlaylist>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -184,9 +184,9 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public async Task<YResponse<YRevision>> RemoveTrackLikeAsync(AuthStorage storage, YTrack track)
         {
-            return await new YLibraryRemoveRequest(api, storage)
+            return await new YLibraryRemoveRequest<YRevision>(api, storage)
                 .Create(track.GetKey().ToString(), YLibrarySection.Tracks)
-                .GetResponseAsync<YResponse<YRevision>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -208,9 +208,9 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public async Task<YResponse<YRevision>> AddTrackDislikeAsync(AuthStorage storage, YTrack track)
         {
-            return await new YLibraryAddRequest(api, storage)
+            return await new YLibraryAddRequest<YRevision>(api, storage)
                 .Create(track.GetKey().ToString(), YLibrarySection.Tracks, YLibrarySectionType.Dislikes)
-                .GetResponseAsync<YResponse<YRevision>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -232,9 +232,9 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public async Task<YResponse<int>> RemoveTrackDislikeAsync(AuthStorage storage, YTrack track)
         {
-            return await new YLibraryRemoveRequest(api, storage)
+            return await new YLibraryRemoveRequest<int>(api, storage)
                 .Create(track.GetKey().ToString(), YLibrarySection.Tracks, YLibrarySectionType.Dislikes)
-                .GetResponseAsync<YResponse<int>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -256,9 +256,9 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public async Task<YResponse<string>> AddAlbumLikeAsync(AuthStorage storage, YAlbum album)
         {
-            return await new YLibraryAddRequest(api, storage)
+            return await new YLibraryAddRequest<string>(api, storage)
                 .Create(album.Id, YLibrarySection.Albums)
-                .GetResponseAsync<YResponse<string>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -280,9 +280,9 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public async Task<YResponse<string>> RemoveAlbumLikeAsync(AuthStorage storage, YAlbum album)
         {
-            return await new YLibraryRemoveRequest(api, storage)
+            return await new YLibraryRemoveRequest<string>(api, storage)
                .Create(album.Id, YLibrarySection.Albums)
-               .GetResponseAsync<YResponse<string>>();
+               .GetResponseAsync();
         }
 
         /// <summary>
@@ -304,9 +304,9 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public async Task<YResponse<string>> AddArtistLikeAsync(AuthStorage storage, YArtist artist)
         {
-            return await new YLibraryAddRequest(api, storage)
+            return await new YLibraryAddRequest<string>(api, storage)
                .Create(artist.Id, YLibrarySection.Artists)
-               .GetResponseAsync<YResponse<string>>();
+               .GetResponseAsync();
         }
 
         /// <summary>
@@ -328,9 +328,9 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public async Task<YResponse<string>> RemoveArtistLikeAsync(AuthStorage storage, YArtist artist)
         {
-            return await new YLibraryRemoveRequest(api, storage)
+            return await new YLibraryRemoveRequest<string>(api, storage)
                .Create(artist.Id, YLibrarySection.Artists)
-               .GetResponseAsync<YResponse<string>>();
+               .GetResponseAsync();
         }
 
         /// <summary>
@@ -352,9 +352,9 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public async Task<YResponse<string>> AddPlaylistLikeAsync(AuthStorage storage, YPlaylist playlist)
         {
-            return await new YLibraryAddRequest(api, storage)
+            return await new YLibraryAddRequest<string>(api, storage)
                .Create(playlist.GetKey().ToString(), YLibrarySection.Playlists)
-               .GetResponseAsync<YResponse<string>>();
+               .GetResponseAsync();
         }
 
         /// <summary>
@@ -376,9 +376,9 @@ namespace Yandex.Music.Api.API
         /// <returns></returns>
         public async Task<YResponse<string>> RemovePlaylistLikeAsync(AuthStorage storage, YPlaylist playlist)
         {
-            return await new YLibraryRemoveRequest(api, storage)
+            return await new YLibraryRemoveRequest<string>(api, storage)
                .Create(playlist.GetKey().ToString(), YLibrarySection.Playlists)
-               .GetResponseAsync<YResponse<string>>();
+               .GetResponseAsync();
         }
 
         /// <summary>

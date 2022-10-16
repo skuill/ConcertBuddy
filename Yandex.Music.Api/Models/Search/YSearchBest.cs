@@ -18,8 +18,6 @@ namespace Yandex.Music.Api.Models.Search
     /// </summary>
     internal class YSearchBestConverter : JsonConverter
     {
-        #region Поля
-
         public override bool CanConvert(Type objectType)
         {
             throw new NotImplementedException();
@@ -30,9 +28,9 @@ namespace Yandex.Music.Api.Models.Search
             if (reader.TokenType == JsonToken.Null)
                 return null;
 
-            var obj = JObject.Load(reader);
-            var contract = (JsonObjectContract) serializer.ContractResolver.ResolveContract(objectType);
-            var best = existingValue as YSearchBest ?? (YSearchBest) contract.DefaultCreator();
+            JObject obj = JObject.Load(reader);
+            JsonObjectContract contract = (JsonObjectContract) serializer.ContractResolver.ResolveContract(objectType);
+            YSearchBest best = existingValue as YSearchBest ?? (YSearchBest) contract.DefaultCreator();
 
             best.Type = (YSearchType) Enum.Parse(typeof(YSearchType), obj["type"].ToString(), true);
 
@@ -49,6 +47,9 @@ namespace Yandex.Music.Api.Models.Search
                 case YSearchType.Playlist:
                     best.Result = JsonConvert.DeserializeObject<YSearchPlaylistModel>(obj["result"].ToString());
                     break;
+                case YSearchType.PodcastEpisode:
+                    best.Result = JsonConvert.DeserializeObject<YSearchTrackModel>(obj["result"].ToString());
+                    break;
                 case YSearchType.Video:
                     best.Result = JsonConvert.DeserializeObject<YSearchVideoModel>(obj["result"].ToString());
                     break;
@@ -62,23 +63,13 @@ namespace Yandex.Music.Api.Models.Search
             throw new NotImplementedException();
         }
 
-        #endregion
-
-        #region Свойства
-
         public override bool CanWrite => false;
-
-        #endregion
     }
 
     [JsonConverter(typeof(YSearchBestConverter))]
     public class YSearchBest
     {
-        #region Свойства
-
         public dynamic Result { get; set; }
         public YSearchType Type { get; set; }
-
-        #endregion
     }
 }

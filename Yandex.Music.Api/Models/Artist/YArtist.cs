@@ -14,12 +14,10 @@ namespace Yandex.Music.Api.Models.Artist
         public bool Composer { get; set; }
         public List<string> Countries { get; set; }
         public YArtistCounts Counts { get; set; }
-
         [JsonConverter(typeof(YCoverConverter))]
         public YCover Cover { get; set; }
-
         public List<string> DbAliases { get; set; }
-        #warning Непонятная коллекция с содержимым разных типов
+        #warning РќРµРїРѕРЅСЏС‚РЅР°СЏ РєРѕР»Р»РµРєС†РёСЏ СЃ СЃРѕРґРµСЂР¶РёРјС‹Рј СЂР°Р·РЅС‹С… С‚РёРїРѕРІ
         public List<object> Decomposed { get; set; }
         public YDescription Description { get; set; }
         public string EndDate { get; set; }

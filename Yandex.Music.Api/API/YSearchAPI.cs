@@ -115,6 +115,30 @@ namespace Yandex.Music.Api.API
         }
 
         /// <summary>
+        /// Поиск по плейлистам
+        /// </summary>
+        /// <param name="storage">Хранилище</param>
+        /// <param name="podcastName">Имя подкаста</param>
+        /// <param name="pageNumber">Номер страницы</param>
+        /// <returns></returns>
+        public async Task<YResponse<YSearch>> PodcastEpisodeAsync(AuthStorage storage, string podcastName, int pageNumber = 0)
+        {
+            return await SearchAsync(storage, podcastName, YSearchType.PodcastEpisode, pageNumber);
+        }
+
+        /// <summary>
+        /// Поиск по плейлистам
+        /// </summary>
+        /// <param name="storage">Хранилище</param>
+        /// <param name="podcastName">Имя подкаста</param>
+        /// <param name="pageNumber">Номер страницы</param>
+        /// <returns></returns>
+        public YResponse<YSearch> PodcastEpisode(AuthStorage storage, string podcastName, int pageNumber = 0)
+        {
+            return PodcastEpisodeAsync(storage, podcastName, pageNumber).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
         /// Поиск по видео
         /// </summary>
         /// <param name="storage">Хранилище</param>
@@ -174,7 +198,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YSearchRequest(api, storage)
                 .Create(searchText, searchType, page)
-                .GetResponseAsync<YResponse<YSearch>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -200,7 +224,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YSearchSuggestRequest(api, storage)
                 .Create(searchText)
-                .GetResponseAsync<YResponse<YSearchSuggest>>();
+                .GetResponseAsync();
         }
 
         /// <summary>

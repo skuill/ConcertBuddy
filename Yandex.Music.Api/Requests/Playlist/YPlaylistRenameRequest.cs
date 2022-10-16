@@ -2,22 +2,26 @@ using System.Collections.Generic;
 using System.Net;
 
 using Yandex.Music.Api.Common;
+using Yandex.Music.Api.Models.Common;
+using Yandex.Music.Api.Models.Playlist;
 
 namespace Yandex.Music.Api.Requests.Playlist
 {
-    internal class YPlaylistRenameRequest : YRequest
+    internal class YPlaylistRenameRequest : YRequest<YResponse<YPlaylist>>
     {
         public YPlaylistRenameRequest(YandexMusicApi yandex, AuthStorage storage) : base(yandex, storage)
         {
         }
 
-        public YRequest Create(string kinds, string name)
+        public YRequest<YResponse<YPlaylist>> Create(string kinds, string name)
         {
-            Dictionary<string, string> query = new Dictionary<string, string> {
-                { "value", name },
+            Dictionary<string, string> query = new()
+            {
+                { "value", name }
             };
 
-            var headers = new List<KeyValuePair<string, string>> {
+            List<KeyValuePair<string, string>> headers = new()
+            {
                 YRequestHeaders.Get(YHeader.ContentType, "application/x-www-form-urlencoded")
             };
 

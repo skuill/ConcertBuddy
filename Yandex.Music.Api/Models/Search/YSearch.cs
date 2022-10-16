@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 using Yandex.Music.Api.Models.Common;
 using Yandex.Music.Api.Models.Search.Album;
 using Yandex.Music.Api.Models.Search.Artist;
@@ -10,8 +12,6 @@ namespace Yandex.Music.Api.Models.Search
 {
     public class YSearch
     {
-        #region Свойства
-
         public YSearchResult<YSearchAlbumModel> Albums { get; set; }
         public YSearchResult<YSearchArtistModel> Artists { get; set; }
 
@@ -24,6 +24,8 @@ namespace Yandex.Music.Api.Models.Search
         public int Page { get; set; }
         public int PerPage { get; set; }
         public YSearchResult<YSearchPlaylistModel> Playlists { get; set; }
+        [JsonProperty("podcast_episodes")]
+        public YSearchResult<YSearchTrackModel> PodcastEpisode { get; set; }
         public string SearchRequestId { get; set; }
         public string Text { get; set; }
         public YSearchResult<YSearchTrackModel> Tracks { get; set; }
@@ -31,7 +33,5 @@ namespace Yandex.Music.Api.Models.Search
         public YSearchType Type { get; set; }
         public YSearchResult<YSearchUserModel> Users { get; set; }
         public YSearchResult<YSearchVideoModel> Videos { get; set; }
-
-        #endregion
     }
 }

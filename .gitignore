@@ -368,7 +368,8 @@ appsettings*.json
 !appsettings.template.json
 
 # Hosting settings and credentials
-vscale/
+doc/vscale/
+doc/external_sites_credentials/
 
 # Logs
 logs/

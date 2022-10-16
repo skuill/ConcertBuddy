@@ -1,18 +1,20 @@
 using System.Collections.Generic;
 
 using Yandex.Music.Api.Common;
+using Yandex.Music.Api.Models.Common;
 
 namespace Yandex.Music.Api.Requests.Track
 {
-    internal class YTrackDownloadInfoRequest : YRequest
+    internal class YTrackDownloadInfoRequest : YRequest<YResponse<List<YTrackDownloadInfo>>>
     {
         public YTrackDownloadInfoRequest(YandexMusicApi yandex, AuthStorage storage) : base(yandex, storage)
         {
         }
 
-        public YRequest Create(string trackKey, bool direct)
+        public YRequest<YResponse<List<YTrackDownloadInfo>>> Create(string trackKey, bool direct)
         {
-            Dictionary<string, string> query = new Dictionary<string, string> {
+            Dictionary<string, string> query = new()
+            {
                 { "direct", direct.ToString() }
             };
 

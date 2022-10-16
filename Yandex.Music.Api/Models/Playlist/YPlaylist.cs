@@ -11,7 +11,7 @@ namespace Yandex.Music.Api.Models.Playlist
 {
     public class YPlaylist : YBaseModel
     {
-        #region ����
+        #region Поля
 
         public YPlaylistUidPair GetKey()
         {
@@ -21,9 +21,9 @@ namespace Yandex.Music.Api.Models.Playlist
             };
         }
 
-        #endregion
+        #endregion Поля
 
-        #region ��������
+        #region Свойства
 
         public YButton ActionButton { get; set; }
         public string AnimatedCoverUri { get; set; }
@@ -32,13 +32,10 @@ namespace Yandex.Music.Api.Models.Playlist
         public string BackgroundImageUrl { get; set; }
         public string BackgroundVideoUrl { get; set; }
         public bool Collective { get; set; }
-
         [JsonConverter(typeof(YCoverConverter))]
         public YCover Cover { get; set; }
-
         [JsonConverter(typeof(YCoverConverter))]
         public YCover CoverWithoutText { get; set; }
-
         public List<YId> RecentTracks { get; set; }
         public DateTime Created { get; set; }
         public string Description { get; set; }
@@ -78,6 +75,6 @@ namespace Yandex.Music.Api.Models.Playlist
         public string UrlPart { get; set; }
         public string Visibility { get; set; }
 
-        #endregion
+        #endregion Свойства
     }
 }

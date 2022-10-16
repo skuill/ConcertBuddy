@@ -5,7 +5,7 @@ using System.Text;
 namespace Yandex.Music.Api.Common
 {
     /// <summary>
-    /// Класс для шифровки потом
+    /// Класс для шифровки
     /// </summary>
     public class Encryptor
     {
@@ -19,6 +19,9 @@ namespace Yandex.Music.Api.Common
         private readonly MD5 md5;
         private readonly Rijndael rijAlg;
 
+
+        #endregion Поля
+
         #region Вспомогательные функции
 
         private byte[] GetHash(string value)
@@ -27,8 +30,6 @@ namespace Yandex.Music.Api.Common
         }
 
         #endregion Вспомогательные функции
-
-        #endregion
 
         #region Основные функции
 
@@ -46,8 +47,8 @@ namespace Yandex.Music.Api.Common
 
         public byte[] Encrypt(byte[] data)
         {
-            using (var ms = new MemoryStream()) {
-                using (var csEncrypt = new CryptoStream(ms, rijAlg.CreateEncryptor(keyHash, IVHash), CryptoStreamMode.Write)) {
+            using (MemoryStream ms = new()) {
+                using (CryptoStream csEncrypt = new(ms, rijAlg.CreateEncryptor(keyHash, IVHash), CryptoStreamMode.Write)) {
                     csEncrypt.Write(data, 0, data.Length);
 
                     if (!csEncrypt.HasFlushedFinalBlock)
@@ -60,8 +61,8 @@ namespace Yandex.Music.Api.Common
 
         public byte[] Decrypt(byte[] data)
         {
-            using (var ms = new MemoryStream()) {
-                using (var csDecrypt = new CryptoStream(ms, rijAlg.CreateDecryptor(keyHash, IVHash), CryptoStreamMode.Write)) {
+            using (MemoryStream ms = new()) {
+                using (CryptoStream csDecrypt = new(ms, rijAlg.CreateDecryptor(keyHash, IVHash), CryptoStreamMode.Write)) {
                     csDecrypt.Write(data, 0, data.Length);
 
                     if (!csDecrypt.HasFlushedFinalBlock)

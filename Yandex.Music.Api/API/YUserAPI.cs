@@ -16,7 +16,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YAuthorizeRequest(api, storage)
                 .Create(login, password)
-                .GetResponseAsync<YAuth>();
+                .GetResponseAsync();
         }
 
         #endregion Вспомогательные функции
@@ -101,7 +101,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YGetAuthInfoRequest(api, storage)
                 .Create()
-                .GetResponseAsync<YResponse<YAccountResult>>();
+                .GetResponseAsync();
         }
 
         /// <summary>

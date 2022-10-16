@@ -1,19 +1,21 @@
 using System.Collections.Generic;
 
 using Yandex.Music.Api.Common;
+using Yandex.Music.Api.Models.Common;
 using Yandex.Music.Api.Models.Radio;
 
-namespace Yandex.Music.Api.Requests.Track
+namespace Yandex.Music.Api.Requests.Radio
 {
-    internal class YGetStationTracksRequest : YRequest
+    internal class YGetStationTracksRequest : YRequest<YResponse<YStationSequence>>
     {
         public YGetStationTracksRequest(YandexMusicApi yandex, AuthStorage storage) : base(yandex, storage)
         {
         }
 
-        public YRequest Create(YStationDescription station, string prevTrackId = "")
+        public YRequest<YResponse<YStationSequence>> Create(YStationDescription station, string prevTrackId = "")
         {
-            Dictionary<string, string> query = new Dictionary<string, string> {
+            Dictionary<string, string> query = new()
+            {
                 { "settings2", "true" }
             };
 

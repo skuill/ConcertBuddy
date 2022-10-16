@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -17,7 +17,7 @@ namespace Yandex.Music.Api.Models.Radio.Restriction
             if (reader.TokenType == JsonToken.Null)
                 return null;
 
-            var jObject = JObject.Load(reader);
+            JObject jObject = JObject.Load(reader);
             YRestriction restriction;
 
             try

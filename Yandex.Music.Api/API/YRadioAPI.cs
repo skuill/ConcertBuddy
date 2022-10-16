@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Yandex.Music.Api.Common;
 using Yandex.Music.Api.Models.Common;
 using Yandex.Music.Api.Models.Radio;
-using Yandex.Music.Api.Requests.Track;
+using Yandex.Music.Api.Requests.Radio;
 
 namespace Yandex.Music.Api.API
 {
@@ -16,7 +16,7 @@ namespace Yandex.Music.Api.API
 
         #region Основные функции
 
-        public YRadioAPI(YandexMusicApi yandex) :base(yandex)
+        public YRadioAPI(YandexMusicApi yandex): base(yandex)
         {
         }
 
@@ -29,7 +29,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YGetStationsDashboardRequest(api, storage)
                 .Create()
-                .GetResponseAsync<YResponse<YStationsDashboard>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YGetStationsRequest(api, storage)
                 .Create()
-                .GetResponseAsync<YResponse<List<YStation>>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YGetStationRequest(api, storage)
                 .Create(type, tag)
-                .GetResponseAsync<YResponse<List<YStation>>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -117,12 +117,13 @@ namespace Yandex.Music.Api.API
         /// </summary>
         /// <param name="storage">Хранилище</param>
         /// <param name="station">Радиостанция</param>
+        /// <param name="prevTrackId">Идентификатор предыдущего трека</param>
         /// <returns></returns>
         public async Task<YResponse<YStationSequence>> GetStationTracksAsync(AuthStorage storage, YStation station, string prevTrackId = "")
         {
             return await new YGetStationTracksRequest(api, storage)
                 .Create(station.Station, prevTrackId)
-                .GetResponseAsync<YResponse<YStationSequence>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -147,7 +148,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YSetSettings2Request(api, storage)
                 .Create(station.Station, settings)
-                .GetResponseAsync<YResponse<string>>();
+                .GetResponseAsync();
         }
 
         /// <summary>

@@ -28,7 +28,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YGetAlbumRequest(api, storage)
                 .Create(albumId)
-                .GetResponseAsync<YResponse<YAlbum>>();
+                .GetResponseAsync();
         }
 
         /// <summary>

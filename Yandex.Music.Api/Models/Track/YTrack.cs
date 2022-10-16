@@ -10,20 +10,6 @@ namespace Yandex.Music.Api.Models.Track
 {
     public class YTrack : YBaseModel, IEquatable<YTrack>
     {
-        #region Поля
-
-        public YTrackAlbumPair GetKey()
-        {
-            return new YTrackAlbumPair {
-                Id = Id,
-                AlbumId = Albums?.FirstOrDefault()?.Id
-            };
-        }
-
-        #endregion
-
-        #region Свойства
-
         public List<YAlbum> Albums { get; set; }
         public List<YArtist> Artists { get; set; }
         public bool Available { get; set; }
@@ -38,11 +24,14 @@ namespace Yandex.Music.Api.Models.Track
         public long FileSize { get; set; }
         public string Id { get; set; }
         public bool IsSuitableForChildren { get; set; }
-        public bool LyricsAvailable { get; set; }
+        public bool HasLyrics { get; set; }
+        public bool HasSyncLyrics { get; set; }
         public YMajor Major { get; set; }
         public YTrackNormalization Normalization { get; set; }
         public YTrackNormalizationR128 R128 { get; set; }
         public string OgImage { get; set; }
+        public bool LyricsAvailable { get; set; }
+        public YLyricsInfo LyricsInfo { get; set; }
         public string PlayerId { get; set; }
         public long PreviewDurationMs { get; set; }
         public YPodcastEpisodeType PodcastEpisodeType { get; set; }
@@ -54,10 +43,17 @@ namespace Yandex.Music.Api.Models.Track
         public YTrack Substituted { get; set; }
         public string Title { get; set; }
         public YTrackSharingFlag TrackSharingFlag { get; set; }
+        public YTrackSource TrackSource { get; set; }
         public string Type { get; set; }
         public string Version { get; set; }
 
-        #endregion
+        public YTrackAlbumPair GetKey()
+        {
+            return new YTrackAlbumPair {
+                Id = Id,
+                AlbumId = Albums?.FirstOrDefault()?.Id
+            };
+        }
 
         #region IEquatable
 

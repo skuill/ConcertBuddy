@@ -6,6 +6,9 @@ namespace MusicSearcher.Converter
     {
         public const string DEFAULT_REGION_CODE = "US";
 
+        /// <summary>
+        /// Convert country name to ISO 3166-1 standard
+        /// </summary>
         public static string ConvertToTwoLetterISO(string country)
         {
             if (string.IsNullOrEmpty(country))

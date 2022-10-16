@@ -57,18 +57,19 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         private async Task<Message> ProcessTracks(string mbid)
         {
-            var artist = await SearchHandler.SearchArtistByMBID(mbid);
-            if (artist == null)
-            {
-                _logger.LogError($"Can't find artist with mbid [{mbid}]");
-                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
-            }
+            // !!!SWITCH TO SEARCH TOP TRACKS BY MBID!!!
+            //var artist = await SearchHandler.SearchArtistByMBID(mbid);
+            //if (artist == null)
+            //{
+            //    _logger.LogError($"Can't find artist with mbid [{mbid}]");
+            //    return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            //}
 
-            var topTracks = await SearchHandler.SearchTopTracks(artist.Name, artist.Country);
+            var topTracks = await SearchHandler.SearchTopTracks(mbid);
 
             if (topTracks == null || !topTracks.Any())
             {
-                _logger.LogError($"Can't find top tracks for artist [{artist.Name}] with mbid [{mbid}]");
+                _logger.LogError($"Can't find top tracks for artist with mbid [{mbid}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 

@@ -1,19 +1,16 @@
 ﻿using Hqub.MusicBrainz.API;
 using Hqub.MusicBrainz.API.Entities;
-using IF.Lastfm.Core.Api;
-using IF.Lastfm.Core.Objects;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
-using MusicSearcher.Converter;
 using MusicSearcher.Model;
 using MusicSearcher.MusicBrainz;
-using SpotifyAPI.Web;
+using MusicSearcher.MusicService.Abstract;
+using MusicSearcher.MusicService.LastFm;
+using MusicSearcher.MusicService.Spotify;
+using MusicSearcher.MusicService.Yandex;
 using System.Net;
 using System.Reflection;
-using Yandex.Music.Api.Models.Common;
-using Yandex.Music.Api.Models.Track;
-using Yandex.Music.Client;
 
 namespace MusicSearcher
 {
@@ -21,15 +18,26 @@ namespace MusicSearcher
     {
         private readonly ILogger<MusicSearcherClient> _logger;
 
+        private List<IMusicServiceClient> _musicServiceClients;
+
         private MusicBrainzClient _musicBrainzClient;
-        private LastfmClient _lastFmClient;
-        private SpotifyClient _spotifyClient;
-        private YandexMusicClient _yandexClient;
 
         private const int MEMORY_CACHE_SIZE = 256;
-        private bool _isMemoryCacheEnabled;
         private IMemoryCache _artistMemoryCache;
         private readonly MemoryCacheEntryOptions _memoryCacheEntryOptions;
+
+
+        private bool _isLastFmClientEnabled = false;
+        public bool IsLastFmClientEnabled => _isLastFmClientEnabled;
+
+        private bool _isSpotifyClientEnabled = false;
+        private bool IsSpotifyClientEnabled => _isSpotifyClientEnabled;
+
+        private bool _isYandexClientEnabled = false;
+        private bool IsYandexClientEnabled => _isYandexClientEnabled;
+
+        private bool _isMemoryCacheEnabled;
+        public bool IsMemoryCacheEnabled => _isMemoryCacheEnabled;
 
         public MusicSearcherClient(ILogger<MusicSearcherClient> logger)
         {
@@ -57,6 +65,8 @@ namespace MusicSearcher
             {
                 Cache = new FileRequestCache(Path.Combine(location, "cache"))
             };
+
+            _musicServiceClients = new List<IMusicServiceClient>();
         }
 
         // TODO: Add additional check for aliases in case of abbreviations. For example: RHCP
@@ -104,26 +114,36 @@ namespace MusicSearcher
             try
             {
                 bool isResultFromCache = false;
-                if (IsMemoryCacheEnabled())
+                if (IsMemoryCacheEnabled)
                     isResultFromCache = _artistMemoryCache.TryGetValue(artistMBID, out result);
                 if (isResultFromCache)
                     return result;
 
                 result = new MusicArtist();
 
-                var musicBrainzArtistTask = _musicBrainzClient.Artists.GetAsync(artistMBID);
-                var lastFmArtistTask = GetLastFmArtist(artistMBID);
+                result.MusicBrainzArtist = await _musicBrainzClient.Artists.GetAsync(artistMBID);
 
-                result.MusicBrainzArtist = await musicBrainzArtistTask;
-                if (IsLastFmClientEnabled())
+                foreach (var musicServiceClient in _musicServiceClients.OrderByDescending(x => x.GetAvailableSearch()))
                 {
-                    result.LastFmArtist = await lastFmArtistTask;
-                }
-                if (IsSpotifyClientEnabled())
-                {
-                    result.SpotifyArtist = await SearchSpotifyArtist(result.Name);
-                }
+                    try
+                    {
+                        switch (musicServiceClient.GetAvailableSearch())
+                        {
+                            case AvailableSearchType.MBID:
+                            case AvailableSearchType.All:
+                                await musicServiceClient.GetArtistByMBID(result, artistMBID);
+                                break;
+                            case AvailableSearchType.Name:
+                                await musicServiceClient.SearchArtistByName(result, result.Name);
+                                break;
 
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"Can't get artist from music service [{musicServiceClient.GetType().Name}]");
+                    }
+                }
             } 
             catch (Exception ex)
             {
@@ -131,7 +151,7 @@ namespace MusicSearcher
                 return new MusicArtist();
             }
 
-            if (IsMemoryCacheEnabled())
+            if (IsMemoryCacheEnabled)
                 _artistMemoryCache.Set(artistMBID, result, _memoryCacheEntryOptions);
 
             return result;
@@ -141,85 +161,20 @@ namespace MusicSearcher
         {
             MusicTrack result = new MusicTrack();
 
-            if (IsSpotifyClientEnabled())
+            foreach (var musicServiceClient in _musicServiceClients)
             {
-                result.SpotifyTrack = await SearchSpotifyTrack(artistName, trackName);
-            }
-            if (IsYandexClientEnabled())
-            {
-                result.YandexTrack = await SearchYandexTrack(artistName, trackName);
+                try
+                {
+                    await musicServiceClient.SearchTrack(result, artistName, trackName);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Can't get track from music service [{musicServiceClient.GetType().Name}]");
+                }
             }
             return result;
         }
 
-        private async Task<YTrack> SearchYandexTrack(string artistName, string trackName)
-        {
-            try
-            {
-                var searchResult = _yandexClient.Search($"{artistName} - {trackName}", YSearchType.Track);
-                if (searchResult == null
-                    || searchResult.Tracks == null
-                    || searchResult.Tracks.Total == 0)
-                {
-                    throw new Exception($"Can't search track [{trackName}] for artist [{artistName}] from Yandex.");
-                }
-                var searchTrackResult = searchResult.Tracks.Results.FirstOrDefault(t => t.Artists != null && t.Artists.Any(a => string.Equals(a.Name, artistName)));
-                if (searchTrackResult == null)
-                {
-                    throw new Exception($"Can't get track [{trackName}] for artist [{artistName}] from Yandex.");
-                }
-                return _yandexClient.GetTrack(searchTrackResult.Id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Can't search track [{trackName}] for artist [{artistName}] from Yandex.");
-                return await Task.FromResult<YTrack>(null);
-            }
-        }
-
-        private async Task<FullTrack> SearchSpotifyTrack(string artistName, string trackName)
-        {
-            try
-            {
-                var searchTrack = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Track, $"{artistName} - {trackName}"));
-                if (searchTrack == null
-                    || searchTrack.Tracks == null
-                    || searchTrack.Tracks.Total == 0)
-                {
-                    throw new Exception($"Can't get track [{trackName}] for artist [{artistName}] from Spotify.");
-                }
-                // We can't compare artistName. For example for artist "ноганно" actual spotify name is "noganno".
-                return searchTrack.Tracks.Items.First(t => t.Artists != null);
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Can't search track [{trackName}] for artist [{artistName}] from Spotify.");
-                return await Task.FromResult<FullTrack>(null);
-            }
-        }
-
-        private async Task<FullArtist> SearchSpotifyArtist(string artistName)
-        {
-            try
-            {
-                var searchArtist = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Artist, artistName));
-                if (searchArtist == null
-                    || searchArtist.Artists == null
-                    || searchArtist.Artists.Total == 0)
-                {
-                    throw new Exception($"Can't get artist [{artistName}] from Spotify.");
-                }
-                // We can't compare artistName. For example for artist "ноганно" actual spotify name is "noganno".
-                return searchArtist.Artists.Items.First();
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Can't get artist [{artistName}] from Spotify.");
-                return await Task.FromResult<FullArtist>(null);
-            }
-        }
 
         public async Task<Recording> SearchSongByName(string artistMBID, string name)
         {
@@ -246,19 +201,6 @@ namespace MusicSearcher
             return result;
         }
 
-        private async Task<IEnumerable<FullTrack>> GetSpotifyTopTracks(FullArtist artist, string country)
-        {
-            var topTracks = await _spotifyClient.Artists.GetTopTracks(artist.Id, new ArtistsTopTracksRequest(country));
-            if (topTracks != null && topTracks.Tracks != null && topTracks.Tracks.Any())
-            {
-                return topTracks.Tracks;
-            }
-            else
-            {
-                _logger.LogError($"Can't get top tracks from Spotify for artist [{artist.Name}] with id [{artist.Id}]");
-                return await Task.FromResult<IEnumerable<FullTrack>>(null);
-            }
-        }
 
         public async Task<Recording> SearchSongByMBID(string songMBID)
         {
@@ -266,21 +208,23 @@ namespace MusicSearcher
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistName, string country)
+        public async Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistMBID)
         {
             List<MusicTrack> result = new List<MusicTrack>();
 
-            if (IsSpotifyClientEnabled())
+            var artist = await SearchArtistByMBID(artistMBID);
+
+            foreach (var musicServiceClient in _musicServiceClients)
             {
-                var spotifyArtist = await SearchSpotifyArtist(artistName);
-                if (spotifyArtist != null)
+                try
                 {
-                    string formattedCountry = RegionConverter.ConvertToTwoLetterISO(country);
-                    var spotifyTracks = await GetSpotifyTopTracks(spotifyArtist, formattedCountry);
-                    if (spotifyTracks != null )
-                    {
-                        return spotifyTracks.Select(t => new MusicTrack() { SpotifyTrack = t });
-                    }
+                    result = await musicServiceClient.SearchTopTracks(artist);
+                    if (result != null && result.Any())
+                        return result;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Can't get top tracks from music service [{musicServiceClient.GetType().Name}]");
                 }
             }
             return result;
@@ -296,12 +240,13 @@ namespace MusicSearcher
             }
             try
             {
-                _lastFmClient = new LastfmClient(apiKey, secret);
+                _musicServiceClients.Add(new LastFmServiceClient(apiKey, secret));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Can't initialize LastFM client!");
             }
+            _isLastFmClientEnabled = true;
         }
 
         public async Task WithSpotifyClient(string cliendID, string clientSecret)
@@ -314,17 +259,13 @@ namespace MusicSearcher
             }
             try
             {
-                var config = SpotifyClientConfig
-                    .CreateDefault()
-                    .WithRetryHandler(new SimpleRetryHandler() { RetryAfter = TimeSpan.FromSeconds(1) })
-                    .WithAuthenticator(new ClientCredentialsAuthenticator(cliendID, clientSecret));
-
-                _spotifyClient = new SpotifyClient(config);
+                _musicServiceClients.Add(new SpotifyServiceClient(cliendID, clientSecret));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Can't initialize Spotify client!");
             }
+            _isSpotifyClientEnabled = true;
         }
 
         public void WithMemoryCache()
@@ -345,40 +286,15 @@ namespace MusicSearcher
             }
             try
             {
-                _yandexClient = new YandexMusicClient();
-                _yandexClient.Authorize(login, password);
+                _musicServiceClients.Add(new YandexServiceClient(login, password));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Can't initialize Yandex client!");
             }
+            _isYandexClientEnabled = true;
         }
 
-        private async Task<LastArtist> GetLastFmArtist(string mbid)
-        {
-            LastArtist result = null;
-            if (IsLastFmClientEnabled())
-            {
-                var lastFmArtist = await _lastFmClient.Artist.GetInfoByMbidAsync(mbid);
-                if (lastFmArtist != null && lastFmArtist.Success)
-                {
-                    result = lastFmArtist.Content;
-                }
-                else
-                {
-                    _logger.LogError($"Can't get artist by mbid [{mbid}] from LastFM. Status: {lastFmArtist?.Status}.");
-                }
-            }
-            return result;
-        }
-
-        private bool IsLastFmClientEnabled() => _lastFmClient != null;
-
-        private bool IsSpotifyClientEnabled() => _spotifyClient != null;
-
-        private bool IsYandexClientEnabled() => _yandexClient != null;
-
-        private bool IsMemoryCacheEnabled() => _isMemoryCacheEnabled;
 
         public void Dispose()
         {

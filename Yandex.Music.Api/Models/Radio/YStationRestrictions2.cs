@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
 using Yandex.Music.Api.Models.Radio.Restriction;
 
@@ -8,10 +8,8 @@ namespace Yandex.Music.Api.Models.Radio
     {
         [JsonConverter(typeof(YRestrictionConverter))]
         public YRestriction Diversity { get; set; }
-
         [JsonConverter(typeof(YRestrictionConverter))]
         public YRestriction Language { get; set; }
-
         [JsonConverter(typeof(YRestrictionConverter))]
         public YRestriction MoodEnergy { get; set; }
     }

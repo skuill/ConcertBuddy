@@ -54,7 +54,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YPlaylistChangeRequest(api, storage)
                 .Create(playlist, changes)
-                .GetResponseAsync<YResponse<YPlaylist>>();
+                .GetResponseAsync();
         }
 
         private List<YTrack> RemoveIdentical(YTrack[] tracks)
@@ -81,7 +81,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YGetPlaylistMainPageRequest(api, storage)
                 .Create()
-                .GetResponseAsync<YResponse<YLanding>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YGetPlaylistFavoritesRequest(api, storage)
                 .Create()
-                .GetResponseAsync<YResponse<List<YPlaylist>>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -245,9 +245,9 @@ namespace Yandex.Music.Api.API
         /// </summary>
         /// <param name="storage">Хранилище</param>
         /// <returns></returns>
-        public async Task<YResponse<YPlaylist>> RewindAsync(AuthStorage storage)
+        public async Task<YResponse<YPlaylist>> KinopoiskAsync(AuthStorage storage)
         {
-            return await GetPersonalPlaylist(storage, YGeneratedPlaylistType.Rewind21);
+            return await GetPersonalPlaylist(storage, YGeneratedPlaylistType.Kinopoisk);
         }
 
         /// <summary>
@@ -255,9 +255,9 @@ namespace Yandex.Music.Api.API
         /// </summary>
         /// <param name="storage">Хранилище</param>
         /// <returns></returns>
-        public YResponse<YPlaylist> Rewind(AuthStorage storage)
+        public YResponse<YPlaylist> Kinopoisk(AuthStorage storage)
         {
-            return RewindAsync(storage).GetAwaiter().GetResult();
+            return KinopoiskAsync(storage).GetAwaiter().GetResult();
         }
 
         #endregion Стандартные плейлисты
@@ -275,7 +275,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YGetPlaylistRequest(api, storage)
                 .Create(user, kinds)
-                .GetResponseAsync<YResponse<YPlaylist>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -300,7 +300,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YGetPlaylistRequest(api, storage)
                 .Create(playlist)
-                .GetResponseAsync<YResponse<YPlaylist>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -328,7 +328,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YPlaylistCreateRequest(api, storage)
                 .Create(name)
-                .GetResponseAsync<YResponse<YPlaylist>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -353,7 +353,7 @@ namespace Yandex.Music.Api.API
         {
             return await new YPlaylistRenameRequest(api, storage)
                 .Create(kinds, name)
-                .GetResponseAsync<YResponse<YPlaylist>>();
+                .GetResponseAsync();
         }
 
         /// <summary>
@@ -457,7 +457,8 @@ namespace Yandex.Music.Api.API
         public async Task<YResponse<YPlaylist>> InsertTracksAsync(AuthStorage storage, YPlaylist playlist, params YTrack[] tracks)
         {
             return await ChangePlaylist(storage, playlist, new List<YPlaylistChange> {
-                    new YPlaylistChange {
+                    new()
+                    {
                         Operation = YPlaylistChangeType.Insert,
                         At = 0,
                         Tracks = tracks.Select(t => t.GetKey()).ToList()
