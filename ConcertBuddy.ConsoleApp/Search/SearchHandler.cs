@@ -30,7 +30,7 @@ namespace ConcertBuddy.ConsoleApp.Search
             if (Configuration.IsSpotifyAvailable())
                 musicSearcherClient.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
             if (Configuration.IsYandexAvailable())
-                musicSearcherClient.WithYandexClient(Configuration.YandexLogin, Configuration.YandexPassword);
+                musicSearcherClient.WithYandexClient(Configuration.YandexToken);
             musicSearcherClient.WithMemoryCache();
             _musicSearcherClient = musicSearcherClient;
 

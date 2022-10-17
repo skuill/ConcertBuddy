@@ -52,16 +52,11 @@ namespace ConcertBuddy.ConsoleApp
         public static string SpotifyClientSecret { get; set; }
 
         /// <summary>
-        /// To access Yandex API you need authorization. You can do it via OAuth token or login/password.
-        /// Documentation: https://yandexmusicapicsharp.readthedocs.io/ru/latest/client/root.html
+        /// To access Yandex API you need authorization. You can do it via OAuth token
+        /// Documentation 1: https://yandexmusicapicsharp.readthedocs.io/ru/latest/client/root.html
+        /// Documentation 2: https://yandex-music.readthedocs.io/en/main/
         /// </summary>
-        public static string YandexLogin { get; set; }
-
-        /// <summary>
-        /// To access Yandex API you need authorization. You can do it via OAuth token or login/password.
-        /// Documentation: https://yandexmusicapicsharp.readthedocs.io/ru/latest/client/root.html
-        /// </summary>
-        public static string YandexPassword { get; set; }
+        public static string YandexToken { get; set; }
 
         public static bool IsSetlistFmAvailable() => !string.IsNullOrWhiteSpace(SetlistFmApiKey);
 
@@ -69,6 +64,6 @@ namespace ConcertBuddy.ConsoleApp
         
         public static bool IsSpotifyAvailable() => !string.IsNullOrWhiteSpace(SpotifyClientID) && !string.IsNullOrWhiteSpace(SpotifyClientSecret);
 
-        public static bool IsYandexAvailable() => !string.IsNullOrWhiteSpace(YandexLogin) && !string.IsNullOrWhiteSpace(YandexPassword);
+        public static bool IsYandexAvailable() => !string.IsNullOrEmpty(YandexToken);
     }
 }

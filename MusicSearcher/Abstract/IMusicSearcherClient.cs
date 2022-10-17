@@ -27,7 +27,7 @@ namespace MusicSearcher.Abstract
 
         Task WithSpotifyClient(string cliendID, string clientSecret);
 
-        Task WithYandexClient(string login, string password);
+        Task WithYandexClient(string token);
 
         void WithMemoryCache();
     }

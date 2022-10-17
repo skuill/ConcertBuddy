@@ -276,17 +276,17 @@ namespace MusicSearcher
             _artistMemoryCache = new MemoryCache(memoryCacheOptions);
         }
 
-        public async Task WithYandexClient(string login, string password)
+        public async Task WithYandexClient(string token)
         {
             _logger.LogInformation($"Enable Yandex client for artist search");
-            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
+            if (string.IsNullOrEmpty(token))
             {
-                _logger.LogWarning($"Please set Yandex credentials: user login [{login}] and password [{password}] properly!");
+                _logger.LogWarning($"Please set Yandex credentials: token [{token}]!");
                 return;
             }
             try
             {
-                _musicServiceClients.Add(new YandexServiceClient(login, password));
+                _musicServiceClients.Add(new YandexServiceClient(token));
             }
             catch (Exception ex)
             {

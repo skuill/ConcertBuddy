@@ -7,7 +7,8 @@ namespace Yandex.Music.Api.Models.Search.Album
     public class YSearchAlbumModel: YAlbum
     {
         public List<string> AvailableRegions { get; set; }
-        public new List<string> Labels { get; set; }
+        // TODO: Wait for a fix https://github.com/K1llMan/Yandex.Music.Api/issues/6
+        public new List<object> Labels { get; set; }
         public int OriginalReleaseYear { get; set; }
         public List<string> Regions { get; set; }
     }
