@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Inflatable.Lastfm" Version="1.2.0" />
+    <PackageReference Include="KM.Yandex.Music.Client" Version="1.0.1" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
     <PackageReference Include="MusicBrainzAPI" Version="2.5.0" />
@@ -17,7 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SetlistFmApi\SetlistFmAPI.csproj" />
-    <ProjectReference Include="..\Yandex.Music.Client\Yandex.Music.Client.csproj" />
   </ItemGroup>
 
 </Project>
