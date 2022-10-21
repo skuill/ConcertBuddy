@@ -1,5 +1,5 @@
 ﻿using LyricsScraper.Abstract;
-using LyricsScraper.Unils;
+using LyricsScraper.Utils;
 
 namespace LyricsScraper.AZLyrics
 {

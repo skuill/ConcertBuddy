@@ -1,14 +1,15 @@
 ﻿using Hqub.MusicBrainz.API.Entities;
 using MusicSearcher.Model;
+using MusicSearcher.Model.Abstract;
 using SetlistFmAPI.Models;
 
 namespace ConcertBuddy.ConsoleApp.Search
 {
     public interface ISearchHandler
     {
-        Task<IEnumerable<MusicArtist>> SearchArtistsByName(string artistName, int limit = 5, int offset = 0);
+        Task<IEnumerable<MusicArtistBase>> SearchArtistsByName(string artistName, int limit = 5, int offset = 0);
 
-        Task<MusicArtist> SearchArtistByMBID(string mbid);
+        Task<MusicArtistBase> SearchArtistByMBID(string mbid);
 
         Task<Setlists> SearchArtistSetlists(string mbid, int page = 1);
 

@@ -1,16 +1,17 @@
 ﻿using Hqub.MusicBrainz.API.Entities;
 using MusicSearcher.Model;
+using MusicSearcher.Model.Abstract;
 using MusicSearcher.MusicBrainz;
 
 namespace MusicSearcher.Abstract
 {
     public interface IMusicSearcherClient : IDisposable
     {
-        Task<MusicArtist> SearchArtistByMBID(string artistMBID);
+        Task<MusicArtistBase> SearchArtistByMBID(string artistMBID);
 
-        Task<MusicArtist> SearchArtistByName(string name, ScoreType scoreType = ScoreType.MusicBrainz);
+        Task<MusicArtistBase> SearchArtistByName(string name, ScoreType scoreType = ScoreType.MusicBrainz);
 
-        Task<IEnumerable<MusicArtist>> SearchArtistsByName(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5, int offset = 0);
+        Task<IEnumerable<MusicArtistBase>> SearchArtistsByName(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5, int offset = 0);
 
         Task<MusicTrack> SearchTrack(string artistName, string trackName);
 

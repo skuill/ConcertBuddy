@@ -4,6 +4,8 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
 using MusicSearcher.Model;
+using MusicSearcher.Model.Abstract;
+using MusicSearcher.Model.MusicBrainz;
 using MusicSearcher.MusicBrainz;
 using MusicSearcher.MusicService.Abstract;
 using MusicSearcher.MusicService.LastFm;
@@ -70,13 +72,13 @@ namespace MusicSearcher
         }
 
         // TODO: Add additional check for aliases in case of abbreviations. For example: RHCP
-        public async Task<MusicArtist> SearchArtistByName(string name, ScoreType scoreType = ScoreType.MusicBrainz)
+        public async Task<MusicArtistBase> SearchArtistByName(string name, ScoreType scoreType = ScoreType.MusicBrainz)
         {
             return (await SearchArtistsByName(name, scoreType, 5)).FirstOrDefault();
         }
 
         // TODO: Add additional check for aliases in case of abbreviations. For example: RHCP
-        public async Task<IEnumerable<MusicArtist>> SearchArtistsByName(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5, int offset = 0)
+        public async Task<IEnumerable<MusicArtistBase>> SearchArtistsByName(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5, int offset = 0)
         {
             IEnumerable<MusicArtist> result = new List<MusicArtist>();
             try
@@ -93,8 +95,8 @@ namespace MusicSearcher
 
                 result = scoreType switch
                 {
-                    ScoreType.MusicBrainz => artists.Select(x => new MusicArtist() { MusicBrainzArtist = x }),
-                    ScoreType.Levenshtein => artists.OrderByDescending(x => Levenshtein.Similarity(x.Name, name)).Select(x => new MusicArtist() { MusicBrainzArtist = x }),
+                    ScoreType.MusicBrainz => artists.Select(x => new MusicArtist(new MusicBrainzMusicArtist(x))),
+                    ScoreType.Levenshtein => artists.OrderByDescending(x => Levenshtein.Similarity(x.Name, name)).Select(x => new MusicArtist(new MusicBrainzMusicArtist(x))),
                     _ => new List<MusicArtist>()
                 };
 
@@ -108,7 +110,7 @@ namespace MusicSearcher
             return result;
         }
 
-        public async Task<MusicArtist> SearchArtistByMBID(string artistMBID)
+        public async Task<MusicArtistBase> SearchArtistByMBID(string artistMBID)
         {
             var result = new MusicArtist();
             try
@@ -121,7 +123,7 @@ namespace MusicSearcher
 
                 result = new MusicArtist();
 
-                result.MusicBrainzArtist = await _musicBrainzClient.Artists.GetAsync(artistMBID);
+                result.Add(new MusicBrainzMusicArtist(await _musicBrainzClient.Artists.GetAsync(artistMBID)));
 
                 foreach (var musicServiceClient in _musicServiceClients.OrderByDescending(x => x.GetAvailableSearch()))
                 {
@@ -131,10 +133,10 @@ namespace MusicSearcher
                         {
                             case AvailableSearchType.MBID:
                             case AvailableSearchType.All:
-                                await musicServiceClient.GetArtistByMBID(result, artistMBID);
+                                result.Add(await musicServiceClient.GetArtistByMBID(artistMBID));
                                 break;
                             case AvailableSearchType.Name:
-                                await musicServiceClient.SearchArtistByName(result, result.Name);
+                                result.Add(await musicServiceClient.SearchArtistByName(result.Name));
                                 break;
 
                         }

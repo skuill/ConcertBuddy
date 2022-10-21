@@ -1,5 +1,7 @@
 ﻿using MusicSearcher.Converter;
 using MusicSearcher.Model;
+using MusicSearcher.Model.Abstract;
+using MusicSearcher.Model.Spotify;
 using MusicSearcher.MusicService.Abstract;
 using SpotifyAPI.Web;
 
@@ -9,6 +11,8 @@ namespace MusicSearcher.MusicService.Spotify
     {
         private SpotifyClient _spotifyClient;
         private AvailableSearchType availableSearch = AvailableSearchType.Name;
+
+        public MusicServiceType MusicServiceType => MusicServiceType.Spotify;
 
         public SpotifyServiceClient(string cliendID, string clientSecret)
         {
@@ -27,18 +31,18 @@ namespace MusicSearcher.MusicService.Spotify
             }
         }
 
-        public Task GetArtistByMBID(MusicArtist artist, string mbid)
+        public Task<MusicArtistBase> GetArtistByMBID(string mbid)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<List<MusicTrack>> SearchTopTracks(MusicArtist artist)
+        public async Task<List<MusicTrack>> SearchTopTracks(MusicArtistBase artist)
         {
-            if (artist != null && artist.SpotifyArtist != null)
+            if (artist != null && artist.IsMusicArtistExist(MusicServiceType.Spotify))
             {
                 // Country code should be in ISO 3166-1
                 string formattedCountry = RegionConverter.ConvertToTwoLetterISO(artist.Country);
-                var spotifyTracks = await GetSpotifyTopTracks(artist.SpotifyArtist, formattedCountry);
+                var spotifyTracks = await GetSpotifyTopTracks((artist.GetMusicArtistByServiceType(MusicServiceType.Spotify) as SpotifyMusicArtist).Artist, formattedCountry);
                 if (spotifyTracks != null)
                 {
                     return spotifyTracks.Select(t => new MusicTrack() { SpotifyTrack = t }).ToList();
@@ -75,7 +79,7 @@ namespace MusicSearcher.MusicService.Spotify
 
         public AvailableSearchType GetAvailableSearch() => availableSearch;
 
-        public async Task SearchArtistByName(MusicArtist artist, string name)
+        public async Task<MusicArtistBase> SearchArtistByName(string name)
         {
             var searchArtist = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Artist, name));
             if (searchArtist == null
@@ -85,7 +89,7 @@ namespace MusicSearcher.MusicService.Spotify
                 throw new Exception($"Can't get artist [{name}] from Spotify.");
             }
             // We can't compare artistName. For example for artist "ноганно" actual spotify name is "noganno".
-            artist.SpotifyArtist = searchArtist.Artists.Items.First();
+            return new SpotifyMusicArtist(searchArtist.Artists.Items.First());
         }
     }
 }

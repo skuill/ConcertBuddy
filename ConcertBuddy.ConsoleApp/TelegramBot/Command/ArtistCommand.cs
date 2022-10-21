@@ -3,6 +3,8 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;
+using MusicSearcher.Model;
+using MusicSearcher.MusicService;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -35,7 +37,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             var artistMBID = Data.GetParameterFromMessageText(CommandList.COMMAND_ARTIST);
 
-            var artist = await SearchHandler.SearchArtistByMBID(artistMBID);
+            var artist = await SearchHandler.SearchArtistByMBID(artistMBID) as MusicArtist;
 
             if (artist == null)
             {
@@ -43,13 +45,16 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
+            var lastFmUrl = artist[MusicServiceType.LastFm].ExternalUrl;
+            var spotifyUrl = artist[MusicServiceType.Spotify].ExternalUrl;
+
             replyText = $"<b>{artist.Name}</b>. ";
-            if (artist.LastFmUrl != null || artist.SpotifyUrl != null)
+            if (lastFmUrl != default || spotifyUrl != default)
                 replyText = replyText + "<i>Links</i>: ";
-            if (artist.LastFmUrl != null)
-                replyText = replyText + "<a href=\"" + artist.LastFmUrl.ToString() + "\">last.fm</a>, ";
-            if (artist.SpotifyUrl != null)
-                replyText = replyText + "<a href=\"" + artist.SpotifyUrl.ToString() + "\">spotify</a>";
+            if (lastFmUrl != default)
+                replyText = replyText + "<a href=\"" + lastFmUrl.ToString() + "\">last.fm</a>, ";
+            if (spotifyUrl != default)
+                replyText = replyText + "<a href=\"" + spotifyUrl.ToString() + "\">spotify</a>";
 
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(artistMBID)
                 .WithDeleteButton();

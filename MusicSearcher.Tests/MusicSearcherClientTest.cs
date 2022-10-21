@@ -2,6 +2,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using MusicSearcher.Abstract;
+using MusicSearcher.Model;
+using MusicSearcher.MusicService;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -77,11 +79,12 @@ namespace MusicSearcher.Tests
             var client = InitClient();
 
             // Act
-            var result = await client.SearchArtistByMBID(mbid);
+            var result = await client.SearchArtistByMBID(mbid) as MusicArtist;
 
             // Assert
-            Assert.IsNull(result.MusicBrainzArtist);
-            Assert.IsNull(result.LastFmArtist);
+            Assert.IsNotNull(result);
+            Assert.IsNull(result[MusicServiceType.MusicBrainz]);
+            Assert.IsNull(result[MusicServiceType.LastFm]);
             Assert.IsTrue(string.IsNullOrEmpty(result.Name));
             Assert.IsTrue(string.IsNullOrEmpty(result.Biography));
             Assert.IsTrue(string.IsNullOrEmpty(result.MBID));
@@ -112,12 +115,13 @@ namespace MusicSearcher.Tests
             client.WithLastFmClient(Configuration.LastFmApiKey, Configuration.LastFmApiSecret);
 
             // Act
-            var result = await client.SearchArtistByMBID(mbid);
+            var result = await client.SearchArtistByMBID(mbid) as MusicArtist;
 
             // Assert
-            Assert.IsNotNull(result.LastFmArtist);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result[MusicServiceType.LastFm]);
             Assert.IsTrue(string.Equals(artist, result.Name));
-            Assert.IsTrue(string.Equals(artist, result.LastFmArtist.Name));
+            Assert.IsTrue(string.Equals(artist, result[MusicServiceType.LastFm].Name));
         }
 
         [TestMethod]
@@ -130,12 +134,13 @@ namespace MusicSearcher.Tests
             client.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
 
             // Act
-            var result = await client.SearchArtistByMBID(mbid);
+            var result = await client.SearchArtistByMBID(mbid) as MusicArtist;
 
             // Assert
-            Assert.IsNotNull(result.SpotifyArtist);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result[MusicServiceType.Spotify]);
             Assert.IsTrue(string.Equals(artist, result.Name));
-            Assert.IsTrue(string.Equals(artist, result.SpotifyArtist.Name));
+            Assert.IsTrue(string.Equals(artist, result[MusicServiceType.Spotify].Name));
             Assert.IsNotNull(result.ImageUri);
         }
 

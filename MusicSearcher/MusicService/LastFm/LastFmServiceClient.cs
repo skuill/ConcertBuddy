@@ -1,5 +1,7 @@
 ﻿using IF.Lastfm.Core.Api;
 using MusicSearcher.Model;
+using MusicSearcher.Model.Abstract;
+using MusicSearcher.Model.LastFm;
 using MusicSearcher.MusicService.Abstract;
 
 namespace MusicSearcher.MusicService.LastFm
@@ -21,12 +23,14 @@ namespace MusicSearcher.MusicService.LastFm
             }
         }
 
-        public async Task GetArtistByMBID(MusicArtist artist, string mbid)
+        public MusicServiceType MusicServiceType => MusicServiceType.LastFm;
+
+        public async Task<MusicArtistBase> GetArtistByMBID(string mbid)
         {
             var lastFmArtist = await _lastFmClient.Artist.GetInfoByMbidAsync(mbid);
             if (lastFmArtist != null && lastFmArtist.Success)
             {
-                artist.LastFmArtist = lastFmArtist.Content;
+                return new LastFmMusicArtist(lastFmArtist.Content);
             }
             else
             {
@@ -36,12 +40,12 @@ namespace MusicSearcher.MusicService.LastFm
 
         public AvailableSearchType GetAvailableSearch() => availableSearch;
 
-        public Task SearchArtistByName(MusicArtist artist, string name)
+        public Task<MusicArtistBase> SearchArtistByName(string name)
         {
             throw new NotImplementedException();
         }
 
-        public Task<List<MusicTrack>> SearchTopTracks(MusicArtist artist)
+        public Task<List<MusicTrack>> SearchTopTracks(MusicArtistBase artist)
         {
             throw new NotImplementedException();
         }

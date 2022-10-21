@@ -1,4 +1,5 @@
 ﻿using MusicSearcher.Model;
+using MusicSearcher.Model.Abstract;
 using MusicSearcher.MusicService.Abstract;
 using Yandex.Music.Api.Models.Common;
 using Yandex.Music.Client;
@@ -9,6 +10,8 @@ namespace MusicSearcher.MusicService.Yandex
     {
         private YandexMusicClient _yandexClient;
         private AvailableSearchType availableSearch = AvailableSearchType.All;
+
+        public MusicServiceType MusicServiceType => MusicServiceType.Yandex;
 
         [Obsolete("Starting with version 2.0.0, the library no longer provides interfaces for working with OAuth Yandex and Yandex.Passport.")]
         public YandexServiceClient(string login, string password)
@@ -41,12 +44,12 @@ namespace MusicSearcher.MusicService.Yandex
             }
         }
 
-        public Task GetArtistByMBID(MusicArtist artist, string mbid)
+        public Task<MusicArtistBase> GetArtistByMBID(string mbid)
         {
             throw new NotImplementedException();
         }
 
-        public Task<List<MusicTrack>> SearchTopTracks(MusicArtist artist)
+        public Task<List<MusicTrack>> SearchTopTracks(MusicArtistBase artist)
         {
             throw new NotImplementedException();
         }
@@ -72,7 +75,7 @@ namespace MusicSearcher.MusicService.Yandex
 
         public AvailableSearchType GetAvailableSearch() => availableSearch;
 
-        public Task SearchArtistByName(MusicArtist artist, string name)
+        public Task<MusicArtistBase> SearchArtistByName(string name)
         {
             throw new NotImplementedException();
         }

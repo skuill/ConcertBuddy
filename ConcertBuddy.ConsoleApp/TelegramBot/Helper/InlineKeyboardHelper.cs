@@ -1,6 +1,7 @@
 ﻿using ConcertBuddy.ConsoleApp.Model;
 using ConcertBuddy.ConsoleApp.Search;
 using MusicSearcher.Model;
+using MusicSearcher.Model.Abstract;
 using SetlistFmAPI.Models;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -66,7 +67,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
             return new InlineKeyboardMarkup(inlineKeyboardButtons);
         }
 
-        public static InlineKeyboardMarkup GetArtistsInlineKeyboard(IEnumerable<MusicArtist> artists, int counter = 1)
+        public static InlineKeyboardMarkup GetArtistsInlineKeyboard(IEnumerable<MusicArtistBase> artists, int counter = 1)
         {
             List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
             foreach (var artist in artists)

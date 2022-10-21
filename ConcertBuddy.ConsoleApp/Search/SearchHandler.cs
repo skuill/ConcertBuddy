@@ -4,9 +4,9 @@ using LyricsScraper.Abstract;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
 using MusicSearcher.Model;
+using MusicSearcher.Model.Abstract;
 using SetlistFmAPI;
 using SetlistFmAPI.Models;
-using SpotifyAPI.Web;
 
 namespace ConcertBuddy.ConsoleApp.Search
 {
@@ -47,7 +47,7 @@ namespace ConcertBuddy.ConsoleApp.Search
             return _setlistFmClient.SearchArtistSetlists(mbid, page);
         }
 
-        public Task<IEnumerable<MusicArtist>> SearchArtistsByName(string artistName, int limit = 5, int offset = 0)
+        public Task<IEnumerable<MusicArtistBase>> SearchArtistsByName(string artistName, int limit = 5, int offset = 0)
         {
             return _musicSearcherClient.SearchArtistsByName(artistName, limit:limit, offset:offset);
         }
@@ -57,7 +57,7 @@ namespace ConcertBuddy.ConsoleApp.Search
             return _lyricsScraperUtil.SearchLyricAsync(artistName, songName);
         }
 
-        public Task<MusicArtist> SearchArtistByMBID(string mbid)
+        public Task<MusicArtistBase> SearchArtistByMBID(string mbid)
         {
             return _musicSearcherClient.SearchArtistByMBID(mbid);
         }

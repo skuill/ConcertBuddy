@@ -1,4 +1,4 @@
-﻿namespace LyricsScraper.Unils
+﻿namespace LyricsScraper.Utils
 {
     public static class StringUtils
     {

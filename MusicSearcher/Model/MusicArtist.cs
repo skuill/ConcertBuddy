@@ -1,75 +1,84 @@
-﻿using Hqub.MusicBrainz.API.Entities;
-using IF.Lastfm.Core.Objects;
-using SpotifyAPI.Web;
+﻿using MusicSearcher.Model.Abstract;
+using MusicSearcher.MusicService;
+using System.Collections;
 
 namespace MusicSearcher.Model
 {
-    public class MusicArtist
+    public class MusicArtist : MusicArtistBase, IEnumerable<MusicArtistBase>
     {
-        public Artist MusicBrainzArtist { get; set; }
+        private List<MusicArtistBase> _musicArtists;
 
-        public LastArtist LastFmArtist { get; set; }
+        // Indexer with only a get accessor with the expression-bodied definition:
+        public MusicArtistBase this[MusicServiceType musicServiceType] => GetMusicArtistByServiceType(musicServiceType);
 
-        public FullArtist SpotifyArtist { get; set; }
+        public MusicArtist() {
+            _musicArtists = new List<MusicArtistBase>();
+        }
 
-        public string Name => MusicBrainzArtist?.Name ?? LastFmArtist?.Name;
+        public MusicArtist(MusicArtistBase musicArtist)
+        {
+            _musicArtists = new List<MusicArtistBase> { musicArtist };
+        }
 
-        public string MBID => MusicBrainzArtist?.Id ?? LastFmArtist?.Mbid;
+        public MusicArtist(List<MusicArtistBase> musicArtists)
+        {
+            _musicArtists = musicArtists;
+        }
 
-        public int? Score => MusicBrainzArtist?.Score;
+        public override string Name { get => _musicArtists?.Select(x => x.Name).Where(x => x != default).FirstOrDefault(); }
 
-        public Uri ImageUri => TryGetSpotifyArtistImage() ?? TryGetLastFmArtistImageUri();
+        public override string MBID { get => _musicArtists?.Select(x => x.MBID).Where(x => x != default).FirstOrDefault(); }
 
-        public string Biography => LastFmArtist?.Bio?.Summary;
+        public override int? Score { get => _musicArtists?.Select(x => x.Score).Where(x => x != default).FirstOrDefault(); }
 
-        public Uri LastFmUrl => LastFmArtist?.Url;
+        public override Uri ImageUri { get => _musicArtists?.Select(x => x.ImageUri).Where(x => x != default).FirstOrDefault(); }
 
-        public Uri SpotifyUrl => SpotifyArtist?.ExternalUrls != null && SpotifyArtist.ExternalUrls.TryGetValue("spotify", out string uriString) ? new Uri(uriString) : null;
+        public override string Biography { get => _musicArtists?.Select(x => x.Biography).Where(x => x != default).FirstOrDefault(); }
 
         /// <summary>
         /// Areas are geographic regions or settlements.
         /// </summary>
-        public string Area => MusicBrainzArtist?.Area?.Name;
+        public override string Area { get => _musicArtists?.Select(x => x.Area).Where(x => x != default).FirstOrDefault(); }
 
-        public string ActiveYears => $"{MusicBrainzArtist?.LifeSpan?.Begin} - {MusicBrainzArtist?.LifeSpan?.End}";
+        public override string ActiveYears { get => _musicArtists?.Select(x => x.ActiveYears).Where(x => x != default).FirstOrDefault(); }
 
-        public string Type => MusicBrainzArtist?.Type;
+        public override string Type { get => _musicArtists?.Select(x => x.Type).Where(x => x != default).FirstOrDefault(); }
 
-        public string Country => MusicBrainzArtist?.Country;
+        public override string Country { get => _musicArtists?.Select(x => x.Country).Where(x => x != default).FirstOrDefault(); }
 
-        private Uri TryGetSpotifyArtistImage()
+        public override Uri ExternalUrl { get => _musicArtists?.Select(x => x.ExternalUrl).Where(x => x != default).FirstOrDefault(); }
+
+        public override MusicServiceType MusicServiceType => MusicServiceType.None;
+
+        public void Add(MusicArtistBase artist)
         {
-            if (SpotifyArtist is null || SpotifyArtist.Images is null || !SpotifyArtist.Images.Any())
-                return null;
-            return new Uri(SpotifyArtist.Images.First().Url);
+            if (!_musicArtists.Contains(artist))
+                _musicArtists.Add(artist);
+            else
+                throw new InvalidOperationException($"Try to add already exist artist {artist.MusicServiceType}");
         }
 
-        private const string LAST_FM_BLANK_IMAGE_NAME = "2a96cbd8b46e442fc41c2b86b821562f.png";
-        // LastFM API return blank image:
-        // https://support.last.fm/t/api-announcement-usage-of-audio-audiovisual-images-or-artwork/202
-        private Uri TryGetLastFmArtistImageUri()
+        public override bool IsMusicArtistExist(MusicServiceType musicServiceType)
         {
-            if (LastFmArtist?.MainImage?.Small != null && !LastFmArtist.MainImage.Small.ToString().Contains(LAST_FM_BLANK_IMAGE_NAME))
-            {
-                return LastFmArtist.MainImage.Small;
-            }
-            if (LastFmArtist?.MainImage?.Medium != null && !LastFmArtist.MainImage.Medium.ToString().Contains(LAST_FM_BLANK_IMAGE_NAME))
-            {
-                return LastFmArtist.MainImage.Small;
-            }
-            if (LastFmArtist?.MainImage?.Large != null && !LastFmArtist.MainImage.Large.ToString().Contains(LAST_FM_BLANK_IMAGE_NAME))
-            {
-                return LastFmArtist.MainImage.Small;
-            }
-            if (LastFmArtist?.MainImage?.ExtraLarge != null && !LastFmArtist.MainImage.ExtraLarge.ToString().Contains(LAST_FM_BLANK_IMAGE_NAME))
-            {
-                return LastFmArtist.MainImage.Small;
-            }
-            if (LastFmArtist?.MainImage?.Mega != null && !LastFmArtist.MainImage.Mega.ToString().Contains(LAST_FM_BLANK_IMAGE_NAME))
-            {
-                return LastFmArtist.MainImage.Small;
-            }
-            return null;
+            return _musicArtists != null && _musicArtists.Any(x => x.MusicServiceType == musicServiceType); 
+        }
+
+        public override MusicArtistBase GetMusicArtistByServiceType(MusicServiceType musicServiceType)
+        {
+            if (_musicArtists == null)
+                return null;
+
+            return _musicArtists.FirstOrDefault(x => x.MusicServiceType == musicServiceType);
+        }
+
+        public IEnumerator<MusicArtistBase> GetEnumerator()
+        {
+            return _musicArtists.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using LyricsScraper.Abstract;
 using LyricsScraper.Common;
-using LyricsScraper.Unils;
+using LyricsScraper.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace LyricsScraper.AZLyrics

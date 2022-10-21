@@ -1,16 +1,19 @@
 ﻿using MusicSearcher.Model;
+using MusicSearcher.Model.Abstract;
 
 namespace MusicSearcher.MusicService.Abstract
 {
     internal interface IMusicServiceClient
     {
-        public Task GetArtistByMBID(MusicArtist artist, string mbid);
+        public MusicServiceType MusicServiceType { get; }
 
-        public Task SearchArtistByName(MusicArtist artist, string name);
+        public Task<MusicArtistBase> GetArtistByMBID(string mbid);
+
+        public Task<MusicArtistBase> SearchArtistByName(string name);
 
         public Task SearchTrack(MusicTrack track, string artistName, string trackName);
 
-        public Task<List<MusicTrack>> SearchTopTracks(MusicArtist artist);
+        public Task<List<MusicTrack>> SearchTopTracks(MusicArtistBase artist);
 
         public AvailableSearchType GetAvailableSearch();
     }
