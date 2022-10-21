@@ -6,7 +6,7 @@ namespace MusicSearcher.Model.Spotify
 {
     internal class SpotifyMusicArtist : MusicArtistBase
     {
-        private string _externalUrlKey = "spotify";
+        private const string EXTERNAL_URL_KEY = "spotify";
 
         private FullArtist _artist { get; set; }
 
@@ -29,7 +29,7 @@ namespace MusicSearcher.Model.Spotify
         public override Uri ExternalUrl
         {
             get => _artist?.ExternalUrls != null
-                        && _artist.ExternalUrls.TryGetValue(_externalUrlKey, out string uriString) 
+                        && _artist.ExternalUrls.TryGetValue(EXTERNAL_URL_KEY, out string uriString) 
                     ? new Uri(uriString) 
                     : null;
         }
