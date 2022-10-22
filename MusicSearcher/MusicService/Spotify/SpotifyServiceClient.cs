@@ -36,7 +36,7 @@ namespace MusicSearcher.MusicService.Spotify
             throw new NotImplementedException();
         }
 
-        public async Task<List<MusicTrack>> SearchTopTracks(MusicArtistBase artist)
+        public async Task<List<MusicTrackBase>> SearchTopTracks(MusicArtistBase artist)
         {
             if (artist != null && artist.IsMusicArtistExist(MusicServiceType.Spotify))
             {
@@ -45,7 +45,7 @@ namespace MusicSearcher.MusicService.Spotify
                 var spotifyTracks = await GetSpotifyTopTracks((artist.GetMusicArtistByServiceType(MusicServiceType.Spotify) as SpotifyMusicArtist).Artist, formattedCountry);
                 if (spotifyTracks != null)
                 {
-                    return spotifyTracks.Select(t => new MusicTrack() { SpotifyTrack = t }).ToList();
+                    return spotifyTracks.Select(x => new SpotifyMusicTrack(x)).ToList<MusicTrackBase>();
                 }
             }
             return null;
@@ -64,7 +64,7 @@ namespace MusicSearcher.MusicService.Spotify
             }
         }
 
-        public async Task SearchTrack(MusicTrack track, string artistName, string trackName)
+        public async Task<MusicTrackBase> SearchTrack(string artistName, string trackName)
         {
             var searchTrack = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Track, $"{artistName} - {trackName}"));
             if (searchTrack == null
@@ -74,7 +74,7 @@ namespace MusicSearcher.MusicService.Spotify
                 throw new Exception($"Can't get track [{trackName}] for artist [{artistName}] from Spotify.");
             }
             // We can't compare artistName. For example for artist "ноганно" actual spotify name is "noganno".
-            track.SpotifyTrack = searchTrack.Tracks.Items.First(t => t.Artists != null);
+            return new SpotifyMusicTrack(searchTrack.Tracks.Items.First(t => t.Artists != null));
         }
 
         public AvailableSearchType GetAvailableSearch() => availableSearch;

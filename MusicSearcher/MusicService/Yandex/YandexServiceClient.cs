@@ -1,5 +1,6 @@
 ﻿using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
+using MusicSearcher.Model.Yandex;
 using MusicSearcher.MusicService.Abstract;
 using Yandex.Music.Api.Models.Common;
 using Yandex.Music.Client;
@@ -49,12 +50,12 @@ namespace MusicSearcher.MusicService.Yandex
             throw new NotImplementedException();
         }
 
-        public Task<List<MusicTrack>> SearchTopTracks(MusicArtistBase artist)
+        public Task<List<MusicTrackBase>> SearchTopTracks(MusicArtistBase artist)
         {
             throw new NotImplementedException();
         }
 
-        public async Task SearchTrack(MusicTrack track, string artistName, string trackName)
+        public async Task<MusicTrackBase> SearchTrack(string artistName, string trackName)
         {
             // Known search problems with external library:
             // https://github.com/K1llMan/Yandex.Music.Api/issues/6
@@ -70,7 +71,7 @@ namespace MusicSearcher.MusicService.Yandex
             {
                 throw new Exception($"Can't get track [{trackName}] for artist [{artistName}] from Yandex.");
             }
-            track.YandexTrack = _yandexClient.GetTrack(searchTrackResult.Id);
+            return new YandexMusicTrack(_yandexClient.GetTrack(searchTrackResult.Id));
         }
 
         public AvailableSearchType GetAvailableSearch() => availableSearch;

@@ -31,7 +31,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
             return new InlineKeyboardMarkup(inlineKeyboardButtons);
         }
 
-        public static InlineKeyboardMarkup GetTracksInlineKeyboardMenu(MusicTrack[] tracks, string mbid)
+        public static InlineKeyboardMarkup GetTracksInlineKeyboardMenu(MusicTrackBase[] tracks, string mbid)
         {
             List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
             int counter = 1;

@@ -1,5 +1,4 @@
 ﻿using Hqub.MusicBrainz.API.Entities;
-using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using SetlistFmAPI.Models;
 
@@ -17,9 +16,9 @@ namespace ConcertBuddy.ConsoleApp.Search
 
         Task<string> SearchLyric(string artistName, string songName);
 
-        Task<MusicTrack> SearchTrack(string artistName, string trackName);
+        Task<MusicTrackBase> SearchTrack(string artistName, string trackName);
 
-        Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistMBID);
+        Task<IEnumerable<MusicTrackBase>> SearchTopTracks(string artistMBID);
 
         Task<Recording> SearchSongByName(string artistMBID, string name);
 

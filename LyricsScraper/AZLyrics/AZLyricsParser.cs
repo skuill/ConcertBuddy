@@ -7,7 +7,7 @@ namespace LyricsScraper.AZLyrics
     {
         public string Parse(string lyric)
         {
-            return RemoveAllHtmlTags(lyric);
+            return UnescapeString(RemoveAllHtmlTags(lyric));
         }
 
         private string RemoveAllHtmlTags(string html)
@@ -27,6 +27,20 @@ namespace LyricsScraper.AZLyrics
             }
 
             return html;
+        }
+
+        private string UnescapeString(string lyric)
+        {
+            if (!string.IsNullOrEmpty(lyric))
+            {
+                // replace entities with literal values
+                lyric = lyric.Replace("&apos;", "'");
+                lyric = lyric.Replace("&quot;", "\"");
+                lyric = lyric.Replace("&gt;", ">");
+                lyric = lyric.Replace("&lt;", "<");
+                lyric = lyric.Replace("&amp;", "&");
+            }
+            return lyric;
         }
     }
 }

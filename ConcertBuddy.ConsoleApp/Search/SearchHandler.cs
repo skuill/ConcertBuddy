@@ -3,7 +3,6 @@ using LyricsScraper;
 using LyricsScraper.Abstract;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
-using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using SetlistFmAPI;
 using SetlistFmAPI.Models;
@@ -67,12 +66,12 @@ namespace ConcertBuddy.ConsoleApp.Search
             return _setlistFmClient.SearchSetlist(setlistId);
         }
 
-        public Task<MusicTrack> SearchTrack(string artistName, string trackName)
+        public Task<MusicTrackBase> SearchTrack(string artistName, string trackName)
         {
             return _musicSearcherClient.SearchTrack(artistName, trackName);
         }
 
-        public Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistMBID)
+        public Task<IEnumerable<MusicTrackBase>> SearchTopTracks(string artistMBID)
         {
             return _musicSearcherClient.SearchTopTracks(artistMBID);
         }

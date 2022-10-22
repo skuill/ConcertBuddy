@@ -45,12 +45,12 @@ namespace MusicSearcher.MusicService.LastFm
             throw new NotImplementedException();
         }
 
-        public Task<List<MusicTrack>> SearchTopTracks(MusicArtistBase artist)
+        public Task<List<MusicTrackBase>> SearchTopTracks(MusicArtistBase artist)
         {
             throw new NotImplementedException();
         }
 
-        public Task SearchTrack(MusicTrack track, string artistName, string trackName)
+        public Task<MusicTrackBase> SearchTrack(string artistName, string trackName)
         {
             throw new NotImplementedException();
         }

@@ -11,9 +11,9 @@ namespace MusicSearcher.MusicService.Abstract
 
         public Task<MusicArtistBase> SearchArtistByName(string name);
 
-        public Task SearchTrack(MusicTrack track, string artistName, string trackName);
+        public Task<MusicTrackBase> SearchTrack(string artistName, string trackName);
 
-        public Task<List<MusicTrack>> SearchTopTracks(MusicArtistBase artist);
+        public Task<List<MusicTrackBase>> SearchTopTracks(MusicArtistBase artist);
 
         public AvailableSearchType GetAvailableSearch();
     }

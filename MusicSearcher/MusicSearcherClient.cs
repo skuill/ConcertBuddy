@@ -159,7 +159,7 @@ namespace MusicSearcher
             return result;
         }
 
-        public async Task<MusicTrack> SearchTrack(string artistName, string trackName)
+        public async Task<MusicTrackBase> SearchTrack(string artistName, string trackName)
         {
             MusicTrack result = new MusicTrack();
 
@@ -167,7 +167,7 @@ namespace MusicSearcher
             {
                 try
                 {
-                    await musicServiceClient.SearchTrack(result, artistName, trackName);
+                    result.Add(await musicServiceClient.SearchTrack(artistName, trackName));
                 }
                 catch (Exception ex)
                 {
@@ -210,9 +210,9 @@ namespace MusicSearcher
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<MusicTrack>> SearchTopTracks(string artistMBID)
+        public async Task<IEnumerable<MusicTrackBase>> SearchTopTracks(string artistMBID)
         {
-            List<MusicTrack> result = new List<MusicTrack>();
+            List<MusicTrackBase> result = new List<MusicTrackBase>();
 
             var artist = await SearchArtistByMBID(artistMBID);
 

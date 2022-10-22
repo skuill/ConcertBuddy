@@ -1,17 +1,17 @@
-﻿using MusicSearcher.Model;
+﻿using MusicSearcher.Model.Abstract;
 using System.Text;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
 {
     public static class TrackHelper
     {
-        public static string GetTrackArtistsLinks(this MusicTrack track)
+        public static string GetTrackArtistsLinks(this MusicTrackBase track)
         {
             return string.Join(", ", track.ArtistsExternalLinks
                 .Select(a => $"<a href=\"{a.Value}\">{a.Key}</a>"));
         }
 
-        public static string GetTrackMarkdown(this MusicTrack track)
+        public static string GetTrackMarkdown(this MusicTrackBase track)
         {
             StringBuilder result = new StringBuilder();
 

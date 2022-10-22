@@ -155,13 +155,14 @@ namespace MusicSearcher.Tests
             client.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
 
             // Act
-            var result = await client.SearchTrack(artist, trackSearch);
+            var result = await client.SearchTrack(artist, trackSearch) as MusicTrack;
 
             // Assert
             Assert.IsNotNull(result);
+            Assert.IsNotNull(result[MusicServiceType.Spotify]);
             Assert.IsTrue(string.Equals(trackExpected, result.TrackName));
-            Assert.IsNotNull(result.SpotifyTrack.Artists);
-            Assert.IsTrue(result.SpotifyTrack.Artists.Any(x => string.Equals(x.Name, artist)));
+            Assert.IsNotNull(result.ArtistsNames);
+            Assert.IsTrue(result.ArtistsNames.Any(x => string.Equals(x, artist)));
         }
 
         [TestMethod]

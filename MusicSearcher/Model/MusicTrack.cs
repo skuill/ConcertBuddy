@@ -1,94 +1,78 @@
-﻿using SpotifyAPI.Web;
-using Yandex.Music.Api.Models.Track;
-using Yandex.Music.Client.Extensions;
+﻿using MusicSearcher.Model.Abstract;
+using MusicSearcher.MusicService;
+using System.Collections;
 
 namespace MusicSearcher.Model
 {
-    public class MusicTrack
+    public class MusicTrack: MusicTrackBase, IEnumerable<MusicTrackBase>
     {
-        private const string EXTERNAL_URL_KEY = "spotify";
+        private List<MusicTrackBase> _musicTracks;
 
-        public FullTrack SpotifyTrack { get; set; }
+        // Indexer with only a get accessor with the expression-bodied definition:
+        public MusicTrackBase this[MusicServiceType musicServiceType] => GetMusicTrackByServiceType(musicServiceType);
 
-        public YTrack YandexTrack { get; set; }
-
-        public string TrackName => SpotifyTrack?.Name ?? YandexTrack?.Title;
-
-        public string DownloadLink => YandexTrack?.GetLink();
-
-        public string TrackExternalLink
+        public MusicTrack()
         {
-            get {
-                if (SpotifyTrack is null)
-                    return null;
-                if (SpotifyTrack.ExternalUrls.TryGetValue(EXTERNAL_URL_KEY, out string result))
-                    return result;
-                return null;
-            }
+            _musicTracks = new List<MusicTrackBase>();
         }
 
-        public string AlbumName
+        public MusicTrack(MusicTrackBase musicTrack)
         {
-            get
-            {
-                if (SpotifyTrack != null && SpotifyTrack.Album != null)
-                {
-                    return SpotifyTrack.Album.Name;
-                }
-                if (YandexTrack != null && YandexTrack.Albums != null && YandexTrack.Albums.Any())
-                {
-                    return YandexTrack.Albums.First().Title;
-                }
-                return null;
-            }
+            _musicTracks = new List<MusicTrackBase> { musicTrack };
         }
 
-        public string AlbumExternalLink
+        public MusicTrack(List<MusicTrackBase> musicTracks)
         {
-            get
-            {
-                if (SpotifyTrack != null && SpotifyTrack.Album != null)
-                {
-                    if (SpotifyTrack.Album.ExternalUrls.TryGetValue(EXTERNAL_URL_KEY, out string result))
-                        return result;
-                }
-                return null;
-            }
+            _musicTracks = musicTracks;
         }
 
-        public IEnumerable<string> ArtistsNames
+        public override string TrackName { get => _musicTracks?.Select(x => x.TrackName).Where(x => x != default).FirstOrDefault(); }
+
+        public override string DownloadLink { get => _musicTracks?.Select(x => x.DownloadLink).Where(x => x != default).FirstOrDefault(); }
+
+        public override string TrackExternalLink { get => _musicTracks?.Select(x => x.TrackExternalLink).Where(x => x != default).FirstOrDefault(); }
+
+        public override string AlbumName { get => _musicTracks?.Select(x => x.AlbumName).Where(x => x != default).FirstOrDefault(); }
+
+        public override string AlbumExternalLink { get => _musicTracks?.Select(x => x.AlbumExternalLink).Where(x => x != default).FirstOrDefault(); }
+
+        public override IEnumerable<string> ArtistsNames { get => _musicTracks?.Select(x => x.ArtistsNames).Where(x => x != default).FirstOrDefault(); }
+
+        public override IEnumerable<KeyValuePair<string, string>> ArtistsExternalLinks { get => _musicTracks?.Select(x => x.ArtistsExternalLinks).Where(x => x != default).FirstOrDefault(); }
+
+        public override TimeSpan? Duration { get => _musicTracks?.Select(x => x.Duration).Where(x => x != default)?.First(); }
+
+        public override MusicServiceType MusicServiceType => MusicServiceType.None;
+
+        public void Add(MusicTrackBase track)
         {
-            get
-            {
-                if (SpotifyTrack != null && SpotifyTrack.Artists != null && SpotifyTrack.Artists.Count > 0)
-                {
-                    return SpotifyTrack.Artists.Select(x => x.Name);
-                }
-                if (YandexTrack != null && YandexTrack.Artists != null && YandexTrack.Artists.Count > 0)
-                {
-                    return YandexTrack.Artists.Select(x => x.Name);
-                }
-                return null;
-            }
+            if (!_musicTracks.Contains(track))
+                _musicTracks.Add(track);
+            else
+                throw new InvalidOperationException($"Try to add already exist track {track.MusicServiceType}");
         }
 
-        public IEnumerable<KeyValuePair<string, string>> ArtistsExternalLinks
+        public override bool IsMusicTrackExist(MusicServiceType musicServiceType)
         {
-            get
-            {
-                if (SpotifyTrack != null && SpotifyTrack.Artists != null && SpotifyTrack.Artists.Count > 0)
-                {
-                    return SpotifyTrack.Artists.Where(x => x.ExternalUrls.ContainsKey(EXTERNAL_URL_KEY))
-                        .Select(x => KeyValuePair.Create(x.Name, x.ExternalUrls[EXTERNAL_URL_KEY]));
-                }    
-                return null;
-            }
+            return _musicTracks != null && _musicTracks.Any(x => x.MusicServiceType == musicServiceType);
         }
 
-        public TimeSpan Duration => SpotifyTrack != null
-            ? TimeSpan.FromMilliseconds(SpotifyTrack.DurationMs)
-            : YandexTrack != null
-            ? TimeSpan.FromMilliseconds(YandexTrack.DurationMs)
-            : TimeSpan.FromMilliseconds(0);
+        public override MusicTrackBase GetMusicTrackByServiceType(MusicServiceType musicServiceType)
+        {
+            if (_musicTracks == null)
+                return null;
+
+            return _musicTracks.FirstOrDefault(x => x.MusicServiceType == musicServiceType);
+        }
+
+        public IEnumerator<MusicTrackBase> GetEnumerator()
+        {
+            return _musicTracks.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }
