@@ -13,7 +13,9 @@ namespace MusicSearcher.Model.MusicBrainz
             _artist = musicBrainzArtist;
         }
 
-        public override string Name { get => _artist.Name; }
+        //#28 Some hyphen from MusicBrainz are the wrong hyphen.
+        // Replace Unicode: (U+2010) to Unicode: (U+002D)
+        public override string Name { get => _artist.Name?.Replace("‐", "-"); }
         public override string MBID { get => _artist.Id; }
         public override int? Score { get => _artist.Score; }
         public override Uri ImageUri { get => default; }

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+Ôªøusing Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using MusicSearcher.Abstract;
@@ -124,12 +124,13 @@ namespace MusicSearcher.Tests
             Assert.IsTrue(string.Equals(artist, result[MusicServiceType.LastFm].Name));
         }
 
-        [TestMethod]
-        public async Task SearchArtistByMBID_WithSpotifyClient_AreEqual()
+        [DataTestMethod]
+        [DataRow("b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "The Beatles")]
+        // #28 Can't find Wu tang artist's information and tracks. https://github.com/skuill/ConcertBuddy/issues/28
+        [DataRow("0febdcf7-4e1f-4661-9493-b40427de2c13", "Wu-Tang Clan")] 
+        public async Task SearchArtistByMBID_WithSpotifyClient_AreEqual(string mbid, string expectedArtistName)
         {
             // Arrange
-            string artist = "The Beatles";
-            string mbid = "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d";
             var client = InitClient();
             client.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
 
@@ -139,8 +140,8 @@ namespace MusicSearcher.Tests
             // Assert
             Assert.IsNotNull(result);
             Assert.IsNotNull(result[MusicServiceType.Spotify]);
-            Assert.IsTrue(string.Equals(artist, result.Name));
-            Assert.IsTrue(string.Equals(artist, result[MusicServiceType.Spotify].Name));
+            Assert.IsTrue(string.Equals(expectedArtistName, result.Name));
+            Assert.IsTrue(string.Equals(expectedArtistName, result[MusicServiceType.Spotify].Name));
             Assert.IsNotNull(result.ImageUri);
         }
 
@@ -151,7 +152,7 @@ namespace MusicSearcher.Tests
         /// <returns></returns>
         [DataTestMethod]
         [DataRow("f422e97e-fe40-4c9c-be9a-2bba923539ad", "Guf", "GUF")]
-        [DataRow("827e1b52-1782-4e73-b8e7-a7b6939370f5", "ÕÓ„„‡ÌÓ", "ÕÓ„„‡ÌÓ")]
+        [DataRow("827e1b52-1782-4e73-b8e7-a7b6939370f5", "–ù–æ–≥–≥–∞–Ω–æ", "–ù–æ–≥–≥–∞–Ω–æ")]
         public async Task SearchArtistByMBID_RussianArtistWithSpotifyClient_IsSupported(string mbid, string expectedArtistNameResult, string expectedArtistNameSpotify)
         {
             // Arrange
