@@ -88,7 +88,11 @@ namespace MusicSearcher.MusicService.Spotify
             {
                 throw new Exception($"Can't get artist [{name}] from Spotify.");
             }
+
             // We can't compare artistName. For example for artist "ноганно" actual spotify name is "noganno".
+            // First ty to return artist with the same name.
+            if (searchArtist.Artists.Items.Any(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase)))
+                return new SpotifyMusicArtist(searchArtist.Artists.Items.First(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase)));
             return new SpotifyMusicArtist(searchArtist.Artists.Items.First());
         }
     }

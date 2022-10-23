@@ -144,6 +144,32 @@ namespace MusicSearcher.Tests
             Assert.IsNotNull(result.ImageUri);
         }
 
+        /// <summary>
+        /// #29 Map properly MusicBrainz to Spotify track while searching
+        /// https://github.com/skuill/ConcertBuddy/issues/29
+        /// </summary>
+        /// <returns></returns>
+        [DataTestMethod]
+        [DataRow("f422e97e-fe40-4c9c-be9a-2bba923539ad", "Guf", "GUF")]
+        [DataRow("827e1b52-1782-4e73-b8e7-a7b6939370f5", "Ноггано", "Ноггано")]
+        public async Task SearchArtistByMBID_RussianArtistWithSpotifyClient_IsSupported(string mbid, string expectedArtistNameResult, string expectedArtistNameSpotify)
+        {
+            // Arrange
+            var client = InitClient();
+            client.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
+
+            // Act
+            var result = await client.SearchArtistByMBID(mbid) as MusicArtist;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result[MusicServiceType.Spotify]);
+            Assert.IsTrue(string.Equals(expectedArtistNameResult, result.Name));
+            Assert.IsTrue(string.Equals(expectedArtistNameSpotify, result[MusicServiceType.Spotify].Name));
+            Assert.IsTrue(string.Equals("Russia", result.Area));
+            Assert.IsTrue(string.Equals("RU", result.Country));
+        }
+
         [TestMethod]
         public async Task SearchSpotifyTrack_DefaultExample_AreEqual()
         {

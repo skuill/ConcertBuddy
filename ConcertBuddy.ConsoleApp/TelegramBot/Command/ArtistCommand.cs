@@ -45,8 +45,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
-            var lastFmUrl = artist[MusicServiceType.LastFm].ExternalUrl;
-            var spotifyUrl = artist[MusicServiceType.Spotify].ExternalUrl;
+            var lastFmUrl = artist[MusicServiceType.LastFm]?.ExternalUrl;
+            var spotifyUrl = artist[MusicServiceType.Spotify]?.ExternalUrl;
 
             replyText = $"<b>{artist.Name}</b>. ";
             if (lastFmUrl != default || spotifyUrl != default)
