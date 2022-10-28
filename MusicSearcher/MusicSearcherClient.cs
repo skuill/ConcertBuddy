@@ -302,6 +302,15 @@ namespace MusicSearcher
         {
             if (_isMemoryCacheEnabled)
                 _artistMemoryCache.Dispose();
+            if (_musicServiceClients != null && _musicServiceClients.Any())
+            {
+                foreach (var musicServiceClient in _musicServiceClients)
+                {
+                    if (musicServiceClient is IAsyncDisposable)
+                        ((IAsyncDisposable)musicServiceClient).DisposeAsync().GetAwaiter().GetResult();
+                }
+                _musicServiceClients.Clear();
+            }
         }
     }
 }

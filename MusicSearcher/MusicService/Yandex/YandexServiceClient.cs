@@ -66,7 +66,7 @@ namespace MusicSearcher.MusicService.Yandex
             {
                 throw new Exception($"Can't search track [{trackName}] for artist [{artistName}] from Yandex.");
             }
-            var searchTrackResult = searchResult.Tracks.Results.FirstOrDefault(t => t.Artists != null && t.Artists.Any(a => string.Equals(a.Name, artistName)));
+            var searchTrackResult = searchResult.Tracks.Results.FirstOrDefault(t => t.Artists != null && t.Artists.Any(a => string.Equals(a.Name, artistName, StringComparison.OrdinalIgnoreCase)));
             if (searchTrackResult == null)
             {
                 throw new Exception($"Can't get track [{trackName}] for artist [{artistName}] from Yandex.");
