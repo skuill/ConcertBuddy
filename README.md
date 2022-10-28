@@ -83,6 +83,7 @@ Visit [github project page](https://github.com/users/skuill/projects/1) or [issu
 BreakingChanges:
  * Refactoring. MusicSearcherClient has many responsibilities and bottleneck ([Issue 30](https://github.com/skuill/ConcertBuddy/issues/30))
  * Use nuget package of Yandex api instead of project reference ([Issue 21](https://github.com/skuill/ConcertBuddy/issues/21))
+
 Bugfixes:
  * Map properly MusicBrainz to Spotify track while searching ([Issue 29](https://github.com/skuill/ConcertBuddy/issues/29))
  * Track searching will return nothing if track not found in spotify ([Issue 27](https://github.com/skuill/ConcertBuddy/issues/27))
