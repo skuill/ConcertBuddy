@@ -79,6 +79,15 @@ The serilog adapter is used for event logging. Logs are written to the console, 
 Visit [github project page](https://github.com/users/skuill/projects/1) or [issue board](https://github.com/skuill/ConcertBuddy/issues)
 
 ## Release Notes
+#### v0.1.0 (28.10.22):
+BreakingChanges:
+ * Refactoring. MusicSearcherClient has many responsibilities and bottleneck ([Issue 30](https://github.com/skuill/ConcertBuddy/issues/30))
+ * Use nuget package of Yandex api instead of project reference ([Issue 21](https://github.com/skuill/ConcertBuddy/issues/21))
+Bugfixes:
+ * Map properly MusicBrainz to Spotify track while searching ([Issue 29](https://github.com/skuill/ConcertBuddy/issues/29))
+ * Track searching will return nothing if track not found in spotify ([Issue 27](https://github.com/skuill/ConcertBuddy/issues/27))
+ * Can't find Wu tang artist's information and tracks ([Issue 28](https://github.com/skuill/ConcertBuddy/issues/28))
+ * Can't initialize Yandex client! System.Net.WebException: The remote server returned an error: (400) Bad Request. ([Issue 31](https://github.com/skuill/ConcertBuddy/issues/31))
 #### v0.0.8 (04.02.22. It's my Bday 🎂):
 Bugfixes:
  * Track searching will return nothing if track not found in spotify ([Issue 27](https://github.com/skuill/ConcertBuddy/issues/27))
