@@ -62,8 +62,8 @@ Project is created with:
 The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.selectel.ru/) in a docker container from [docker hub repository](https://hub.docker.com/repository/docker/skuill/concertbuddyconsoleapp).
 
 #### Deployment
-1. Create and configure `ConcertBuddy/ConcertBuddy.ConsoleApp/appsettings.json` file with settings [Configuration.cs](ConcertBuddy.ConsoleApp/Configuration.cs) from template [appsettings.template.json](ConcertBuddy.ConsoleApp/appsettings.template.json). 
-2. Build and publish docker image with [Dockerfile](ConcertBuddy.ConsoleApp/Dockerfile) to [docker hub registry](https://hub.docker.com/). 
+1. Create and configure `ConcertBuddy/ConcertBuddy.ConsoleApp/appsettings.json` file with settings [Configuration.cs](src/ConcertBuddy.ConsoleApp/Configuration.cs) from template [appsettings.template.json](src/ConcertBuddy.ConsoleApp/appsettings.template.json). 
+2. Build and publish docker image with [Dockerfile](src/ConcertBuddy.ConsoleApp/Dockerfile) to [docker hub registry](https://hub.docker.com/). 
 3. Use [docker-compose.yml](docker-compose.yml) to run container.
 
 #### Environments
@@ -73,7 +73,7 @@ The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.
 | Production      | **[ConcertBuddy](https://t.me/concert_buddy_bot)** |
 
 #### Logging
-The serilog adapter is used for event logging. Logs are written to the console, debug, file. Log rotation is configured. Logging settings are set in appsettings.json. Example: [appsettings.template.json](ConcertBuddy.ConsoleApp/appsettings.template.json)
+The serilog adapter is used for event logging. Logs are written to the console, debug, file. Log rotation is configured. Logging settings are set in appsettings.json. Example: [appsettings.template.json](src/ConcertBuddy.ConsoleApp/appsettings.template.json)
 
 ## TODO
 Visit [github project page](https://github.com/users/skuill/projects/1) or [issue board](https://github.com/skuill/ConcertBuddy/issues)
