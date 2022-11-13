@@ -29,7 +29,7 @@ namespace SetlistFmAPI.Http
                     var response = await httpClient.GetAsync(url);
                     if (!response.IsSuccessStatusCode)
                     {
-                        _logger?.LogError($"Try №{retryCount} to load setlist error. Response status: {response.StatusCode}. {response.ReasonPhrase}. Url: {url}");
+                        _logger?.LogError($"Try [{retryCount}] of [{retryAmount}] to load setlist error. Response status: {response.StatusCode}. {response.ReasonPhrase}. Url: {url}");
                         continue;
                     }
                     return await response.Content.ReadFromJsonAsync<T>();
