@@ -59,7 +59,7 @@ Project is created with:
 ## Documentation
 
 #### Hosting
-The bot is launched on the Ubuntu 20.04 64bit server [VDS Selectel](https://vds.selectel.ru/) in a docker container from [docker hub repository](https://hub.docker.com/repository/docker/skuill/concertbuddyconsoleapp).
+The bot is launched on the Ubuntu 22.10 64bit server [DigitalOcean droplet](https://www.digitalocean.com/products/droplets) in a docker container from [docker hub repository](https://hub.docker.com/repository/docker/skuill/concertbuddyconsoleapp). It costs 6$/month.
 
 #### Deployment
 1. Create and configure `ConcertBuddy/ConcertBuddy.ConsoleApp/appsettings.json` file with settings [Configuration.cs](src/ConcertBuddy.ConsoleApp/Configuration.cs) from template [appsettings.template.json](src/ConcertBuddy.ConsoleApp/appsettings.template.json). 
