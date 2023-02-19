@@ -1,17 +1,14 @@
 ﻿using ConcertBuddy.ConsoleApp.Search;
 using ConcertBuddy.ConsoleApp.TelegramBot.Handler;
-using LyricsScraper;
-using LyricsScraper.Abstract;
-using LyricsScraper.AZLyrics;
-using LyricsScraper.Common;
+using LyricsScraperNET.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MusicSearcher;
 using MusicSearcher.Abstract;
+using Serilog;
 using SetlistFmAPI;
 using SetlistFmAPI.Http;
-using Serilog;
 
 namespace ConcertBuddy.ConsoleApp
 {
@@ -39,16 +36,14 @@ namespace ConcertBuddy.ConsoleApp
                     .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
                     .AddScoped<ISetlistFmClient, SetlistFmClient>()
                     .AddScoped<ISetlistHttpClient, SetlistHttpWebClient>()
-                    .AddScoped<ILyricsScraperUtil, LyricsScraperUtil>()
-                    .AddScoped<ILyricWebClient, HtmlAgilityWebClient>()
-                    .AddScoped<ILyricParser, AZLyricsParser>()
-                    .AddScoped<ILyricGetter, AZLyricsGetter>()
                     .AddScoped<IBotHandlers, BotHandlers>()
                     .AddScoped<IMusicSearcherClient, MusicSearcherClient>()
                     .AddScoped<ISearchHandler, SearchHandler>();
 
             IConfigurationRoot configurationRoot = GetConfiguration();
             services.AddSingleton<IConfigurationRoot>(configurationRoot);
+
+            services.AddLyricScraperClientService(configurationRoot);
 
             var appConfiguration = new Configuration();
             configurationRoot.GetSection("Configuration").Bind(appConfiguration);

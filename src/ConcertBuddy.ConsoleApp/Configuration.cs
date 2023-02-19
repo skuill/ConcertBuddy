@@ -17,8 +17,6 @@ namespace ConcertBuddy.ConsoleApp
         /// </summary>
         public static string SetlistFmApiKey { get; set; }
 
-        public static string GeniusClientAccessToken { get; set; }
-
         /// <summary>
         /// API key and secret need to authenticating with the API.
         /// Documentation: https://www.last.fm/api/authentication

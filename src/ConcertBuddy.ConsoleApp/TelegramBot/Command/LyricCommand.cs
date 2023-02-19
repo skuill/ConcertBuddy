@@ -52,9 +52,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var recording = await recordingTask;
             string trackActualName = recording != null ? recording.Title : (await SearchHandler.SearchTrack(artist.Name, trackName)).TrackName;
 
-            var lyric = await SearchHandler.SearchLyric(artist.Name, trackActualName);
+            var searchResult = await SearchHandler.SearchLyric(artist.Name, trackActualName);
 
-            if (lyric == null)
+            if (searchResult == null || searchResult.IsEmpty())
             {
                 _logger.LogError($"Can't find lyric for track [{artist.Name} - {trackActualName}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
@@ -64,7 +64,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             return await TelegramBotClient.SendTextMessageAsync(
                 chatId: Data.Message.Chat.Id,
-                text: lyric,
+                text: searchResult.LyricText,
                 replyMarkup: inlineKeyboard);
         }
     }

@@ -15,13 +15,12 @@
   <ItemGroup>
     <PackageReference Include="Genius.NET" Version="4.0.1" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
+    <PackageReference Include="LyricsScraperNET" Version="1.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
-    <PackageReference Include="Selenium.WebDriver" Version="4.5.1" />
-    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="106.0.5249.6100" />
     <PackageReference Include="Serilog" Version="2.12.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
@@ -34,7 +33,6 @@
     <PackageReference Include="Telegram.Bot.Extensions.Polling" Version="1.0.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LyricsScraper\LyricsScraper.csproj" />
     <ProjectReference Include="..\MusicSearcher\MusicSearcher.csproj" />
     <ProjectReference Include="..\SetlistFmAPI\SetlistFmAPI.csproj" />
   </ItemGroup>

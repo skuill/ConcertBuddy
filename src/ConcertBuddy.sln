@@ -9,10 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SetlistFmAPI.Tests", "Setli
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConcertBuddy.ConsoleApp", "ConcertBuddy.ConsoleApp\ConcertBuddy.ConsoleApp.csproj", "{68B80A89-B854-4070-B265-28B4749F704B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LyricsScraper", "LyricsScraper\LyricsScraper.csproj", "{BF866A82-B4B2-4B4B-B149-4061FC1F052D}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LyricsScraper.Test", "LyricsScraper.Test\LyricsScraper.Test.csproj", "{BE4EA92C-964F-49B0-BD58-F7F5A3255116}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MusicSearcher", "MusicSearcher\MusicSearcher.csproj", "{1D5CCB83-2E9F-40FD-B7DE-20F8906E6950}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MusicSearcher.Tests", "MusicSearcher.Tests\MusicSearcher.Tests.csproj", "{037E8C06-84E3-4AE1-BEB1-88EDF0B10A83}"
@@ -37,14 +33,6 @@ Global
 		{68B80A89-B854-4070-B265-28B4749F704B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{68B80A89-B854-4070-B265-28B4749F704B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{68B80A89-B854-4070-B265-28B4749F704B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BF866A82-B4B2-4B4B-B149-4061FC1F052D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BF866A82-B4B2-4B4B-B149-4061FC1F052D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BF866A82-B4B2-4B4B-B149-4061FC1F052D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BF866A82-B4B2-4B4B-B149-4061FC1F052D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BE4EA92C-964F-49B0-BD58-F7F5A3255116}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BE4EA92C-964F-49B0-BD58-F7F5A3255116}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BE4EA92C-964F-49B0-BD58-F7F5A3255116}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BE4EA92C-964F-49B0-BD58-F7F5A3255116}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1D5CCB83-2E9F-40FD-B7DE-20F8906E6950}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1D5CCB83-2E9F-40FD-B7DE-20F8906E6950}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1D5CCB83-2E9F-40FD-B7DE-20F8906E6950}.Release|Any CPU.ActiveCfg = Release|Any CPU

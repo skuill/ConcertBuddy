@@ -1,6 +1,7 @@
 ﻿using Hqub.MusicBrainz.API.Entities;
-using LyricsScraper;
-using LyricsScraper.Abstract;
+using LyricsScraperNET;
+using LyricsScraperNET.Models.Requests;
+using LyricsScraperNET.Models.Responses;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
 using MusicSearcher.Model.Abstract;
@@ -14,14 +15,12 @@ namespace ConcertBuddy.ConsoleApp.Search
         private readonly ILogger<ISearchHandler> _logger;
         private readonly IMusicSearcherClient _musicSearcherClient;
         private readonly ISetlistFmClient _setlistFmClient;
-        private readonly ILyricsScraperUtil _lyricsScraperUtil;
-        private readonly ILyricGetter _lyricGetter;
+        private readonly ILyricsScraperClient _lyricsScraperClient;
 
         public SearchHandler(ILogger<ISearchHandler> logger, 
             IMusicSearcherClient musicSearcherClient, 
             ISetlistFmClient setlistFmClient, 
-            ILyricsScraperUtil lyricsScraperUtil,
-            ILyricGetter lyricGetter)
+            ILyricsScraperClient lyricsScraperClient)
         {
             _logger = logger;
             if (Configuration.IsLastFmAvailable())
@@ -36,9 +35,7 @@ namespace ConcertBuddy.ConsoleApp.Search
             setlistFmClient.WithApiKey(Configuration.SetlistFmApiKey);
             _setlistFmClient = setlistFmClient;
             
-            _lyricGetter = lyricGetter;
-            lyricsScraperUtil.AddGetter(lyricGetter);
-            _lyricsScraperUtil = lyricsScraperUtil;
+            _lyricsScraperClient = lyricsScraperClient;
         }
 
         public Task<Setlists> SearchArtistSetlists(string mbid, int page = 1)
@@ -51,9 +48,10 @@ namespace ConcertBuddy.ConsoleApp.Search
             return _musicSearcherClient.SearchArtistsByName(artistName, limit:limit, offset:offset);
         }
 
-        public Task<string> SearchLyric(string artistName, string songName)
+        public Task<SearchResult> SearchLyric(string artistName, string songName)
         {
-            return _lyricsScraperUtil.SearchLyricAsync(artistName, songName);
+            var searchRequest = new ArtistAndSongSearchRequest(artistName, songName);
+            return _lyricsScraperClient.SearchLyricAsync(searchRequest);
         }
 
         public Task<MusicArtistBase> SearchArtistByMBID(string mbid)
