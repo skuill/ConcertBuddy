@@ -80,6 +80,11 @@ The serilog adapter is used for event logging. Logs are written to the console, 
 Visit [github project page](https://github.com/users/skuill/projects/1) or [issue board](https://github.com/skuill/ConcertBuddy/issues)
 
 ## Release Notes
+#### v0.1.1 (03.09.23):
+* Fixed a problem with lyric searching ([Issue 33](https://github.com/skuill/ConcertBuddy/issues/33))
+* Use LyricsScraperNET library instead of LyricsScraper project.
+* Updated external libraries to the latest version (Spotify, Telegram, Yandex)
+  
 #### v0.1.0 (28.10.22):
 BreakingChanges:
  * Refactoring. MusicSearcherClient has many responsibilities and bottleneck ([Issue 30](https://github.com/skuill/ConcertBuddy/issues/30))
