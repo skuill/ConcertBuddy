@@ -1,6 +1,5 @@
 ﻿using ConcertBuddy.ConsoleApp.Model;
 using ConcertBuddy.ConsoleApp.Search;
-using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using SetlistFmAPI.Models;
 using Telegram.Bot.Types.ReplyMarkups;

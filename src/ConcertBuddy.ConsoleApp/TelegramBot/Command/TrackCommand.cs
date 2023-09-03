@@ -65,7 +65,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                     chatId: Data.Message.Chat.Id,
                     performer: artist.Name,
                     title: track.TrackName,
-                    audio: trackLink,
+                    audio: InputFile.FromString(trackLink),
                     caption: trackMarkdown,
                     replyMarkup: inlineKeyboard,
                     parseMode: ParseMode.Html);

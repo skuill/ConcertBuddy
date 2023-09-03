@@ -115,7 +115,7 @@ namespace MusicSearcher.MusicService.Spotify
 
         public async Task<MusicTrackBase> SearchTrack(string artistName, string trackName)
         {
-            var searchTrack = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Track, $"{artistName} - {trackName}"));
+            var searchTrack = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Track, $"artist:{artistName} track:{trackName}"));
             if (searchTrack == null
                 || searchTrack.Tracks == null
                 || searchTrack.Tracks.Total == 0)
@@ -123,12 +123,18 @@ namespace MusicSearcher.MusicService.Spotify
                 throw new Exception($"Can't get track [{trackName}] for artist [{artistName}] from Spotify.");
             }
             // We can't compare artistName. For example for artist "ноганно" actual spotify name is "noganno".
+            if (searchTrack.Tracks.Items.Any(t => t.Artists!= null 
+                && t.Artists.Any(a => string.Equals(a.Name, artistName, StringComparison.OrdinalIgnoreCase)) 
+                && string.Equals(t.Name, trackName, StringComparison.OrdinalIgnoreCase)))
+                return new SpotifyMusicTrack(searchTrack.Tracks.Items.First(t => t.Artists != null
+                    && t.Artists.Any(a => string.Equals(a.Name, artistName, StringComparison.OrdinalIgnoreCase))
+                    && string.Equals(t.Name, trackName, StringComparison.OrdinalIgnoreCase)));
             return new SpotifyMusicTrack(searchTrack.Tracks.Items.First(t => t.Artists != null));
         }
 
         public async Task<MusicArtistBase> SearchArtistByName(string name)
         {
-            var searchArtist = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Artist, name));
+            var searchArtist = await _spotifyClient.Search.Item(new SearchRequest(SearchRequest.Types.Artist, $"artist:{name}"));
             if (searchArtist == null
                 || searchArtist.Artists == null
                 || searchArtist.Artists.Total == 0)

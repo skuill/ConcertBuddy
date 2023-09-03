@@ -67,7 +67,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 return await TelegramBotClient.SendPhotoAsync(
                     chatId: Data.Message.Chat.Id,
                     caption: replyText,
-                    photo: artist.ImageUri.ToString(),
+                    photo: InputFile.FromUri(artist.ImageUri),
                     replyMarkup: inlineKeyboard,
                     parseMode: ParseMode.Html);
 

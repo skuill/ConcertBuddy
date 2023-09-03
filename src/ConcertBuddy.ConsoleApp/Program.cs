@@ -1,13 +1,13 @@
 ﻿using ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
-using Telegram.Bot.Extensions.Polling;
+using Telegram.Bot.Polling;
 
 namespace ConcertBuddy.ConsoleApp
 {
     public class Program
     {
-        private static ILogger<Program> _logger = null;
+        private static ILogger<Program>? _logger;
 
         public static void Main(string[] args)
         {

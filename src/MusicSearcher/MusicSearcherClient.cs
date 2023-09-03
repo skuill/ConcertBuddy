@@ -89,7 +89,7 @@ namespace MusicSearcher
                 var artists = await _musicBrainzClient.Artists.SearchAsync(name.Quote(), limit, offset);
                 if (artists == null || !artists.Any())
                 {
-                    _logger.LogError($"Can't find artist {name} with search limit {limit}");
+                    _logger.LogError($"Can't find artist [{name}] with search limit {limit}");
                     return result;
                 }
 
@@ -122,7 +122,6 @@ namespace MusicSearcher
                     return result;
 
                 result = new MusicArtist();
-
                 result.Add(new MusicBrainzMusicArtist(await _musicBrainzClient.Artists.GetAsync(artistMBID)));
 
                 foreach (var musicServiceClient in _musicServiceClients.OrderByDescending(x => x.GetAvailableSearch()))
@@ -140,6 +139,9 @@ namespace MusicSearcher
                                 break;
 
                         }
+                    }
+                    catch (NotImplementedException)
+                    {
                     }
                     catch (Exception ex)
                     {
@@ -168,6 +170,9 @@ namespace MusicSearcher
                 try
                 {
                     result.Add(await musicServiceClient.SearchTrack(artistName, trackName));
+                }
+                catch (NotImplementedException)
+                {
                 }
                 catch (Exception ex)
                 {
@@ -224,6 +229,9 @@ namespace MusicSearcher
                     if (result != null && result.Any())
                         return result;
                 }
+                catch (NotImplementedException)
+                {
+                }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, $"Can't get top tracks from music service [{musicServiceClient.GetType().Name}]");
@@ -251,7 +259,7 @@ namespace MusicSearcher
             _isLastFmClientEnabled = true;
         }
 
-        public async Task WithSpotifyClient(string cliendID, string clientSecret)
+        public void WithSpotifyClient(string cliendID, string clientSecret)
         {
             _logger.LogInformation($"Enable Spotify client for artist search");
             if (string.IsNullOrEmpty(cliendID) || string.IsNullOrEmpty(clientSecret))
@@ -278,7 +286,7 @@ namespace MusicSearcher
             _artistMemoryCache = new MemoryCache(memoryCacheOptions);
         }
 
-        public async Task WithYandexClient(string token)
+        public void WithYandexClient(string token)
         {
             _logger.LogInformation($"Enable Yandex client for artist search");
             if (string.IsNullOrEmpty(token))
