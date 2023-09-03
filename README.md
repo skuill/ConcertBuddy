@@ -34,7 +34,7 @@ A few of the things you can do with ConcertBuddy:
   * Directly from: `Yandex`
   * External link: `Spotify`
 * ✅ Read the lyrics of the tracks
-  * `AZLyrics`
+  * Different lyric providers: `AZLyrics`, `Genius`, `SongLyrics`, `MusixMatch`
 
 ## Feedback
 
@@ -76,7 +76,7 @@ The bot is launched on the Ubuntu 22.10 64bit server [DigitalOcean droplet](http
 #### Logging
 The serilog adapter is used for event logging. Logs are written to the console, debug, file. Log rotation is configured. Logging settings are set in appsettings.json. Example: [appsettings.template.json](src/ConcertBuddy.ConsoleApp/appsettings.template.json)
 
-## TODO
+## Roadmap
 Visit [github project page](https://github.com/users/skuill/projects/1) or [issue board](https://github.com/skuill/ConcertBuddy/issues)
 
 ## Release Notes
