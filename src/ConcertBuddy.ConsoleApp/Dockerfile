@@ -8,7 +8,6 @@ WORKDIR /src
 COPY ["ConcertBuddy.ConsoleApp/ConcertBuddy.ConsoleApp.csproj", "ConcertBuddy.ConsoleApp/"]
 COPY ["SetlistFmAPI/SetlistFmAPI.csproj", "SetlistFmAPI/"]
 COPY ["MusicSearcher/MusicSearcher.csproj", "MusicSearcher/"]
-COPY ["LyricsScraper/LyricsScraper.csproj", "LyricsScraper/"]
 RUN dotnet restore "ConcertBuddy.ConsoleApp/ConcertBuddy.ConsoleApp.csproj"
 COPY . .
 WORKDIR "/src/ConcertBuddy.ConsoleApp"

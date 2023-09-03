@@ -21,9 +21,13 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
 
         public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
+            // Ignore the unavailability of Telegram servers when polling. 502 - Bad Gateway.
+            if (exception is ApiRequestException apiRequestException && apiRequestException.ErrorCode == 502)
+                return Task.CompletedTask;
+
             var ErrorMessage = exception switch
             {
-                ApiRequestException apiRequestException => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+                ApiRequestException requestException => $"Telegram API Error:\n[{requestException.ErrorCode}]\n{requestException.Message}",
                 _ => exception.ToString()
             };
 
