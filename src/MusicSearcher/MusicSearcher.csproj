@@ -11,9 +11,9 @@
     <PackageReference Include="KM.Yandex.Music.Client" Version="1.3.3" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
-    <PackageReference Include="MusicBrainzAPI" Version="2.5.0" />
-    <PackageReference Include="SpotifyAPI.Web" Version="7.0.0" />
-    <PackageReference Include="SpotifyAPI.Web.Auth" Version="7.0.0" />
+    <PackageReference Include="MusicBrainzAPI" Version="3.0.0" />
+    <PackageReference Include="SpotifyAPI.Web" Version="7.0.2" />
+    <PackageReference Include="SpotifyAPI.Web.Auth" Version="7.0.2" />
   </ItemGroup>
 
   <ItemGroup>

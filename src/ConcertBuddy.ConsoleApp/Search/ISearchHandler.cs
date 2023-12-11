@@ -1,4 +1,4 @@
-﻿using Hqub.MusicBrainz.API.Entities;
+﻿using Hqub.MusicBrainz.Entities;
 using LyricsScraperNET.Models.Responses;
 using MusicSearcher.Model.Abstract;
 using SetlistFmAPI.Models;
