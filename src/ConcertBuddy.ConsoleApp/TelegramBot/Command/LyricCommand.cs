@@ -2,6 +2,7 @@
 using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
+using LyricsScraperNET.Models.Responses;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -53,10 +54,9 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             string trackActualName = recording != null ? recording.Title : (await SearchHandler.SearchTrack(artist.Name, trackName)).TrackName;
 
             var searchResult = await SearchHandler.SearchLyric(artist.Name, trackActualName);
-
-            if (searchResult == null || searchResult.IsEmpty())
+            if (searchResult == null || searchResult.IsEmpty() || searchResult.ResponseStatusCode != ResponseStatusCode.Success)
             {
-                _logger.LogError($"Can't find lyric for track [{artist.Name} - {trackActualName}]");
+                _logger.LogError($"Can't find lyric for track [{artist.Name} - {trackActualName}]. Reason: [{searchResult?.ResponseStatusCode}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
