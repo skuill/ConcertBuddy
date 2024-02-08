@@ -2,6 +2,8 @@
 
 <img src="https://github.com/skuill/ConcertBuddy/blob/master/resources/BotImage.jpg" width="30%" height="30%">
 
+[![CodeFactor](https://www.codefactor.io/repository/github/skuill/concertbuddy/badge)](https://www.codefactor.io/repository/github/skuill/concertbuddy)
+
 ## Table of contents
 - [General info](#general-info)
 - [Features](#features)
