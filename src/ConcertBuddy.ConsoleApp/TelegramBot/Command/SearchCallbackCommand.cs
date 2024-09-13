@@ -13,7 +13,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
     {
         private ILogger<SearchCallbackCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<SearchCallbackCommand>>();
 
-        public SearchCallbackCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data) 
+        public SearchCallbackCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
             : base(searchHandler, telegramBotClient, data)
         {
         }
@@ -49,7 +49,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var parameters = Data.GetParametersFromMessageText(CommandList.COMMAND_SEARCH);
             offset = int.Parse(parameters[0]);
             limit = int.Parse(parameters[1]);
-            artistName = String.Join(' ',parameters.Skip(2));
+            artistName = String.Join(' ', parameters.Skip(2));
 
             var artists = await SearchHandler.SearchArtistsByName(artistName, limit, offset);
 

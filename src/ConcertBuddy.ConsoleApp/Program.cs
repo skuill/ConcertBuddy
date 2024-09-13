@@ -35,7 +35,7 @@ namespace ConcertBuddy.ConsoleApp
                 cancellationToken: cts.Token);
 
             var botUser = botClient.GetMeAsync().GetAwaiter().GetResult();
-            
+
             Console.Title = botUser.Username ?? "My awesome Bot";
             _logger.LogInformation($"Bot {botUser.FirstName} [{botUser.Id}] start listening.");
 

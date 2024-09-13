@@ -11,7 +11,8 @@ namespace MusicSearcher.Model
         // Indexer with only a get accessor with the expression-bodied definition:
         public MusicArtistBase this[MusicServiceType musicServiceType] => GetMusicArtistByServiceType(musicServiceType);
 
-        public MusicArtist() {
+        public MusicArtist()
+        {
             _musicArtists = new List<MusicArtistBase>();
         }
 
@@ -60,7 +61,7 @@ namespace MusicSearcher.Model
 
         public override bool IsMusicArtistExist(MusicServiceType musicServiceType)
         {
-            return _musicArtists != null && _musicArtists.Any(x => x.MusicServiceType == musicServiceType); 
+            return _musicArtists != null && _musicArtists.Any(x => x.MusicServiceType == musicServiceType);
         }
 
         public override MusicArtistBase GetMusicArtistByServiceType(MusicServiceType musicServiceType)

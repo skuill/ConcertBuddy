@@ -16,7 +16,8 @@ namespace ConcertBuddy.ConsoleApp
     {
         private ServiceProvider _serviceProvider;
 
-        private ServiceProviderSingleton() {
+        private ServiceProviderSingleton()
+        {
             var serviceCollection = new ServiceCollection();
             ConfigureServices(serviceCollection);
 
@@ -32,7 +33,7 @@ namespace ConcertBuddy.ConsoleApp
 
         private void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(configure => configure.AddSerilog(dispose:true))
+            services.AddLogging(configure => configure.AddSerilog(dispose: true))
                     .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
                     .AddScoped<ISetlistFmClient, SetlistFmClient>()
                     .AddScoped<ISetlistHttpClient, SetlistHttpWebClient>()

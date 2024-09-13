@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 
 namespace SetlistFmAPI.Http
 {
-    public class SetlistHttpWebClient: ISetlistHttpClient
+    public class SetlistHttpWebClient : ISetlistHttpClient
     {
         private readonly ILogger<SetlistHttpWebClient> _logger;
 
@@ -17,7 +17,8 @@ namespace SetlistFmAPI.Http
             int retryCount = 1;
             int retryAmount = 3;
 
-            do {
+            do
+            {
                 try
                 {
                     var httpClient = new HttpClient();
@@ -40,7 +41,7 @@ namespace SetlistFmAPI.Http
                     Thread.Sleep(1000);
                 }
             } while (retryCount++ <= retryAmount);
-            
+
             return default(T);
         }
     }

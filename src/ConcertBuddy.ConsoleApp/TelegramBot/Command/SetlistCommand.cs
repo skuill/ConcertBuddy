@@ -13,7 +13,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
     {
         private ILogger<SetlistCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<SetlistCommand>>();
 
-        public SetlistCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data) 
+        public SetlistCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
             : base(searchHandler, telegramBotClient, data)
         {
         }
@@ -32,7 +32,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             var replyText = string.Empty;
 
-            var parameters = Data.GetParametersFromMessageText(CommandList.COMMAND_SETLIST);            
+            var parameters = Data.GetParametersFromMessageText(CommandList.COMMAND_SETLIST);
             var artistMBID = parameters[0];
             var setlistId = parameters[1];
 
@@ -43,7 +43,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 _logger.LogError($"Can't find setlist. Id: [{setlistId}], mbid: [{artistMBID}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
-            
+
             // Save message ids for delete command 
             var messageIds = new List<int>();
 
@@ -63,7 +63,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                                                        replyMarkup: inlineKeyboard));
             }
 
-            
+
             messageIds = Task.WhenAll(sendTextMessageTasks).Result.Select(x => x.MessageId).ToList();
 
             InlineKeyboardMarkup deleteKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton(messageIds.ToArray());

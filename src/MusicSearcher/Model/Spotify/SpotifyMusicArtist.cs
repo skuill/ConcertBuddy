@@ -29,8 +29,8 @@ namespace MusicSearcher.Model.Spotify
         public override Uri ExternalUrl
         {
             get => _artist?.ExternalUrls != null
-                        && _artist.ExternalUrls.TryGetValue(EXTERNAL_URL_KEY, out string uriString) 
-                    ? new Uri(uriString) 
+                        && _artist.ExternalUrls.TryGetValue(EXTERNAL_URL_KEY, out string uriString)
+                    ? new Uri(uriString)
                     : null;
         }
 

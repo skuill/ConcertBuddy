@@ -14,7 +14,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
     {
         private ILogger<SetlistsCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<SetlistsCommand>>();
 
-        public SetlistsCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data) 
+        public SetlistsCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
             : base(searchHandler, telegramBotClient, data)
         {
         }
@@ -32,12 +32,12 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             }
 
             string replyText = string.Empty;
-            
+
             var parameters = Data.GetParametersFromMessageText(CommandList.COMMAND_SETLISTS);
             var page = int.Parse(parameters[0]);
             // ingore limit in parameters[1]. NOT USED BY LAST.FM
             var artistMBID = parameters[2];
-            
+
             var setlists = await SearchHandler.SearchArtistSetlists(artistMBID, page);
 
             if (setlists == null || setlists.IsEmpty())
@@ -56,7 +56,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                                                             text: replyText,
                                                             replyMarkup: deleteKeyboard);
                 }
-                                
+
                 var navigationKeyboard = InlineKeyboardMarkup.Empty()
                     .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page, isForwardNavigationEnabled: false);
                 return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,

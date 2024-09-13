@@ -1,7 +1,7 @@
 ﻿using MusicSearcher.Model.Abstract;
 using MusicSearcher.MusicService;
+using Yandex.Music.Api.Extensions.API;
 using Yandex.Music.Api.Models.Track;
-using Yandex.Music.Client.Extensions;
 
 namespace MusicSearcher.Model.Yandex
 {

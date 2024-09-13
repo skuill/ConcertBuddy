@@ -7,26 +7,12 @@ using Yandex.Music.Client;
 
 namespace MusicSearcher.MusicService.Yandex
 {
-    internal class YandexServiceClient: IMusicServiceClient
+    internal class YandexServiceClient : IMusicServiceClient
     {
         private YandexMusicClient _yandexClient;
         private AvailableSearchType availableSearch = AvailableSearchType.All;
 
         public MusicServiceType MusicServiceType => MusicServiceType.Yandex;
-
-        [Obsolete("Starting with version 2.0.0, the library no longer provides interfaces for working with OAuth Yandex and Yandex.Passport.")]
-        public YandexServiceClient(string login, string password)
-        {
-            try
-            {
-                _yandexClient = new YandexMusicClient();
-                _yandexClient.Authorize(login, password);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
 
         /// <summary>
         /// API access token doc: https://yandex-music.readthedocs.io/en/main/#id4.

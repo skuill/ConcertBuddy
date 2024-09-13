@@ -75,7 +75,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             _logger.LogWarning($"Can't send audio: {artist.Name} - {track.TrackName}");
 
             return await TelegramBotClient.SendTextMessageAsync(
-                chatId: Data.Message.Chat.Id,                
+                chatId: Data.Message.Chat.Id,
                 text: trackMarkdown,
                 replyMarkup: inlineKeyboard,
                 parseMode: ParseMode.Html);

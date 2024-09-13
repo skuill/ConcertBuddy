@@ -4,7 +4,7 @@ using System.Collections;
 
 namespace MusicSearcher.Model
 {
-    public class MusicTrack: MusicTrackBase, IEnumerable<MusicTrackBase>
+    public class MusicTrack : MusicTrackBase, IEnumerable<MusicTrackBase>
     {
         private List<MusicTrackBase> _musicTracks;
 

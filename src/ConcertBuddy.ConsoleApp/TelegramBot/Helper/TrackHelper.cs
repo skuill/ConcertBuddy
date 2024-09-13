@@ -15,7 +15,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
         {
             StringBuilder result = new StringBuilder();
 
-            if (!string.IsNullOrWhiteSpace(track.TrackExternalLink) 
+            if (!string.IsNullOrWhiteSpace(track.TrackExternalLink)
                 && !string.IsNullOrEmpty(track.TrackName))
                 result.AppendLine($"<a href=\"{track.TrackExternalLink}\">{track.TrackName}</a>");
             else if (!string.IsNullOrEmpty(track.TrackName))
@@ -26,7 +26,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
                 result.AppendLine($"Artists: {track.GetTrackArtistsLinks()}");
             else if (track.ArtistsNames != null
                 && track.ArtistsNames.Any())
-                result.AppendLine($"Artists: { string.Join(", ", track.ArtistsNames)}");
+                result.AppendLine($"Artists: {string.Join(", ", track.ArtistsNames)}");
 
             if (!string.IsNullOrWhiteSpace(track.AlbumName))
             {

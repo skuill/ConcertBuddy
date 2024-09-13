@@ -32,7 +32,7 @@ namespace MusicSearcher.Tests
             // Arrange
             string artist = "Parkway Drive";
             var client = InitClient();
-                            
+
             // Act
             var result = await client.SearchArtistByName(artist);
 
@@ -127,7 +127,7 @@ namespace MusicSearcher.Tests
         [DataTestMethod]
         [DataRow("b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "The Beatles")]
         // #28 Can't find Wu tang artist's information and tracks. https://github.com/skuill/ConcertBuddy/issues/28
-        [DataRow("0febdcf7-4e1f-4661-9493-b40427de2c13", "Wu-Tang Clan")] 
+        [DataRow("0febdcf7-4e1f-4661-9493-b40427de2c13", "Wu-Tang Clan")]
         public async Task SearchArtistByMBID_WithSpotifyClient_AreEqual(string mbid, string expectedArtistName)
         {
             // Arrange

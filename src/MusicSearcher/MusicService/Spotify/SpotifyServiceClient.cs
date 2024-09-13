@@ -57,7 +57,7 @@ namespace MusicSearcher.MusicService.Spotify
                     {
                         _availableMarkets = availableMarkets.Markets;
                     }
-                } 
+                }
                 while (!cancellationToken.IsCancellationRequested
                 && await timer.WaitForNextTickAsync(cancellationToken));
             }
@@ -123,8 +123,8 @@ namespace MusicSearcher.MusicService.Spotify
                 throw new Exception($"Can't get track [{trackName}] for artist [{artistName}] from Spotify.");
             }
             // We can't compare artistName. For example for artist "ноганно" actual spotify name is "noganno".
-            if (searchTrack.Tracks.Items.Any(t => t.Artists!= null 
-                && t.Artists.Any(a => string.Equals(a.Name, artistName, StringComparison.OrdinalIgnoreCase)) 
+            if (searchTrack.Tracks.Items.Any(t => t.Artists != null
+                && t.Artists.Any(a => string.Equals(a.Name, artistName, StringComparison.OrdinalIgnoreCase))
                 && string.Equals(t.Name, trackName, StringComparison.OrdinalIgnoreCase)))
                 return new SpotifyMusicTrack(searchTrack.Tracks.Items.First(t => t.Artists != null
                     && t.Artists.Any(a => string.Equals(a.Name, artistName, StringComparison.OrdinalIgnoreCase))
@@ -148,7 +148,7 @@ namespace MusicSearcher.MusicService.Spotify
                 return new SpotifyMusicArtist(searchArtist.Artists.Items.First(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase)));
             return new SpotifyMusicArtist(searchArtist.Artists.Items.First());
         }
-    
+
         public async ValueTask DisposeAsync()
         {
             _availableMarketsTimer.Dispose();

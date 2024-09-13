@@ -14,7 +14,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
     {
         private ILogger<BiographyCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<BiographyCommand>>();
 
-        public BiographyCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data) 
+        public BiographyCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
             : base(searchHandler, telegramBotClient, data)
         {
         }
@@ -34,7 +34,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             string replyText = "Sorry, but the biography of the artist was not found 😕";
 
             var artistMBID = Data.GetParameterFromMessageText(CommandList.COMMAND_BIOGRAPHY);
-            
+
             var artist = await SearchHandler.SearchArtistByMBID(artistMBID);
             if (artist != null && !string.IsNullOrWhiteSpace(artist.Biography))
             {

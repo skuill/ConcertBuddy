@@ -17,9 +17,9 @@ namespace ConcertBuddy.ConsoleApp.Search
         private readonly ISetlistFmClient _setlistFmClient;
         private readonly ILyricsScraperClient _lyricsScraperClient;
 
-        public SearchHandler(ILogger<ISearchHandler> logger, 
-            IMusicSearcherClient musicSearcherClient, 
-            ISetlistFmClient setlistFmClient, 
+        public SearchHandler(ILogger<ISearchHandler> logger,
+            IMusicSearcherClient musicSearcherClient,
+            ISetlistFmClient setlistFmClient,
             ILyricsScraperClient lyricsScraperClient)
         {
             _logger = logger;
@@ -34,7 +34,7 @@ namespace ConcertBuddy.ConsoleApp.Search
 
             setlistFmClient.WithApiKey(Configuration.SetlistFmApiKey);
             _setlistFmClient = setlistFmClient;
-            
+
             _lyricsScraperClient = lyricsScraperClient;
         }
 
@@ -45,7 +45,7 @@ namespace ConcertBuddy.ConsoleApp.Search
 
         public Task<IEnumerable<MusicArtistBase>> SearchArtistsByName(string artistName, int limit = 5, int offset = 0)
         {
-            return _musicSearcherClient.SearchArtistsByName(artistName, limit:limit, offset:offset);
+            return _musicSearcherClient.SearchArtistsByName(artistName, limit: limit, offset: offset);
         }
 
         public Task<SearchResult> SearchLyric(string artistName, string songName)

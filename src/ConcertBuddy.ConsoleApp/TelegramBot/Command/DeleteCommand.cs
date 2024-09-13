@@ -10,7 +10,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
     {
         private ILogger<DeleteCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<DeleteCommand>>();
 
-        public DeleteCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data) 
+        public DeleteCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
             : base(searchHandler, telegramBotClient, data)
         {
         }

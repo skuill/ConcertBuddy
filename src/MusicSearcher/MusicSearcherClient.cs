@@ -46,7 +46,8 @@ namespace MusicSearcher
             _logger = logger;
 
             _isMemoryCacheEnabled = false;
-            _memoryCacheEntryOptions = new MemoryCacheEntryOptions {
+            _memoryCacheEntryOptions = new MemoryCacheEntryOptions
+            {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
                 SlidingExpiration = TimeSpan.FromMinutes(5),
                 Size = 1
@@ -148,7 +149,7 @@ namespace MusicSearcher
                         _logger.LogError(ex, $"Can't get artist from music service [{musicServiceClient.GetType().Name}]");
                     }
                 }
-            } 
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Can't get artist by mbid [{artistMBID}] from LastFM");

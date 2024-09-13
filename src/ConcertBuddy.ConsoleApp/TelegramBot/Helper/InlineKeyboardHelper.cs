@@ -98,7 +98,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
             var inlineKeyboard = inlineKeyboardMarkup.InlineKeyboard;
             var navigationButtons = new List<InlineKeyboardButton>();
             int shift = limit == 0 ? 1 : limit;
-            
+
             if (page - shift >= 0 && !(limit == 0 && page == 1))
                 navigationButtons.Add(InlineKeyboardButton.WithCallbackData("⬅️", string.Format(commandFormat, page - shift, limit, data)));
             navigationButtons.Add(GetDeleteButton());

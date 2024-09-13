@@ -2,7 +2,7 @@
 
 namespace MusicSearcher.Model.Abstract
 {
-    public abstract class MusicTrackBase: IMusicTrack
+    public abstract class MusicTrackBase : IMusicTrack
     {
         public abstract MusicServiceType MusicServiceType { get; }
         public abstract string TrackName { get; }

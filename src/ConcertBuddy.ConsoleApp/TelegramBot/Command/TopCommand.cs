@@ -77,7 +77,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper
                 .GetTracksInlineKeyboardMenu(topTracks.ToArray(), mbid)
                 .WithDeleteButton();
-            
+
             return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
                                                    text: replyText,
                                                    replyMarkup: inlineKeyboard);

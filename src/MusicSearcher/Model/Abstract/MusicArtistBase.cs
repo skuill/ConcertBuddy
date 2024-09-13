@@ -2,7 +2,7 @@
 
 namespace MusicSearcher.Model.Abstract
 {
-    public abstract class MusicArtistBase: IMusicArtist
+    public abstract class MusicArtistBase : IMusicArtist
     {
         public abstract string Name { get; }
 

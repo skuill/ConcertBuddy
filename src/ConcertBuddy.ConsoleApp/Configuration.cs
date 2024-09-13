@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ConcertBuddy.ConsoleApp
+﻿namespace ConcertBuddy.ConsoleApp
 {
     public class Configuration
     {
@@ -59,7 +57,7 @@ namespace ConcertBuddy.ConsoleApp
         public static bool IsSetlistFmAvailable() => !string.IsNullOrWhiteSpace(SetlistFmApiKey);
 
         public static bool IsLastFmAvailable() => !string.IsNullOrWhiteSpace(LastFmApiKey) && !string.IsNullOrWhiteSpace(LastFmApiSecret);
-        
+
         public static bool IsSpotifyAvailable() => !string.IsNullOrWhiteSpace(SpotifyClientID) && !string.IsNullOrWhiteSpace(SpotifyClientSecret);
 
         public static bool IsYandexAvailable() => !string.IsNullOrEmpty(YandexToken);
