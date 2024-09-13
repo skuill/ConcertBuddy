@@ -1,4 +1,4 @@
-﻿using Hqub.MusicBrainz.Entities;
+﻿using Hqub.MusicBrainz.API.Entities;
 using LyricsScraperNET;
 using LyricsScraperNET.Models.Requests;
 using LyricsScraperNET.Models.Responses;
