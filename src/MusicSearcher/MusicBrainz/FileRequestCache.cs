@@ -1,4 +1,4 @@
-﻿using Hqub.MusicBrainz.API.Cache;
+﻿using Hqub.MusicBrainz.Cache;
 using System.Security.Cryptography;
 using System.Text;
 

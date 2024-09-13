@@ -1,4 +1,4 @@
-﻿using Hqub.MusicBrainz.API.Entities;
+﻿using Hqub.MusicBrainz.Entities;
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.MusicBrainz;
 

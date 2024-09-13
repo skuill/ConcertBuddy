@@ -1,5 +1,5 @@
-﻿using Hqub.MusicBrainz.API;
-using Hqub.MusicBrainz.API.Entities;
+﻿using Hqub.MusicBrainz;
+using Hqub.MusicBrainz.Entities;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
