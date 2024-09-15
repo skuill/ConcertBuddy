@@ -49,7 +49,7 @@ namespace ConcertBuddy.ConsoleApp
 
         static void UnhandledExceptionsHandler(object sender, UnhandledExceptionEventArgs ex)
         {
-            _logger.LogCritical((ex.ExceptionObject as Exception).ToString());
+            _logger?.LogCritical((ex.ExceptionObject as Exception)?.ToString());
         }
     }
 }

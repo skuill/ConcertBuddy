@@ -1,6 +1,6 @@
+using FakeItEasy;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using SetlistFmAPI.Http;
 using System.Threading.Tasks;
 
@@ -91,10 +91,10 @@ namespace SetlistFmAPI.Tests
 
         private ISetlistFmClient InitClient()
         {
-            var loggerWebMock = Mock.Of<ILogger<SetlistHttpWebClient>>();
+            var loggerWebMock = A.Fake<ILogger<SetlistHttpWebClient>>();
             var webClient = new SetlistHttpWebClient(loggerWebMock);
 
-            var loggerClientMock = Mock.Of<ILogger<SetlistFmClient>>();
+            var loggerClientMock = A.Fake<ILogger<SetlistFmClient>>();
             ISetlistFmClient client = new SetlistFmClient(loggerClientMock, webClient);
             client.WithApiKey(Configuration.SetlistFmApiKey);
             return client;

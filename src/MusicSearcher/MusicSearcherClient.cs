@@ -66,7 +66,7 @@ namespace MusicSearcher
 
             _musicBrainzClient = new MusicBrainzClient()
             {
-                Cache = new FileRequestCache(Path.Combine(location, "cache"))
+                Cache = new FileRequestCache(Path.Combine(location!, "cache"))
             };
 
             _musicServiceClients = new List<IMusicServiceClient>();

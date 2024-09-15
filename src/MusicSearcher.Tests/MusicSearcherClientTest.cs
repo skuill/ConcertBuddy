@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FakeItEasy;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using MusicSearcher.Abstract;
 using MusicSearcher.Model;
 using MusicSearcher.MusicService;
@@ -214,7 +214,7 @@ namespace MusicSearcher.Tests
 
         private IMusicSearcherClient InitClient()
         {
-            var loggerMock = Mock.Of<ILogger<MusicSearcherClient>>();
+            var loggerMock = A.Fake<ILogger<MusicSearcherClient>>();
             return new MusicSearcherClient(loggerMock);
         }
     }

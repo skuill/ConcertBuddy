@@ -19,7 +19,7 @@ namespace MusicSearcher.Converter
                 RegionInfo region = new RegionInfo(country);
                 return region.TwoLetterISORegionName;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return DEFAULT_REGION_CODE;
             }
