@@ -82,6 +82,12 @@ The serilog adapter is used for event logging. Logs are written to the console, 
 Visit [github project page](https://github.com/users/skuill/projects/1) or [issue board](https://github.com/skuill/ConcertBuddy/issues)
 
 ## Release Notes
+#### v1.0.0 (15.09.24):
+* Migration from .NET 6 to .NET 8
+* Use FakeItEasy instead of Moq
+* Optimize docker image size by using alpine in dockerfile
+* Updated external libraries to the latest version
+
 #### v0.1.1 (03.09.23):
 * Fixed a problem with lyric searching ([Issue 33](https://github.com/skuill/ConcertBuddy/issues/33))
 * Use LyricsScraperNET library instead of LyricsScraper project.
