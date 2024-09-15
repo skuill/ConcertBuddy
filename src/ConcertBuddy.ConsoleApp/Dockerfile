@@ -9,7 +9,7 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["ConcertBuddy.ConsoleApp/ConcertBuddy.ConsoleApp.csproj", "ConcertBuddy.ConsoleApp/"]
 COPY ["MusicSearcher/MusicSearcher.csproj", "MusicSearcher/"]
-COPY ["SetlistFmApi/SetlistFmAPI.csproj", "SetlistFmApi/"]
+COPY ["SetlistFmAPI/SetlistFmAPI.csproj", "SetlistFmAPI/"]
 RUN dotnet restore "./ConcertBuddy.ConsoleApp/ConcertBuddy.ConsoleApp.csproj"
 COPY . .
 WORKDIR "/src/ConcertBuddy.ConsoleApp"

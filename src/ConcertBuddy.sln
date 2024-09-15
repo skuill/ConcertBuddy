@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SetlistFmAPI", "SetlistFmApi\SetlistFmAPI.csproj", "{E08E9B9E-EB95-4FC2-95AD-9DA2E5E2B007}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SetlistFmAPI", "SetlistFmAPI\SetlistFmAPI.csproj", "{E08E9B9E-EB95-4FC2-95AD-9DA2E5E2B007}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SetlistFmAPI.Tests", "SetlistFmApi.Tests\SetlistFmAPI.Tests.csproj", "{756FE4EF-8CAF-4549-8222-4AD814049571}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SetlistFmAPI.Tests", "SetlistFmAPI.Tests\SetlistFmAPI.Tests.csproj", "{756FE4EF-8CAF-4549-8222-4AD814049571}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConcertBuddy.ConsoleApp", "ConcertBuddy.ConsoleApp\ConcertBuddy.ConsoleApp.csproj", "{68B80A89-B854-4070-B265-28B4749F704B}"
 EndProject

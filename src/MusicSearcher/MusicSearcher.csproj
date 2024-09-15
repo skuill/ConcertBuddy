@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SetlistFmApi\SetlistFmAPI.csproj" />
+    <ProjectReference Include="..\SetlistFmAPI\SetlistFmAPI.csproj" />
   </ItemGroup>
 
 </Project>
