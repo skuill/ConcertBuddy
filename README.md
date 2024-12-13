@@ -2,6 +2,8 @@
 
 <img src="https://github.com/skuill/ConcertBuddy/blob/master/resources/BotImage.jpg" width="30%" height="30%">
 
+Your personal Telegram bot for discovering artists, setlists, and lyrics. Perfect for music enthusiasts and concert-goers! 🎵
+
 [![CodeFactor](https://www.codefactor.io/repository/github/skuill/concertbuddy/badge)](https://www.codefactor.io/repository/github/skuill/concertbuddy)
 
 ## Table of contents
@@ -11,15 +13,18 @@
 - [Technologies](#technologies)
 - [Built with](#built-with)
 - [Documentation](#documentation)
-- [TODO](#todo)
+- [Roadmap](#roadmap)
 - [Release Notes](#release-notes)
 - [Support](#support)
 
 ## General info
-Are you planning to go to the concert? 
-This telegram bot will be your companion, like a good buddy! 😎 
+Are you planning to go to a concert?
+This Telegram bot will be your companion, like a good buddy! 😎
 
-He can tell you the biography of the artist/band, find out the actual setlist from the last concerts, play the track and show the lyrics.
+With ConcertBuddy, you can:
+- Explore artist and band biographies.
+- Check out setlists from recent concerts.
+- Listen to tracks and read their lyrics.
 
 Just write the artist/band name to the **[ConcertBuddy](https://t.me/concert_buddy_bot)** bot and enjoy!
 
@@ -36,11 +41,15 @@ A few of the things you can do with ConcertBuddy:
   * Directly from: `Yandex`
   * External link: `Spotify`
 * ✅ Read the lyrics of the tracks
-  * Different lyric providers: `AZLyrics`, `Genius`, `SongLyrics`, `MusixMatch`
+  * Different lyric providers: `AZLyrics`, `Genius`, `SongLyrics`, `MusixMatch`, `LyricFind`
 
 ## Feedback
 
-Feel free to send me feedback on [Telegram](https://t.me/skuill) or [file an issue](https://github.com/skuill/ConcertBuddy/issues/new). Feature requests are always welcome.
+For bug reports, suggestions, or feature requests, please use the [issue tracker](https://github.com/skuill/ConcertBuddy/issues/new).
+
+For direct feedback, reach out on [Telegram](https://t.me/skuill).
+
+Feature requests are always welcome.
 
 ## Technologies
 Project is created with:
@@ -62,12 +71,12 @@ Project is created with:
 ## Documentation
 
 #### Hosting
-The bot is launched on the Ubuntu 22.10 64bit server [DigitalOcean droplet](https://www.digitalocean.com/products/droplets) in a docker container from [docker hub repository](https://hub.docker.com/repository/docker/skuill/concertbuddyconsoleapp). It costs 6$/month.
+The bot is hosted on an Ubuntu 22.10 64-bit server using a [DigitalOcean droplet](https://www.digitalocean.com/products/droplets) and runs in a Docker container from [docker hub repository](https://hub.docker.com/repository/docker/skuill/concertbuddyconsoleapp). Hosting costs $6/month.
 
 #### Deployment
 1. Create and configure `ConcertBuddy/ConcertBuddy.ConsoleApp/appsettings.json` file with settings [Configuration.cs](src/ConcertBuddy.ConsoleApp/Configuration.cs) from template [appsettings.template.json](src/ConcertBuddy.ConsoleApp/appsettings.template.json). 
-2. Build and publish docker image with [Dockerfile](src/ConcertBuddy.ConsoleApp/Dockerfile) to [docker hub registry](https://hub.docker.com/). 
-3. Use [docker-compose.yml](docker-compose.yml) to run container.
+2. Build and publish docker image usingn the [Dockerfile](src/ConcertBuddy.ConsoleApp/Dockerfile) to [docker hub registry](https://hub.docker.com/). 
+3. Use [docker-compose.yml](docker-compose.yml) to run the container.
 
 #### Environments
 | Name            | Link               |
@@ -76,10 +85,10 @@ The bot is launched on the Ubuntu 22.10 64bit server [DigitalOcean droplet](http
 | Production      | **[ConcertBuddy](https://t.me/concert_buddy_bot)** |
 
 #### Logging
-The serilog adapter is used for event logging. Logs are written to the console, debug, file. Log rotation is configured. Logging settings are set in appsettings.json. Example: [appsettings.template.json](src/ConcertBuddy.ConsoleApp/appsettings.template.json)
+Event logging is managed by Serilog, with logs written to console, debug, and file. Log rotation is configured. Logging settings can be found in `appsettings.json`. Example: [appsettings.template.json](src/ConcertBuddy.ConsoleApp/appsettings.template.json)
 
 ## Roadmap
-Visit [github project page](https://github.com/users/skuill/projects/1) or [issue board](https://github.com/skuill/ConcertBuddy/issues)
+See the full roadmap on the [Github project page](https://github.com/users/skuill/projects/1) or [Issue board](https://github.com/skuill/ConcertBuddy/issues)
 
 ## Release Notes
 #### v1.0.0 (15.09.24):
@@ -132,7 +141,7 @@ Bugfixes:
 ## Support
 If you want to support this project or my work in general, you can donate via the link below. 
 
-This will always be optional! Thank you! 😉
+This is always optional! Thank you! 😉
 
  * [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/skuill)
  * [!["Tinkoff Donate Button"](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.tinkoff.ru/cf/3MNYeRds3s)
