@@ -91,6 +91,11 @@ Event logging is managed by Serilog, with logs written to console, debug, and fi
 See the full roadmap on the [Github project page](https://github.com/users/skuill/projects/1) or [Issue board](https://github.com/skuill/ConcertBuddy/issues)
 
 ## Release Notes
+#### v1.1.0 (01.01.25):
+* Use Hqub.Last.fm instead of Inflatable.Lastfm.
+* Updated external libraries to the latest version.
+* Refactoring. Added data validation in commands. In the model, properties are now nullable.
+
 #### v1.0.0 (15.09.24):
 * Migration from .NET 6 to .NET 8
 * Use FakeItEasy instead of Moq
