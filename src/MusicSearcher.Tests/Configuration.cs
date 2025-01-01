@@ -6,7 +6,7 @@ namespace MusicSearcher.Tests
 {
     public class Configuration
     {
-        private static readonly ILogger<Configuration> _logger;
+        private static readonly ILogger<Configuration>? _logger;
         private static readonly string LASTFM_API_KEY = "LastFmApiKey";
         private static readonly string LASTFM_API_SECRET = "LastFmApiSecret";
         private static readonly string SPOTIFY_CLIENT_ID = "SpotifyClientID";

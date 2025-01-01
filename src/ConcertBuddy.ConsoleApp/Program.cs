@@ -13,7 +13,7 @@ namespace ConcertBuddy.ConsoleApp
         {
             _logger = ServiceProviderSingleton.Source.GetService<ILogger<Program>>();
 
-            _logger.LogInformation($"Start ConcertBoddy application.");
+            _logger?.LogInformation($"Start ConcertBoddy application.");
 
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(UnhandledExceptionsHandler);
 
@@ -29,19 +29,19 @@ namespace ConcertBuddy.ConsoleApp
                 AllowedUpdates = { } // receive all update types
             };
             botClient.StartReceiving(
-                botHandler.HandleUpdateAsync,
-                botHandler.HandleErrorAsync,
+                botHandler!.HandleUpdateAsync,
+                botHandler!.HandleErrorAsync,
                 receiverOptions,
                 cancellationToken: cts.Token);
 
-            var botUser = botClient.GetMeAsync().GetAwaiter().GetResult();
+            var botUser = botClient.GetMe().GetAwaiter().GetResult();
 
             Console.Title = botUser.Username ?? "My awesome Bot";
-            _logger.LogInformation($"Bot {botUser.FirstName} [{botUser.Id}] start listening.");
+            _logger?.LogInformation($"Bot {botUser.FirstName} [{botUser.Id}] start listening.");
 
             Console.ReadLine();
 
-            _logger.LogInformation($"Stop ConcertBoddy application.");
+            _logger?.LogInformation($"Stop ConcertBoddy application.");
             // Send cancellation request to stop bot
             cts.Cancel();
             return;

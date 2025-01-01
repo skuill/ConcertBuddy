@@ -14,22 +14,21 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Genius.NET" Version="4.0.1" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.65" />
-    <PackageReference Include="LyricsScraperNET" Version="1.9.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
-    <PackageReference Include="Serilog" Version="2.12.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
-    <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="SpotifyAPI.Web" Version="7.1.1" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
-    <PackageReference Include="Telegram.Bot" Version="19.0.0" />
+    <PackageReference Include="LyricsScraperNET" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.4" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="SpotifyAPI.Web" Version="7.2.1" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.1" />
+    <PackageReference Include="Telegram.Bot" Version="22.2.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MusicSearcher\MusicSearcher.csproj" />

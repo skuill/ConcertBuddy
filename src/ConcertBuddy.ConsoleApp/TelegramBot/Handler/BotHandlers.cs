@@ -31,7 +31,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
                 _ => exception.ToString()
             };
 
-            _logger.LogError(ErrorMessage);
+            _logger?.LogError(ErrorMessage);
             return Task.CompletedTask;
         }
 
@@ -94,13 +94,13 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
 
         private Task BotOnChosenInlineResultReceived(ITelegramBotClient botClient, ChosenInlineResult chosenInlineResult)
         {
-            _logger.LogInformation($"Received inline result: {chosenInlineResult.ResultId}");
+            _logger?.LogInformation($"Received inline result: {chosenInlineResult.ResultId}");
             return Task.CompletedTask;
         }
 
         private Task UnknownUpdateHandlerAsync(ITelegramBotClient botClient, Update update)
         {
-            _logger.LogInformation($"Unknown update type: {update.Type}");
+            _logger?.LogInformation($"Unknown update type: {update.Type}");
             return Task.CompletedTask;
         }
     }

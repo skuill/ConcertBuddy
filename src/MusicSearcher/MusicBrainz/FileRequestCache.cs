@@ -1,4 +1,4 @@
-﻿using Hqub.MusicBrainz.API.Cache;
+﻿using Hqub.MusicBrainz.Cache;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -42,6 +42,23 @@ namespace MusicSearcher.MusicBrainz
             }
 
             await CacheEntry.Write(path, request, response);
+        }
+
+        public Task<bool> Contains(string request)
+        {
+            var item = CacheEntry.Read(path, request);
+
+            if (item == null)
+            {
+                return Task.FromResult(false);
+            }
+
+            if ((DateTime.Now - item.TimeStamp) > Timeout)
+            {
+                return Task.FromResult(false);
+            }
+
+            return Task.FromResult(true);
         }
 
         public Task<bool> TryGetCachedItem(string request, out Stream stream)

@@ -43,7 +43,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot
 
         public static String ConvertToString(this Enum obj)
         {
-            return Enum.GetName(obj.GetType(), obj).ToLowerInvariant();
+            return Enum.GetName(obj.GetType(), obj)!.ToLowerInvariant();
         }
     }
 }

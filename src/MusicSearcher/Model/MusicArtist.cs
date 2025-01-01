@@ -26,30 +26,32 @@ namespace MusicSearcher.Model
             _musicArtists = musicArtists;
         }
 
-        public override string Name { get => _musicArtists?.Select(x => x.Name).Where(x => x != default).FirstOrDefault(); }
-
-        public override string MBID { get => _musicArtists?.Select(x => x.MBID).Where(x => x != default).FirstOrDefault(); }
-
-        public override int? Score { get => _musicArtists?.Select(x => x.Score).Where(x => x != default).FirstOrDefault(); }
-
-        public override Uri ImageUri { get => _musicArtists?.Select(x => x.ImageUri).Where(x => x != default).FirstOrDefault(); }
-
-        public override string Biography { get => _musicArtists?.Select(x => x.Biography).Where(x => x != default).FirstOrDefault(); }
-
-        /// <summary>
-        /// Areas are geographic regions or settlements.
-        /// </summary>
-        public override string Area { get => _musicArtists?.Select(x => x.Area).Where(x => x != default).FirstOrDefault(); }
-
-        public override string ActiveYears { get => _musicArtists?.Select(x => x.ActiveYears).Where(x => x != default).FirstOrDefault(); }
-
-        public override string Type { get => _musicArtists?.Select(x => x.Type).Where(x => x != default).FirstOrDefault(); }
-
-        public override string Country { get => _musicArtists?.Select(x => x.Country).Where(x => x != default).FirstOrDefault(); }
-
-        public override Uri ExternalUrl { get => _musicArtists?.Select(x => x.ExternalUrl).Where(x => x != default).FirstOrDefault(); }
-
         public override MusicServiceType MusicServiceType => MusicServiceType.None;
+
+        public override string? Name => GetFirstNonDefaultValue(x => x.Name);
+
+        public override string? MBID => GetFirstNonDefaultValue(x => x.MBID);
+
+        public override int? Score => GetFirstNonDefaultValue(x => x.Score);
+
+        public override Uri? ImageUri => GetFirstNonDefaultValue(x => x.ImageUri);
+
+        public override string? Biography => GetFirstNonDefaultValue(x => x.Biography);
+
+        public override string? Area => GetFirstNonDefaultValue(x => x.Area);
+
+        public override string? ActiveYears => GetFirstNonDefaultValue(x => x.ActiveYears);
+
+        public override string? Type => GetFirstNonDefaultValue(x => x.Type);
+
+        public override string? Country => GetFirstNonDefaultValue(x => x.Country);
+
+        public override Uri? ExternalUrl => GetFirstNonDefaultValue(x => x.ExternalUrl);
+
+        private T? GetFirstNonDefaultValue<T>(Func<MusicArtistBase, T> selector)
+        {
+            return _musicArtists.Select(selector).FirstOrDefault(x => !EqualityComparer<T>.Default.Equals(x, default));
+        }
 
         public void Add(MusicArtistBase artist)
         {
@@ -64,12 +66,9 @@ namespace MusicSearcher.Model
             return _musicArtists != null && _musicArtists.Any(x => x.MusicServiceType == musicServiceType);
         }
 
-        public override MusicArtistBase GetMusicArtistByServiceType(MusicServiceType musicServiceType)
+        public override MusicArtistBase? GetMusicArtistByServiceType(MusicServiceType musicServiceType)
         {
-            if (_musicArtists == null)
-                return null;
-
-            return _musicArtists.FirstOrDefault(x => x.MusicServiceType == musicServiceType);
+            return _musicArtists?.FirstOrDefault(x => x.MusicServiceType == musicServiceType);
         }
 
         public IEnumerator<MusicArtistBase> GetEnumerator()

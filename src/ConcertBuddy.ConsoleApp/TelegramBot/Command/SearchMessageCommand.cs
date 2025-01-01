@@ -8,18 +8,26 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 {
-    public class SearchMessageCommand : AbstractCommand<Message, Message>
+    public class SearchMessageCommand : AbstractCommand<Message?, Message>
     {
-        private ILogger<SearchMessageCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<SearchMessageCommand>>();
+        private const string CurrentCommand = CommandList.COMMAND_SEARCH;
+
+        private ILogger<SearchMessageCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SearchMessageCommand>>();
 
         public SearchMessageCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, Message data)
             : base(searchHandler, telegramBotClient, data)
         {
         }
 
-        public override async Task<Message> ExecuteAsync()
+        public override async Task<Message?> ExecuteAsync()
         {
-            _logger.LogDebug($"Handle [{CommandList.COMMAND_SEARCH}] message command: [{Data.Text}]");
+            _logger?.LogDebug($"Handle [{CurrentCommand}] message command: [{Data.Text}]");
+
+            if (Data == null)
+            {
+                _logger?.LogError($"Unexpected case. [Data] field is null. Command: [{CurrentCommand}]");
+                return null;
+            }
 
             string replyText = string.Empty;
             string artistName = Data.GetClearMessage();
@@ -28,7 +36,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (artists == null || !artists.Any())
             {
-                _logger.LogError($"Can't find artist [{artistName}]");
+                _logger?.LogError($"Can't find artist [{artistName}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Chat.Id);
             }
 
@@ -44,9 +52,11 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, 0, SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT, isForwardNavigationEnabled);
 
             replyText = "Choose the correct artist 💭:";
-            return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Chat.Id,
-                                                        text: replyText,
-                                                        replyMarkup: inlineKeyboard);
+
+            return await TelegramBotClient.SendMessage(
+                chatId: Data.Chat.Id,
+                text: replyText,
+                replyMarkup: inlineKeyboard);
         }
     }
 }

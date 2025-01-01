@@ -1,4 +1,4 @@
-﻿using IF.Lastfm.Core.Api;
+﻿using Hqub.Lastfm;
 using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.Model.LastFm;
@@ -27,14 +27,30 @@ namespace MusicSearcher.MusicService.LastFm
 
         public async Task<MusicArtistBase> GetArtistByMBID(string mbid)
         {
-            var lastFmArtist = await _lastFmClient.Artist.GetInfoByMbidAsync(mbid);
-            if (lastFmArtist != null && lastFmArtist.Success)
+            try
             {
-                return new LastFmMusicArtist(lastFmArtist.Content);
+                var lastFmArtist = await _lastFmClient.Artist.GetInfoByMbidAsync(mbid);
+
+                if (lastFmArtist != null)
+                {
+                    return new LastFmMusicArtist(lastFmArtist);
+                }
+                else
+                {
+                    throw new Exception($"Artist with MBID [{mbid}] was not found on LastFM.");
+                }
             }
-            else
+            catch (HttpRequestException ex)
             {
-                throw new Exception($"Can't get artist by mbid [{mbid}] from LastFM. Status: {lastFmArtist?.Status}.");
+                throw new Exception($"Network error while fetching artist by MBID [{mbid}] from LastFM.", ex);
+            }
+            catch (TaskCanceledException ex)
+            {
+                throw new Exception($"Request to LastFM for MBID [{mbid}] timed out.", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"An unexpected error occurred while getting artist by MBID [{mbid}].", ex);
             }
         }
 

@@ -7,23 +7,24 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 {
-    public class UsageCommand : AbstractCommand<Message, Message>
+    public class UsageCommand : AbstractCommand<Message?, Message>
     {
-        private ILogger<UsageCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<UsageCommand>>();
+        private ILogger<UsageCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<UsageCommand>>();
 
         public UsageCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, Message data)
             : base(searchHandler, telegramBotClient, data)
         {
         }
 
-        public override async Task<Message> ExecuteAsync()
+        public override async Task<Message?> ExecuteAsync()
         {
             string usage = $"Hi, {Data.From?.FirstName}! 👋\n" +
                 $"Please, write any artist and I will find him! 🔍";
 
-            return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Chat.Id,
-                                                        text: usage,
-                                                        replyMarkup: new ReplyKeyboardRemove());
+            return await TelegramBotClient.SendMessage(
+                chatId: Data.Chat.Id,
+                text: usage,
+                replyMarkup: new ReplyKeyboardRemove());
         }
     }
 }

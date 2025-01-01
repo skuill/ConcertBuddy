@@ -44,7 +44,7 @@ namespace SetlistFmAPI.Models
             get
             {
                 if (Tour == null)
-                    return null;
+                    return default;
                 return Tour.Name;
             }
             set
@@ -113,12 +113,12 @@ namespace SetlistFmAPI.Models
         public DateTime? GetEventDateTime()
         {
             DateTime result;
-            if (DateTime.TryParseExact(EventDate, "dd-MM-yyyy", 
+            if (DateTime.TryParseExact(EventDate, "dd-MM-yyyy",
                 CultureInfo.InvariantCulture, DateTimeStyles.None, out result))
             {
                 return result;
             }
-            
+
             return null;
         }
 

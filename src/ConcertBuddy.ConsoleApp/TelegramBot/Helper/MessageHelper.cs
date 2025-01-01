@@ -8,11 +8,11 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
     {
         public static async Task SendAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery, string text)
         {
-            await botClient.AnswerCallbackQueryAsync(
+            await botClient.AnswerCallbackQuery(
                 callbackQueryId: callbackQuery.Id,
                 text: text);
 
-            await botClient.SendTextMessageAsync(
+            await botClient.SendMessage(
                 chatId: callbackQuery.Message.Chat.Id,
                 text: text);
         }
@@ -20,9 +20,10 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
         public static async Task<Message> SendUnexpectedErrorAsync(ITelegramBotClient botClient, long chatId, string message = "")
         {
             string replyText = "Something goes wrong 😕! Please try another option or try again later.. " + message;
-            return await botClient.SendTextMessageAsync(chatId: chatId,
-                                                        text: replyText,
-                                                        replyMarkup: new ReplyKeyboardRemove());
+            return await botClient.SendMessage(
+                chatId: chatId,
+                text: replyText,
+                replyMarkup: new ReplyKeyboardRemove());
         }
     }
 }

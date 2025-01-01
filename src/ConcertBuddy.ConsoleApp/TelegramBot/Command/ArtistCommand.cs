@@ -12,36 +12,48 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 {
-    public class ArtistCommand : AbstractCommand<Message, CallbackQuery>
+    public class ArtistCommand : AbstractCommand<Message?, CallbackQuery>
     {
-        private ILogger<ArtistCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<ArtistCommand>>();
+        private const string CurrentCommand = CommandList.COMMAND_ARTIST;
+
+        private ILogger<ArtistCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<ArtistCommand>>();
 
         public ArtistCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
             : base(searchHandler, telegramBotClient, data)
         {
         }
 
-        public override async Task<Message> ExecuteAsync()
+        public override async Task<Message?> ExecuteAsync()
         {
-            _logger.LogDebug($"Handle [{CommandList.COMMAND_ARTIST}] command: [{Data.Data}]");
+            _logger?.LogDebug($"Handle [{CurrentCommand}] command: [{Data.Data}]");
 
-            var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CommandList.COMMAND_ARTIST, out string errorMessage);
+            if (Data == null)
+            {
+                _logger?.LogError($"Unexpected case. [Data] field is null. Command: [{CurrentCommand}]");
+                return null;
+            }
+            if (Data!.Message == null)
+            {
+                _logger?.LogError($"Unexpected case. [Data.Message] field is null. Command: [{CurrentCommand}]");
+            }
+
+            var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
             if (!isValidQuery)
             {
-                _logger.LogError(errorMessage);
+                _logger?.LogError(errorMessage);
                 await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
                 return null;
             }
 
             string replyText = string.Empty;
 
-            var artistMBID = Data.GetParameterFromMessageText(CommandList.COMMAND_ARTIST);
+            var artistMBID = Data.GetParameterFromMessageText(CurrentCommand);
 
             var artist = await SearchHandler.SearchArtistByMBID(artistMBID) as MusicArtist;
 
             if (artist == null)
             {
-                _logger.LogError($"Can't find artist with mbid [{artistMBID}]");
+                _logger?.LogError($"Can't find artist with mbid [{artistMBID}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
@@ -59,19 +71,19 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(artistMBID)
                 .WithDeleteButton();
 
-            await TelegramBotClient.AnswerCallbackQueryAsync(
+            await TelegramBotClient.AnswerCallbackQuery(
                 callbackQueryId: Data.Id,
                 text: $"Artist: {artist.Name}");
 
             if (artist.ImageUri != null)
-                return await TelegramBotClient.SendPhotoAsync(
+                return await TelegramBotClient.SendPhoto(
                     chatId: Data.Message.Chat.Id,
                     caption: replyText,
                     photo: InputFile.FromUri(artist.ImageUri),
                     replyMarkup: inlineKeyboard,
                     parseMode: ParseMode.Html);
 
-            return await TelegramBotClient.SendTextMessageAsync(
+            return await TelegramBotClient.SendMessage(
                 chatId: Data.Message.Chat.Id,
                 text: replyText,
                 replyMarkup: inlineKeyboard,

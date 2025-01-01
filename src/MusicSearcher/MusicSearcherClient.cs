@@ -1,5 +1,5 @@
-﻿using Hqub.MusicBrainz.API;
-using Hqub.MusicBrainz.API.Entities;
+﻿using Hqub.MusicBrainz;
+using Hqub.MusicBrainz.Entities;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
@@ -18,14 +18,14 @@ namespace MusicSearcher
 {
     public class MusicSearcherClient : IMusicSearcherClient
     {
-        private readonly ILogger<MusicSearcherClient> _logger;
+        private readonly ILogger<MusicSearcherClient>? _logger;
 
         private List<IMusicServiceClient> _musicServiceClients;
 
         private MusicBrainzClient _musicBrainzClient;
 
         private const int MEMORY_CACHE_SIZE = 256;
-        private IMemoryCache _artistMemoryCache;
+        private IMemoryCache? _artistMemoryCache;
         private readonly MemoryCacheEntryOptions _memoryCacheEntryOptions;
 
 
@@ -41,9 +41,8 @@ namespace MusicSearcher
         private bool _isMemoryCacheEnabled;
         public bool IsMemoryCacheEnabled => _isMemoryCacheEnabled;
 
-        public MusicSearcherClient(ILogger<MusicSearcherClient> logger)
+        public MusicSearcherClient()
         {
-            _logger = logger;
 
             _isMemoryCacheEnabled = false;
             _memoryCacheEntryOptions = new MemoryCacheEntryOptions
@@ -53,11 +52,6 @@ namespace MusicSearcher
                 Size = 1
             };
 
-            Init();
-        }
-
-        private void Init()
-        {
             // Make sure that TLS 1.2 is available.
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
@@ -70,6 +64,12 @@ namespace MusicSearcher
             };
 
             _musicServiceClients = new List<IMusicServiceClient>();
+        }
+
+        public MusicSearcherClient(ILogger<MusicSearcherClient> logger)
+            : this()
+        {
+            _logger = logger;
         }
 
         // TODO: Add additional check for aliases in case of abbreviations. For example: RHCP
@@ -90,7 +90,7 @@ namespace MusicSearcher
                 var artists = await _musicBrainzClient.Artists.SearchAsync(name.Quote(), limit, offset);
                 if (artists == null || !artists.Any())
                 {
-                    _logger.LogError($"Can't find artist [{name}] with search limit {limit}");
+                    _logger?.LogError($"Can't find artist [{name}] with search limit {limit}");
                     return result;
                 }
 
@@ -101,12 +101,12 @@ namespace MusicSearcher
                     _ => new List<MusicArtist>()
                 };
 
-                _logger.LogDebug($"Find artists for [{name}]: {string.Join("; ", result.Select(x => $"{x.Name} [score: {x.Score}]"))}");
+                _logger?.LogDebug($"Find artists for [{name}]: {string.Join("; ", result.Select(x => $"{x.Name} [score: {x.Score}]"))}");
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Can't find artists by name [{name}]");
+                _logger?.LogError(ex, $"Can't find artists by name [{name}]");
             }
             return result;
         }
@@ -118,7 +118,7 @@ namespace MusicSearcher
             {
                 bool isResultFromCache = false;
                 if (IsMemoryCacheEnabled)
-                    isResultFromCache = _artistMemoryCache.TryGetValue(artistMBID, out result);
+                    isResultFromCache = _artistMemoryCache!.TryGetValue(artistMBID, out result);
                 if (isResultFromCache)
                     return result;
 
@@ -146,18 +146,18 @@ namespace MusicSearcher
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"Can't get artist from music service [{musicServiceClient.GetType().Name}]");
+                        _logger?.LogError(ex, $"Can't get artist from music service [{musicServiceClient.GetType().Name}]");
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Can't get artist by mbid [{artistMBID}] from LastFM");
+                _logger?.LogError(ex, $"Can't get artist by mbid [{artistMBID}] from LastFM");
                 return new MusicArtist();
             }
 
             if (IsMemoryCacheEnabled)
-                _artistMemoryCache.Set(artistMBID, result, _memoryCacheEntryOptions);
+                _artistMemoryCache!.Set(artistMBID, result, _memoryCacheEntryOptions);
 
             return result;
         }
@@ -177,36 +177,37 @@ namespace MusicSearcher
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Can't get track from music service [{musicServiceClient.GetType().Name}]");
+                    _logger?.LogError(ex, $"Can't get track from music service [{musicServiceClient.GetType().Name}]");
                 }
             }
             return result;
         }
 
 
-        public async Task<Recording> SearchSongByName(string artistMBID, string name)
+        public async Task<Recording?> SearchSongByName(string artistMBID, string name)
         {
-            Recording result = null;
             try
             {
                 QueryParameters<Recording> query = new QueryParameters<Recording>();
                 query.Add("arid", artistMBID);
                 query.Add("recording", name);
+
                 var recordings = await _musicBrainzClient.Recordings.SearchAsync(query);
+
                 if (recordings == null || !recordings.Any())
                 {
-                    _logger.LogError($"Can't find recording for artist mbid [{artistMBID}] and song name [{name}]");
-                    return result;
+                    _logger?.LogError($"Can't find recording for artist mbid [{artistMBID}] and song name [{name}]");
+                    return null;
                 }
 
-                _logger.LogDebug($"Find recording for artist [{artistMBID}] with song name [{name}]");
+                _logger?.LogDebug($"Find recording for artist [{artistMBID}] with song name [{name}]");
                 return recordings.First();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Can't find recording for artist mbid [{artistMBID}] and song name [{name}]");
+                _logger?.LogError(ex, $"Can't find recording for artist mbid [{artistMBID}] and song name [{name}]");
+                return null;
             }
-            return result;
         }
 
 
@@ -235,7 +236,7 @@ namespace MusicSearcher
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Can't get top tracks from music service [{musicServiceClient.GetType().Name}]");
+                    _logger?.LogError(ex, $"Can't get top tracks from music service [{musicServiceClient.GetType().Name}]");
                 }
             }
             return result;
@@ -243,10 +244,10 @@ namespace MusicSearcher
 
         public void WithLastFmClient(string apiKey, string secret)
         {
-            _logger.LogInformation($"Enable LastFM client for artist search");
+            _logger?.LogInformation($"Enable LastFM client for artist search");
             if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(secret))
             {
-                _logger.LogWarning($"Please set apiKey [{apiKey}] and secret [{secret}] properly!");
+                _logger?.LogWarning($"Please set apiKey [{apiKey}] and secret [{secret}] properly!");
                 return;
             }
             try
@@ -255,17 +256,17 @@ namespace MusicSearcher
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Can't initialize LastFM client!");
+                _logger?.LogError(ex, $"Can't initialize LastFM client!");
             }
             _isLastFmClientEnabled = true;
         }
 
         public void WithSpotifyClient(string cliendID, string clientSecret)
         {
-            _logger.LogInformation($"Enable Spotify client for artist search");
+            _logger?.LogInformation($"Enable Spotify client for artist search");
             if (string.IsNullOrEmpty(cliendID) || string.IsNullOrEmpty(clientSecret))
             {
-                _logger.LogWarning($"Please set cliendID [{cliendID}] and clientSecret [{clientSecret}] properly!");
+                _logger?.LogWarning($"Please set cliendID [{cliendID}] and clientSecret [{clientSecret}] properly!");
                 return;
             }
             try
@@ -274,14 +275,14 @@ namespace MusicSearcher
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Can't initialize Spotify client!");
+                _logger?.LogError(ex, $"Can't initialize Spotify client!");
             }
             _isSpotifyClientEnabled = true;
         }
 
         public void WithMemoryCache()
         {
-            _logger.LogInformation($"Enable memory cache for artist search with size {MEMORY_CACHE_SIZE}");
+            _logger?.LogInformation($"Enable memory cache for artist search with size {MEMORY_CACHE_SIZE}");
             _isMemoryCacheEnabled = true;
             var memoryCacheOptions = new MemoryCacheOptions { SizeLimit = MEMORY_CACHE_SIZE };
             _artistMemoryCache = new MemoryCache(memoryCacheOptions);
@@ -289,10 +290,10 @@ namespace MusicSearcher
 
         public void WithYandexClient(string token)
         {
-            _logger.LogInformation($"Enable Yandex client for artist search");
+            _logger?.LogInformation($"Enable Yandex client for artist search");
             if (string.IsNullOrEmpty(token))
             {
-                _logger.LogWarning($"Please set Yandex credentials: token [{token}]!");
+                _logger?.LogWarning($"Please set Yandex credentials: token [{token}]!");
                 return;
             }
             try
@@ -301,7 +302,7 @@ namespace MusicSearcher
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Can't initialize Yandex client!");
+                _logger?.LogError(ex, $"Can't initialize Yandex client!");
             }
             _isYandexClientEnabled = true;
         }
@@ -310,7 +311,7 @@ namespace MusicSearcher
         public void Dispose()
         {
             if (_isMemoryCacheEnabled)
-                _artistMemoryCache.Dispose();
+                _artistMemoryCache!.Dispose();
             if (_musicServiceClients != null && _musicServiceClients.Any())
             {
                 foreach (var musicServiceClient in _musicServiceClients)

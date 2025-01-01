@@ -26,23 +26,36 @@ namespace MusicSearcher.Model
             _musicTracks = musicTracks;
         }
 
-        public override string TrackName { get => _musicTracks?.Select(x => x.TrackName).Where(x => x != default).FirstOrDefault(); }
-
-        public override string DownloadLink { get => _musicTracks?.Select(x => x.DownloadLink).Where(x => x != default).FirstOrDefault(); }
-
-        public override string TrackExternalLink { get => _musicTracks?.Select(x => x.TrackExternalLink).Where(x => x != default).FirstOrDefault(); }
-
-        public override string AlbumName { get => _musicTracks?.Select(x => x.AlbumName).Where(x => x != default).FirstOrDefault(); }
-
-        public override string AlbumExternalLink { get => _musicTracks?.Select(x => x.AlbumExternalLink).Where(x => x != default).FirstOrDefault(); }
-
-        public override IEnumerable<string> ArtistsNames { get => _musicTracks?.Select(x => x.ArtistsNames).Where(x => x != default).FirstOrDefault(); }
-
-        public override IEnumerable<KeyValuePair<string, string>> ArtistsExternalLinks { get => _musicTracks?.Select(x => x.ArtistsExternalLinks).Where(x => x != default).FirstOrDefault(); }
-
-        public override TimeSpan? Duration { get => _musicTracks?.Select(x => x.Duration).Where(x => x != default)?.First(); }
-
         public override MusicServiceType MusicServiceType => MusicServiceType.None;
+
+        public override string? TrackName
+            => GetFirstNonDefaultValue(x => x.TrackName);
+
+        public override string? DownloadLink
+            => GetFirstNonDefaultValue(x => x.DownloadLink);
+
+        public override string? TrackExternalLink
+            => GetFirstNonDefaultValue(x => x.TrackExternalLink);
+
+        public override string? AlbumName
+            => GetFirstNonDefaultValue(x => x.AlbumName);
+
+        public override string? AlbumExternalLink
+            => GetFirstNonDefaultValue(x => x.AlbumExternalLink);
+
+        public override IEnumerable<string>? ArtistsNames
+            => GetFirstNonDefaultValue(x => x.ArtistsNames);
+
+        public override IEnumerable<KeyValuePair<string, string>>? ArtistsExternalLinks
+            => GetFirstNonDefaultValue(x => x.ArtistsExternalLinks);
+
+        public override TimeSpan? Duration
+            => GetFirstNonDefaultValue(x => x.Duration);
+
+        private T? GetFirstNonDefaultValue<T>(Func<MusicTrackBase, T> selector)
+        {
+            return _musicTracks.Select(selector).FirstOrDefault(x => !EqualityComparer<T>.Default.Equals(x, default));
+        }
 
         public void Add(MusicTrackBase track)
         {
@@ -54,14 +67,11 @@ namespace MusicSearcher.Model
 
         public override bool IsMusicTrackExist(MusicServiceType musicServiceType)
         {
-            return _musicTracks != null && _musicTracks.Any(x => x.MusicServiceType == musicServiceType);
+            return _musicTracks.Any(x => x.MusicServiceType == musicServiceType);
         }
 
-        public override MusicTrackBase GetMusicTrackByServiceType(MusicServiceType musicServiceType)
+        public override MusicTrackBase? GetMusicTrackByServiceType(MusicServiceType musicServiceType)
         {
-            if (_musicTracks == null)
-                return null;
-
             return _musicTracks.FirstOrDefault(x => x.MusicServiceType == musicServiceType);
         }
 

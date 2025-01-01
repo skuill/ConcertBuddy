@@ -1,4 +1,4 @@
-﻿using Hqub.MusicBrainz.API.Entities;
+﻿using Hqub.MusicBrainz.Entities;
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.MusicBrainz;
 
@@ -19,7 +19,7 @@ namespace MusicSearcher.Abstract
         /// </summary>
         Task<IEnumerable<MusicTrackBase>> SearchTopTracks(string artistMBID);
 
-        Task<Recording> SearchSongByName(string artistMBID, string name);
+        Task<Recording?> SearchSongByName(string artistMBID, string name);
 
         Task<Recording> SearchSongByMBID(string songMBID);
 

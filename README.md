@@ -62,7 +62,7 @@ Project is created with:
 * [LyricsScraperNET](https://github.com/skuill/LyricsScraperNET) - 🎼 a library for .NET that provides an API to search for lyrics of a song from the web
 * [SpotifyAPI-NET](https://github.com/JohnnyCrazy/SpotifyAPI-NET) - a client for Spotify's Web API, written in .NET 
 * [MusicBrainzAPI](https://github.com/avatar29A/MusicBrainz) - Implementation of the MuzicBrainz API v2 
-* [Inflatable.Lastfm](https://github.com/inflatablefriends/lastfm) - Last.fm SDK for modern .NET platforms 
+* [Hqub.Last.fm](https://github.com/avatar29A/Last.fm) - Implementation of the Last.fm API for .NET Standard 2.0 or above
 * [Genius.NET](https://github.com/prajjwaldimri/Genius.NET) - C# library to access the Genius REST API in .NET 
 * [HtmlAgilityPack](https://html-agility-pack.net/) - agile HTML parser that builds a read/write DOM and supports plain XPATH or XSLT (you actually don't HAVE to understand XPATH nor XSLT to use it, don't worry...)
 * [Serilog](https://serilog.net/) - simple .NET logging with fully-structured events

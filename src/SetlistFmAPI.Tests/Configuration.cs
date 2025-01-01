@@ -6,7 +6,7 @@ namespace SetlistFmAPI.Tests
 {
     public class Configuration
     {
-        private static readonly ILogger<Configuration> _logger;
+        private static readonly ILogger<Configuration>? _logger;
         private static readonly string SETLISTFM_API_KEY = "SetlistFmApiKey";
 
         public static string SetlistFmApiKey => ReadSetting(SETLISTFM_API_KEY);

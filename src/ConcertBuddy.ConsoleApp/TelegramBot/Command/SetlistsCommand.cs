@@ -10,30 +10,42 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 {
-    public class SetlistsCommand : AbstractCommand<Message, CallbackQuery>
+    public class SetlistsCommand : AbstractCommand<Message?, CallbackQuery>
     {
-        private ILogger<SetlistsCommand> _logger = ServiceProviderSingleton.Source.GetService<ILogger<SetlistsCommand>>();
+        private const string CurrentCommand = CommandList.COMMAND_SETLISTS;
+
+        private ILogger<SetlistsCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SetlistsCommand>>();
 
         public SetlistsCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
             : base(searchHandler, telegramBotClient, data)
         {
         }
 
-        public override async Task<Message> ExecuteAsync()
+        public override async Task<Message?> ExecuteAsync()
         {
-            _logger.LogDebug($"Handle [{CommandList.COMMAND_SETLISTS}] command: [{Data.Data}]");
+            _logger?.LogDebug($"Handle [{CurrentCommand}] command: [{Data.Data}]");
 
-            var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CommandList.COMMAND_SETLISTS, out string errorMessage);
+            if (Data == null)
+            {
+                _logger?.LogError($"Unexpected case. [Data] field is null. Command: [{CurrentCommand}]");
+                return null;
+            }
+            if (Data!.Message == null)
+            {
+                _logger?.LogError($"Unexpected case. [Data.Message] field is null. Command: [{CurrentCommand}]");
+            }
+
+            var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
             if (!isValidQuery)
             {
-                _logger.LogError(errorMessage);
+                _logger?.LogError(errorMessage);
                 await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
                 return null;
             }
 
             string replyText = string.Empty;
 
-            var parameters = Data.GetParametersFromMessageText(CommandList.COMMAND_SETLISTS);
+            var parameters = Data.GetParametersFromMessageText(CurrentCommand);
             var page = int.Parse(parameters[0]);
             // ingore limit in parameters[1]. NOT USED BY LAST.FM
             var artistMBID = parameters[2];
@@ -44,7 +56,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             {
                 replyText = $"Nothing found here 😕! Try another search or go back";
 
-                await TelegramBotClient.AnswerCallbackQueryAsync(
+                await TelegramBotClient.AnswerCallbackQuery(
                     callbackQueryId: Data.Id,
                     text: $"{replyText}");
 
@@ -52,16 +64,19 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 {
                     var deleteKeyboard = InlineKeyboardMarkup.Empty()
                         .WithDeleteButton();
-                    return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
-                                                            text: replyText,
-                                                            replyMarkup: deleteKeyboard);
+                    return await TelegramBotClient.SendMessage(
+                        chatId: Data.Message.Chat.Id,
+                        text: replyText,
+                        replyMarkup: deleteKeyboard);
                 }
 
                 var navigationKeyboard = InlineKeyboardMarkup.Empty()
                     .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page, isForwardNavigationEnabled: false);
-                return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
-                                                            text: replyText,
-                                                            replyMarkup: navigationKeyboard);
+                
+                return await TelegramBotClient.SendMessage(
+                    chatId: Data.Message.Chat.Id,
+                    text: replyText,
+                    replyMarkup: navigationKeyboard);
             }
 
             replyText = $"Found {setlists.Total} setlists 📝 .Please select a setlist:";
@@ -71,17 +86,19 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page, isForwardNavigationEnabled: isForwardNavigationEnabled);
 
             if (page != SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT)
-                return await TelegramBotClient.EditMessageTextAsync(chatId: Data.Message.Chat.Id,
-                                                           messageId: Data.Message.MessageId,
-                                                           text: replyText,
-                                                           replyMarkup: inlineKeyboard,
-                                                           parseMode: ParseMode.Html);
+                return await TelegramBotClient.EditMessageText(
+                    chatId: Data.Message.Chat.Id,
+                    messageId: Data.Message.MessageId,
+                    text: replyText,
+                    replyMarkup: inlineKeyboard,
+                    parseMode: ParseMode.Html);
 
 
-            return await TelegramBotClient.SendTextMessageAsync(chatId: Data.Message.Chat.Id,
-                                                       text: replyText,
-                                                       replyMarkup: inlineKeyboard,
-                                                       parseMode: ParseMode.Html);
+            return await TelegramBotClient.SendMessage(
+                chatId: Data.Message.Chat.Id,
+                text: replyText,
+                replyMarkup: inlineKeyboard,
+                parseMode: ParseMode.Html);
         }
     }
 }
