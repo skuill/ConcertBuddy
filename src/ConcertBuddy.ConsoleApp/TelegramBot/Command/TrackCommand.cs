@@ -27,18 +27,18 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (Data == null)
             {
-                _logger?.LogError($"Unexpected case. [Data] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
                 return null;
             }
             if (Data!.Message == null)
             {
-                _logger?.LogError($"Unexpected case. [Data.Message] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
             }
 
             var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
             if (!isValidQuery)
             {
-                _logger?.LogError(errorMessage);
+                _logger?.LogError($"Command: [{CurrentCommand}]. Error: {errorMessage}");
                 await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
                 return null;
             }
@@ -52,14 +52,21 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var artist = await SearchHandler.SearchArtistByMBID(mbid);
             if (artist == null)
             {
-                _logger?.LogError($"Can't find artist with mbid [{mbid}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist with mbid [{mbid}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
+
+            if (string.IsNullOrWhiteSpace(artist.Name))
+            {
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist name by mbid [{mbid}]");
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            }
+
             var track = await SearchHandler.SearchTrack(artist.Name, trackName);
 
             if (track == null)
             {
-                _logger?.LogError($"Can't find track [{artist} - {trackName}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find track [{artist} - {trackName}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
@@ -86,7 +93,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                     return sendAudioResult;
             }
 
-            _logger?.LogWarning($"Can't send audio: {artist.Name} - {track.TrackName}");
+            _logger?.LogWarning($"Command: [{CurrentCommand}]. Can't send audio: {artist.Name} - {track.TrackName}");
 
             return await TelegramBotClient.SendMessage(
                 chatId: Data.Message.Chat.Id,

@@ -24,15 +24,15 @@ namespace ConcertBuddy.ConsoleApp.Search
         {
             _logger = logger;
             if (Configuration.IsLastFmAvailable())
-                musicSearcherClient.WithLastFmClient(Configuration.LastFmApiKey, Configuration.LastFmApiSecret);
+                musicSearcherClient.WithLastFmClient(Configuration.LastFmApiKey!, Configuration.LastFmApiSecret!);
             if (Configuration.IsSpotifyAvailable())
-                musicSearcherClient.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
+                musicSearcherClient.WithSpotifyClient(Configuration.SpotifyClientID!, Configuration.SpotifyClientSecret!);
             if (Configuration.IsYandexAvailable())
-                musicSearcherClient.WithYandexClient(Configuration.YandexToken);
+                musicSearcherClient.WithYandexClient(Configuration.YandexToken!);
             musicSearcherClient.WithMemoryCache();
             _musicSearcherClient = musicSearcherClient;
 
-            setlistFmClient.WithApiKey(Configuration.SetlistFmApiKey);
+            setlistFmClient.WithApiKey(Configuration.SetlistFmApiKey!);
             _setlistFmClient = setlistFmClient;
 
             _lyricsScraperClient = lyricsScraperClient;

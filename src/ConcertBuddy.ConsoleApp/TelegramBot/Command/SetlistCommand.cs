@@ -26,12 +26,12 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (Data == null)
             {
-                _logger?.LogError($"Unexpected case. [Data] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
                 return null;
             }
             if (Data!.Message == null)
             {
-                _logger?.LogError($"Unexpected case. [Data.Message] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
             }
 
             var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
@@ -52,7 +52,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (setlist == null || !setlist.IsSetsExist())
             {
-                _logger?.LogError($"Can't find setlist. Id: [{setlistId}], mbid: [{artistMBID}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find setlist. Id: [{setlistId}], mbid: [{artistMBID}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
@@ -77,8 +77,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                     replyMarkup: inlineKeyboard));
             }
 
-
-            messageIds = Task.WhenAll(sendTextMessageTasks).Result.Select(x => x.MessageId).ToList();
+            messageIds.AddRange(Task.WhenAll(sendTextMessageTasks).Result.Select(x => x.MessageId).ToList());
 
             InlineKeyboardMarkup deleteKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton(messageIds.ToArray());
             return await TelegramBotClient.SendMessage(

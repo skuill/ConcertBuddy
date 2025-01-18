@@ -7,7 +7,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
     {
         public static string GetTrackArtistsLinks(this MusicTrackBase track)
         {
-            return string.Join(", ", track.ArtistsExternalLinks
+            return string.Join(", ", track.ArtistsExternalLinks!
                 .Select(a => $"<a href=\"{a.Value}\">{a.Key}</a>"));
         }
 

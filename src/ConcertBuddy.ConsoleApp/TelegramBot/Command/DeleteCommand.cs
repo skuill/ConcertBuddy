@@ -23,12 +23,12 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (Data == null)
             {
-                _logger?.LogError($"Unexpected case. [Data] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
                 return null;
             }
             if (Data!.Message == null)
             {
-                _logger?.LogError($"Unexpected case. [Data.Message] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
             }
 
             var splitMessage = Data!.GetSplitMessageText();

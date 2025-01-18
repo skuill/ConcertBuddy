@@ -9,7 +9,7 @@ namespace MusicSearcher.Converter
         /// <summary>
         /// Convert country name to ISO 3166-1 standard
         /// </summary>
-        public static string ConvertToTwoLetterISO(string country)
+        public static string ConvertToTwoLetterISO(string? country)
         {
             if (string.IsNullOrEmpty(country))
                 return DEFAULT_REGION_CODE;

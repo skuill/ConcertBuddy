@@ -27,12 +27,12 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (Data == null)
             {
-                _logger?.LogError($"Unexpected case. [Data] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
                 return null;
             }
             if (Data!.Message == null)
             {
-                _logger?.LogError($"Unexpected case. [Data.Message] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
             }
 
             var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
@@ -58,25 +58,50 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (artist == null)
             {
-                _logger?.LogError($"Can't find artist with mbid [{mbid}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist with mbid [{mbid}]");
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            }
+
+            if (string.IsNullOrWhiteSpace(artist.Name))
+            {
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist name by mbid [{mbid}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
             var recording = await recordingTask;
-            string trackActualName = recording != null ? recording.Title : (await SearchHandler.SearchTrack(artist.Name, trackName)).TrackName;
+            string? trackActualName = recording != null 
+                ? recording.Title 
+                : ((await SearchHandler.SearchTrack(artist.Name, trackName)).TrackName ?? null);
+
+            if (string.IsNullOrWhiteSpace(trackActualName))
+            {
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find actual track by provided name: [{artist.Name} - {trackName}].");
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            }
 
             var searchResult = await SearchHandler.SearchLyric(artist.Name, trackActualName);
-            if (searchResult == null || searchResult.IsEmpty() || searchResult.ResponseStatusCode != ResponseStatusCode.Success)
+            if (searchResult == null
+                || searchResult.ResponseStatusCode != ResponseStatusCode.Success)
             {
-                _logger?.LogError($"Can't find lyric for track [{artist.Name} - {trackActualName}]. Reason: [{searchResult?.ResponseStatusCode}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find lyric for track [{artist.Name} - {trackActualName}]. Reason: [{searchResult?.ResponseStatusCode}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            }
+
+            if (searchResult.ResponseStatusCode == ResponseStatusCode.Success
+                && searchResult.Instrumental)
+            {
+                replyText = "This song is an instrumental";
+            }
+            else
+            {
+                replyText = searchResult.LyricText;
             }
 
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton();
 
             return await TelegramBotClient.SendMessage(
                 chatId: Data.Message.Chat.Id,
-                text: searchResult.LyricText,
+                text: replyText,
                 replyMarkup: inlineKeyboard);
         }
     }

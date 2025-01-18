@@ -25,7 +25,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (Data == null)
             {
-                _logger?.LogError($"Unexpected case. [Data] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
                 return null;
             }
 
@@ -36,7 +36,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (artists == null || !artists.Any())
             {
-                _logger?.LogError($"Can't find artist [{artistName}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist [{artistName}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Chat.Id);
             }
 

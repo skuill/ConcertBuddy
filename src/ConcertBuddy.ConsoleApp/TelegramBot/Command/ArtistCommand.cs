@@ -29,12 +29,12 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (Data == null)
             {
-                _logger?.LogError($"Unexpected case. [Data] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
                 return null;
             }
             if (Data!.Message == null)
             {
-                _logger?.LogError($"Unexpected case. [Data.Message] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
             }
 
             var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
@@ -53,7 +53,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (artist == null)
             {
-                _logger?.LogError($"Can't find artist with mbid [{artistMBID}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist with mbid [{artistMBID}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 

@@ -27,18 +27,18 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (Data == null)
             {
-                _logger?.LogError($"Unexpected case. [Data] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
                 return null;
             }
             if (Data!.Message == null)
             {
-                _logger?.LogError($"Unexpected case. [Data.Message] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
             }
 
             var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
             if (!isValidQuery)
             {
-                _logger?.LogError(errorMessage);
+                _logger?.LogError($"Command: [{CurrentCommand}]. Error: {errorMessage}");
                 await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
                 return null;
             }
@@ -46,7 +46,12 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             string replyText = string.Empty;
 
             var parameters = Data.GetParametersFromMessageText(CurrentCommand);
-            var page = int.Parse(parameters[0]);
+            if (!int.TryParse(parameters[0], out var page))
+            {
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't parse parameter: [{parameters[0]}]");
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+
+            }
             // ingore limit in parameters[1]. NOT USED BY LAST.FM
             var artistMBID = parameters[2];
 

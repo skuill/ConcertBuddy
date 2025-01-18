@@ -27,18 +27,18 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (Data == null)
             {
-                _logger?.LogError($"Unexpected case. [Data] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
                 return null;
             }
             if (Data!.Message == null)
             {
-                _logger?.LogError($"Unexpected case. [Data.Message] field is null. Command: [{CurrentCommand}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
             }
 
             var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
             if (!isValidQuery)
             {
-                _logger?.LogError(errorMessage);
+                _logger?.LogError($"Command: [{CurrentCommand}]. Error: {errorMessage}");
                 await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
                 return null;
             }
@@ -49,7 +49,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var parseResult = Enum.TryParse<SearchType>(parameters[0], ignoreCase: true, out SearchType searchType);
             if (!parseResult || searchType == SearchType.Unknown)
             {
-                _logger?.LogError($"Can't parse [{parameters[0]}] parameter in [{CurrentCommand}] command");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't parse [{parameters[0]}] parameter");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
@@ -79,7 +79,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (topTracks == null || !topTracks.Any())
             {
-                _logger?.LogError($"Can't find top tracks for artist with mbid [{mbid}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find top tracks for artist with mbid [{mbid}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
