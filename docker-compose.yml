@@ -21,3 +21,9 @@ services:
     volumes:
       - ./appsettings.json:/app/appsettings.json
       - ./logs:/app/logs
+    networks:
+      - common-skuill-network
+      
+networks:
+  common-skuill-network:
+    external: true
