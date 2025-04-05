@@ -1,8 +1,12 @@
 ﻿using Hqub.MusicBrainz;
 using Hqub.MusicBrainz.Entities;
+using LyricsScraperNET;
+using LyricsScraperNET.Models.Requests;
+using LyricsScraperNET.Models.Responses;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
+using MusicSearcher.Converter;
 using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.Model.MusicBrainz;
@@ -27,6 +31,8 @@ namespace MusicSearcher
         private const int MEMORY_CACHE_SIZE = 256;
         private IMemoryCache? _artistMemoryCache;
         private readonly MemoryCacheEntryOptions _memoryCacheEntryOptions;
+
+        private readonly ILyricsScraperClient _lyricsScraperClient;
 
 
         private bool _isLastFmClientEnabled = false;
@@ -66,10 +72,13 @@ namespace MusicSearcher
             _musicServiceClients = new List<IMusicServiceClient>();
         }
 
-        public MusicSearcherClient(ILogger<MusicSearcherClient> logger)
+        public MusicSearcherClient(
+            ILyricsScraperClient lyricsScraperClient,
+            ILogger<MusicSearcherClient> logger)
             : this()
         {
             _logger = logger;
+            _lyricsScraperClient = lyricsScraperClient;
         }
 
         // TODO: Add additional check for aliases in case of abbreviations. For example: RHCP
@@ -240,6 +249,23 @@ namespace MusicSearcher
                 }
             }
             return result;
+        }
+
+        /// <inheritdoc />
+        public async Task<MusicLyric> SearchLyric(string artistName, string songName)
+        {
+            var searchRequest = new ArtistAndSongSearchRequest(artistName, songName);
+
+            var searchResult = await _lyricsScraperClient.SearchLyricAsync(searchRequest);
+
+            if (searchResult == null
+               || searchResult.ResponseStatusCode != ResponseStatusCode.Success)
+            {
+                _logger?.LogWarning($"Can't find lyric for track [{artistName} - {songName}]. Reason: [{searchResult?.ResponseStatusCode}]");
+                return MusicLyric.Empty();
+            }
+
+            return searchResult.ToInternal();
         }
 
         public void WithLastFmClient(string apiKey, string secret)

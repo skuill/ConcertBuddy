@@ -1,4 +1,6 @@
 ﻿using Hqub.MusicBrainz.Entities;
+using LyricsScraperNET.Models.Responses;
+using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.MusicBrainz;
 
@@ -18,6 +20,8 @@ namespace MusicSearcher.Abstract
         /// Return TOP tracks from available music services (Spotify,..)
         /// </summary>
         Task<IEnumerable<MusicTrackBase>> SearchTopTracks(string artistMBID);
+
+        Task<MusicLyric> SearchLyric(string artistName, string songName);
 
         Task<Recording?> SearchSongByName(string artistMBID, string name);
 

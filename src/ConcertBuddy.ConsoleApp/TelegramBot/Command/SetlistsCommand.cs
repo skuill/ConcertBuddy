@@ -57,7 +57,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             var setlists = await SearchHandler.SearchArtistSetlists(artistMBID, page);
 
-            if (setlists == null || setlists.IsEmpty())
+            if (setlists == null || setlists.Setlist == null || setlists.Setlist.Count == 0)
             {
                 replyText = $"Nothing found here 😕! Try another search or go back";
 
@@ -86,8 +86,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             replyText = $"Found {setlists.Total} setlists 📝 .Please select a setlist:";
 
-            bool isForwardNavigationEnabled = setlists.ItemsPerPage == setlists.Items.Count;
-            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetSetlistsInlineKeyboardMenu(setlists.Items)
+            bool isForwardNavigationEnabled = setlists.ItemsPerPage == setlists.Setlist.Count;
+            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetSetlistsInlineKeyboardMenu(setlists.Setlist)
                 .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page, isForwardNavigationEnabled: isForwardNavigationEnabled);
 
             if (page != SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT)

@@ -14,7 +14,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Genius.NET" Version="4.0.1" />
-    <PackageReference Include="LyricsScraperNET" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
@@ -26,13 +25,13 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="SetlistNet" Version="2.0.0-beta.2" />
     <PackageReference Include="SpotifyAPI.Web" Version="7.2.1" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.1" />
     <PackageReference Include="Telegram.Bot" Version="22.2.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MusicSearcher\MusicSearcher.csproj" />
-    <ProjectReference Include="..\SetlistFmAPI\SetlistFmAPI.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="app.master.config">

@@ -2,7 +2,6 @@
 using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
-using LyricsScraperNET.Models.Responses;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -69,8 +68,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             }
 
             var recording = await recordingTask;
-            string? trackActualName = recording != null 
-                ? recording.Title 
+            string? trackActualName = recording != null
+                ? recording.Title
                 : ((await SearchHandler.SearchTrack(artist.Name, trackName)).TrackName ?? null);
 
             if (string.IsNullOrWhiteSpace(trackActualName))
@@ -80,15 +79,13 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             }
 
             var searchResult = await SearchHandler.SearchLyric(artist.Name, trackActualName);
-            if (searchResult == null
-                || searchResult.ResponseStatusCode != ResponseStatusCode.Success)
+            if (!searchResult.IsSuccessSearchResult)
             {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find lyric for track [{artist.Name} - {trackActualName}]. Reason: [{searchResult?.ResponseStatusCode}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find lyric for track [{artist.Name} - {trackActualName}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
-            if (searchResult.ResponseStatusCode == ResponseStatusCode.Success
-                && searchResult.Instrumental)
+            if (searchResult.Instrumental)
             {
                 replyText = "This song is an instrumental";
             }

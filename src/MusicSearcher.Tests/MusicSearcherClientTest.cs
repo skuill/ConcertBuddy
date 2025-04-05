@@ -1,4 +1,5 @@
 ﻿using FakeItEasy;
+using LyricsScraperNET;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MusicSearcher.Abstract;
@@ -213,8 +214,9 @@ namespace MusicSearcher.Tests
 
         private IMusicSearcherClient InitClient()
         {
+            var lyricsScraperClientMock = A.Fake<ILyricsScraperClient>();
             var loggerMock = A.Fake<ILogger<MusicSearcherClient>>();
-            return new MusicSearcherClient(loggerMock);
+            return new MusicSearcherClient(lyricsScraperClientMock, loggerMock);
         }
     }
 }

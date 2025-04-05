@@ -1,7 +1,6 @@
 ﻿using Hqub.MusicBrainz.Entities;
-using LyricsScraperNET.Models.Responses;
+using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
-using SetlistFmAPI.Models;
 
 namespace ConcertBuddy.ConsoleApp.Search
 {
@@ -11,11 +10,11 @@ namespace ConcertBuddy.ConsoleApp.Search
 
         Task<MusicArtistBase> SearchArtistByMBID(string mbid);
 
-        Task<Setlists> SearchArtistSetlists(string mbid, int page = 1);
+        Task<SetlistNet.Models.ArrayResult.Setlists> SearchArtistSetlists(string mbid, int page = 1);
 
-        Task<Setlist> SearchSetlist(string setlistId);
+        Task<SetlistNet.Models.Setlist> SearchSetlist(string setlistId);
 
-        Task<SearchResult> SearchLyric(string artistName, string songName);
+        Task<MusicLyric> SearchLyric(string artistName, string songName);
 
         Task<MusicTrackBase> SearchTrack(string artistName, string trackName);
 
