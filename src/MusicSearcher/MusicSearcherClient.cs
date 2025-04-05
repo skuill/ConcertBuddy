@@ -192,37 +192,31 @@ namespace MusicSearcher
             return result;
         }
 
-
-        public async Task<Recording?> SearchSongByName(string artistMBID, string name)
+        /// <inheritdoc />
+        public async Task<MusicRecording?> SearchRecordByName(string artistMBID, string recordingName)
         {
             try
             {
                 QueryParameters<Recording> query = new QueryParameters<Recording>();
                 query.Add("arid", artistMBID);
-                query.Add("recording", name);
+                query.Add("recording", recordingName);
 
                 var recordings = await _musicBrainzClient.Recordings.SearchAsync(query);
 
                 if (recordings == null || !recordings.Any())
                 {
-                    _logger?.LogError($"Can't find recording for artist mbid [{artistMBID}] and song name [{name}]");
+                    _logger?.LogError($"Can't find recording for artist mbid [{artistMBID}] and song name [{recordingName}]");
                     return null;
                 }
 
-                _logger?.LogDebug($"Find recording for artist [{artistMBID}] with song name [{name}]");
-                return recordings.First();
+                _logger?.LogDebug($"Find recording for artist [{artistMBID}] with song name [{recordingName}]");
+                return recordings.First().ToInternal();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"Can't find recording for artist mbid [{artistMBID}] and song name [{name}]");
+                _logger?.LogError(ex, $"Can't find recording for artist mbid [{artistMBID}] and song name [{recordingName}]");
                 return null;
             }
-        }
-
-
-        public async Task<Recording> SearchSongByMBID(string songMBID)
-        {
-            return await _musicBrainzClient.Recordings.GetAsync(songMBID);
         }
 
         /// <inheritdoc />

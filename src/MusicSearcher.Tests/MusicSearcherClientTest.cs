@@ -194,7 +194,7 @@ namespace MusicSearcher.Tests
         }
 
         [TestMethod]
-        public async Task SearchSongByName_DefaultExample_AreEqual()
+        public async Task SearchRecordByName_DefaultExample_AreEqual()
         {
             // Arrange
             string artistMBID = "a436dd02-0549-4c91-b608-df451217fdeb"; // Artist name: Parkway Drive
@@ -205,7 +205,7 @@ namespace MusicSearcher.Tests
             var client = InitClient();
 
             // Act
-            var result = await client.SearchSongByName(artistMBID, songName);
+            var result = await client.SearchRecordByName(artistMBID, songName);
 
             // Assert
             Assert.IsNotNull(result);

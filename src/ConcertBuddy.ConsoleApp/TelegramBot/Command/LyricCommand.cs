@@ -51,7 +51,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var artistTast = SearchHandler.SearchArtistByMBID(mbid);
 
             // Return actual name from MusicBrainz. Because other platform can use additional information in name.
-            var recordingTask = SearchHandler.SearchSongByName(mbid, trackName);
+            var recordingTask = SearchHandler.SearchRecordByName(mbid, trackName);
 
             var artist = await artistTast;
 

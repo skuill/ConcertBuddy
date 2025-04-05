@@ -1,5 +1,4 @@
-﻿using Hqub.MusicBrainz.Entities;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using MusicSearcher.Abstract;
 using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
@@ -62,14 +61,9 @@ namespace ConcertBuddy.ConsoleApp.Search
             return _musicSearcherClient.SearchTopTracks(artistMBID);
         }
 
-        public Task<Recording> SearchSongByName(string artistMBID, string name)
+        public Task<MusicRecording> SearchRecordByName(string artistMBID, string recordingName)
         {
-            return _musicSearcherClient.SearchSongByName(artistMBID, name);
-        }
-
-        public Task<Recording> SearchSongByMBID(string songMBID)
-        {
-            return _musicSearcherClient.SearchSongByMBID(songMBID);
+            return _musicSearcherClient.SearchRecordByName(artistMBID, recordingName);
         }
 
         public Task<MusicLyric> SearchLyric(string artistName, string songName)

@@ -1,5 +1,4 @@
-﻿using Hqub.MusicBrainz.Entities;
-using MusicSearcher.Model;
+﻿using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 
 namespace ConcertBuddy.ConsoleApp.Search
@@ -20,8 +19,6 @@ namespace ConcertBuddy.ConsoleApp.Search
 
         Task<IEnumerable<MusicTrackBase>> SearchTopTracks(string artistMBID);
 
-        Task<Recording> SearchSongByName(string artistMBID, string name);
-
-        Task<Recording> SearchSongByMBID(string songMBID);
+        Task<MusicRecording> SearchRecordByName(string artistMBID, string recordingName);
     }
 }

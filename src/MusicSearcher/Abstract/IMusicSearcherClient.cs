@@ -1,6 +1,4 @@
-﻿using Hqub.MusicBrainz.Entities;
-using LyricsScraperNET.Models.Responses;
-using MusicSearcher.Model;
+﻿using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.MusicBrainz;
 
@@ -23,9 +21,7 @@ namespace MusicSearcher.Abstract
 
         Task<MusicLyric> SearchLyric(string artistName, string songName);
 
-        Task<Recording?> SearchSongByName(string artistMBID, string name);
-
-        Task<Recording> SearchSongByMBID(string songMBID);
+        Task<MusicRecording?> SearchRecordByName(string artistMBID, string recordingName);
 
         void WithLastFmClient(string apiKey, string secret);
 
