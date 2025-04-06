@@ -2,7 +2,6 @@
 using MusicSearcher.Abstract;
 using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
-using SetlistNet;
 
 namespace ConcertBuddy.ConsoleApp.Search
 {
@@ -10,11 +9,9 @@ namespace ConcertBuddy.ConsoleApp.Search
     {
         private readonly ILogger<ISearchHandler> _logger;
         private readonly IMusicSearcherClient _musicSearcherClient;
-        private readonly SetlistApi _setlistFmClient;
 
         public SearchHandler(ILogger<ISearchHandler> logger,
-            IMusicSearcherClient musicSearcherClient,
-            SetlistApi setlistFmClient)
+            IMusicSearcherClient musicSearcherClient)
         {
             _logger = logger;
 
@@ -27,13 +24,11 @@ namespace ConcertBuddy.ConsoleApp.Search
 
             musicSearcherClient.WithMemoryCache();
             _musicSearcherClient = musicSearcherClient;
-
-            _setlistFmClient = setlistFmClient;
         }
 
-        public Task<SetlistNet.Models.ArrayResult.Setlists> SearchArtistSetlists(string mbid, int page = 1)
+        public Task<MusicSetlists> SearchArtistSetlists(string artistMBID, int page = 1)
         {
-            return _setlistFmClient.ArtistSetlists(mbid, page: page);
+            return _musicSearcherClient.SearchArtistSetlists(artistMBID, page: page);
         }
 
         public Task<IEnumerable<MusicArtistBase>> SearchArtistsByName(string artistName, int limit = 5, int offset = 0)
@@ -46,9 +41,9 @@ namespace ConcertBuddy.ConsoleApp.Search
             return _musicSearcherClient.SearchArtistByMBID(mbid);
         }
 
-        public Task<SetlistNet.Models.Setlist> SearchSetlist(string setlistId)
+        public Task<MusicSetlist> SearchSetlist(string setlistId)
         {
-            return _setlistFmClient.Setlist(setlistId);
+            return _musicSearcherClient.SearchSetlist(setlistId);
         }
 
         public Task<MusicTrackBase> SearchTrack(string artistName, string trackName)

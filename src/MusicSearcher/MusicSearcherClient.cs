@@ -15,6 +15,7 @@ using MusicSearcher.MusicService.Abstract;
 using MusicSearcher.MusicService.LastFm;
 using MusicSearcher.MusicService.Spotify;
 using MusicSearcher.MusicService.Yandex;
+using SetlistNet;
 using System.Net;
 using System.Reflection;
 
@@ -34,6 +35,7 @@ namespace MusicSearcher
 
         private readonly ILyricsScraperClient _lyricsScraperClient;
 
+        private readonly SetlistApi _setlistFmClient;
 
         private bool _isLastFmClientEnabled = false;
         public bool IsLastFmClientEnabled => _isLastFmClientEnabled;
@@ -49,7 +51,6 @@ namespace MusicSearcher
 
         public MusicSearcherClient()
         {
-
             _isMemoryCacheEnabled = false;
             _memoryCacheEntryOptions = new MemoryCacheEntryOptions
             {
@@ -74,11 +75,13 @@ namespace MusicSearcher
 
         public MusicSearcherClient(
             ILyricsScraperClient lyricsScraperClient,
+            SetlistApi setlistFmClient,
             ILogger<MusicSearcherClient> logger)
             : this()
         {
             _logger = logger;
             _lyricsScraperClient = lyricsScraperClient;
+            _setlistFmClient = setlistFmClient;
         }
 
         // TODO: Add additional check for aliases in case of abbreviations. For example: RHCP
@@ -147,7 +150,6 @@ namespace MusicSearcher
                             case AvailableSearchType.Name:
                                 result.Add(await musicServiceClient.SearchArtistByName(result.Name));
                                 break;
-
                         }
                     }
                     catch (NotImplementedException)
@@ -260,6 +262,29 @@ namespace MusicSearcher
             }
 
             return searchResult.ToInternal();
+        }
+
+        public async Task<MusicSetlists> SearchArtistSetlists(string artistMBID, int page = 1)
+        {
+            var result = await _setlistFmClient.ArtistSetlists(artistMBID, page: page);
+
+            if (result == null || result.Setlist == null || result.Setlist.Count == 0)
+            {
+                _logger?.LogInformation($"Can't fing setlists for artist with mbid [{artistMBID}]");
+                return null;
+            }
+            return result.ToInternal();
+        }
+
+        public async Task<MusicSetlist> SearchSetlist(string setlistId)
+        {
+            var result = await _setlistFmClient.Setlist(setlistId);
+            if (result == null || result.Sets == null || result.Sets.Set == null || result.Sets.Set.Count == 0)
+            {
+                _logger?.LogError($"Can't find setlist by Id: [{setlistId}]");
+                return null;
+            }
+            return result.ToInternal();
         }
 
         public void WithLastFmClient(string apiKey, string secret)

@@ -1,7 +1,7 @@
 ﻿using ConcertBuddy.ConsoleApp.Model;
 using ConcertBuddy.ConsoleApp.Search;
+using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
-using SetlistNet.Models;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
@@ -17,7 +17,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
             return new InlineKeyboardMarkup(inlineKeyboardButtons).WithDeleteButton();
         }
 
-        public static InlineKeyboardMarkup GetTracksInlineKeyboardMenu(Set set, string mbid)
+        public static InlineKeyboardMarkup GetTracksInlineKeyboardMenu(MusicSet set, string mbid)
         {
             List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
             int counter = 1;
@@ -54,13 +54,13 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
             return StringHelper.SubstringByByteLength(callbackData, 64);
         }
 
-        public static InlineKeyboardMarkup GetSetlistsInlineKeyboardMenu(IEnumerable<Setlist> setlists)
+        public static InlineKeyboardMarkup GetSetlistsInlineKeyboardMenu(IEnumerable<MusicSetlist> setlists)
         {
             List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
             foreach (var setlist in setlists)
             {
                 string callbackText = $"{setlist.ToString()}";
-                string callbackData = string.Format(CommandList.CALLBACK_DATA_FORMAT_SETLIST, setlist.Artist.MBID, setlist.Id);
+                string callbackData = string.Format(CommandList.CALLBACK_DATA_FORMAT_SETLIST, setlist.ArtistMBID, setlist.Id);
                 inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
             }
             return new InlineKeyboardMarkup(inlineKeyboardButtons);

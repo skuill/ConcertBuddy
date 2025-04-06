@@ -84,7 +84,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                     replyMarkup: navigationKeyboard);
             }
 
-            replyText = $"Found {setlists.Total} setlists 📝 .Please select a setlist:";
+            replyText = $"Found {setlists.Total} setlists 📝. Page: [{page}/{setlists.TotalPages}]. Please select a setlist:";
 
             bool isForwardNavigationEnabled = setlists.ItemsPerPage == setlists.Setlist.Count;
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetSetlistsInlineKeyboardMenu(setlists.Setlist)

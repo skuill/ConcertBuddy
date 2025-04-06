@@ -23,6 +23,10 @@ namespace MusicSearcher.Abstract
 
         Task<MusicRecording?> SearchRecordByName(string artistMBID, string recordingName);
 
+        Task<MusicSetlists> SearchArtistSetlists(string artistMBID, int page = 1);
+
+        Task<MusicSetlist> SearchSetlist(string setlistId);
+
         void WithLastFmClient(string apiKey, string secret);
 
         void WithSpotifyClient(string cliendID, string clientSecret);

@@ -3,7 +3,6 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;
-using SetlistNet.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -51,7 +50,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             var setlist = await SearchHandler.SearchSetlist(setlistId);
 
-            if (setlist == null || !(setlist.Sets != null && setlist.Sets.Set != null && setlist.Sets.Set.Count > 0))
+            if (setlist == null || !setlist.IsSetsExist())
             {
                 _logger?.LogError($"Command: [{CurrentCommand}]. Can't find setlist. Id: [{setlistId}], mbid: [{artistMBID}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
@@ -68,7 +67,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 replyMarkup: new ReplyKeyboardRemove())).MessageId);
 
             var sendTextMessageTasks = new List<Task<Message>>();
-            foreach (var set in setlist.Sets.Set)
+            foreach (var set in setlist.Sets!.Set)
             {
                 replyText = $"{set.ToString()}";
                 InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetTracksInlineKeyboardMenu(set, artistMBID);

@@ -8,11 +8,12 @@
 
   <ItemGroup>
     <PackageReference Include="Hqub.Last.fm" Version="2.4.0" />
-    <PackageReference Include="KM.Yandex.Music.Client" Version="2.0.0" />
+    <PackageReference Include="KM.Yandex.Music.Client" Version="2.0.1" />
     <PackageReference Include="LyricsScraperNET" Version="2.2.2" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
     <PackageReference Include="MusicBrainzAPI" Version="3.1.1" />
+    <PackageReference Include="SetlistNet" Version="2.0.0-beta.2" />
     <PackageReference Include="SpotifyAPI.Web" Version="7.2.1" />
     <PackageReference Include="SpotifyAPI.Web.Auth" Version="7.2.1" />
   </ItemGroup>

@@ -7,7 +7,7 @@ namespace MusicSearcher.Model
         /// <summary>
         /// The text of the found lyrics. If the lyrics could not be found, an empty value is returned.
         /// </summary>
-        public string LyricText { get; internal set; }
+        public string? LyricText { get; internal set; }
 
         public bool IsSuccessSearchResult { get; internal set; }
 

@@ -10,8 +10,8 @@
         /// <summary>
         /// Gets or sets the MusicBrainz id.
         /// </summary>
-        public string Id { get; internal set; }
+        public string? Id { get; internal set; }
 
-        public string Title { get; internal set; }
+        public string? Title { get; internal set; }
     }
 }

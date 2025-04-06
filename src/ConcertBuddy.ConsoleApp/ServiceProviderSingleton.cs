@@ -39,14 +39,14 @@ namespace ConcertBuddy.ConsoleApp
             configurationRoot.GetSection("Configuration").Bind(appConfiguration);
             services.AddSingleton<Configuration>(appConfiguration);
 
+            services.AddLyricScraperClientService(configurationRoot);
+
             services.AddLogging(configure => configure.AddSerilog(dispose: true))
                     .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
                     .AddScoped<SetlistApi>(s => new SetlistApi(Configuration.SetlistFmApiKey!))
                     .AddScoped<IBotHandlers, BotHandlers>()
                     .AddScoped<IMusicSearcherClient, MusicSearcherClient>()
                     .AddScoped<ISearchHandler, SearchHandler>();
-
-            services.AddLyricScraperClientService(configurationRoot);
 
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configurationRoot)

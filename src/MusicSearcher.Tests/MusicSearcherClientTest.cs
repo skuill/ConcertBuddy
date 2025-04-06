@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MusicSearcher.Abstract;
 using MusicSearcher.Model;
 using MusicSearcher.MusicService;
+using SetlistNet;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -215,8 +216,9 @@ namespace MusicSearcher.Tests
         private IMusicSearcherClient InitClient()
         {
             var lyricsScraperClientMock = A.Fake<ILyricsScraperClient>();
+            var setlistApiMock = A.Fake<SetlistApi>();
             var loggerMock = A.Fake<ILogger<MusicSearcherClient>>();
-            return new MusicSearcherClient(lyricsScraperClientMock, loggerMock);
+            return new MusicSearcherClient(lyricsScraperClientMock, setlistApiMock, loggerMock);
         }
     }
 }
