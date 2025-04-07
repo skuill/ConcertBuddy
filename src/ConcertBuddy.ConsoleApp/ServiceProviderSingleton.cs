@@ -57,7 +57,7 @@ namespace ConcertBuddy.ConsoleApp
                         s => new LastFmServiceClient(Configuration.LastFmApiKey!, Configuration.LastFmApiSecret!))
                     .AddScoped<YandexServiceClient>(
                         s => new YandexServiceClient(Configuration.YandexToken!))
-                    .AddScoped<SetlistFmServiceClient>(provider =>
+                    .AddScoped<ISetlistFmServiceClient>(provider =>
                         {
                             var logger = provider.GetRequiredService<ILogger<SetlistFmServiceClient>>();
                             var token = Configuration.SetlistFmApiKey!;

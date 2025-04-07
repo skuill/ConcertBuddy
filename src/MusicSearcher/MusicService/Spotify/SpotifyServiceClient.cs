@@ -22,23 +22,16 @@ namespace MusicSearcher.MusicService.Spotify
 
         public SpotifyServiceClient(string cliendID, string clientSecret)
         {
-            try
-            {
-                var config = SpotifyClientConfig
-                       .CreateDefault()
-                       .WithRetryHandler(new SimpleRetryHandler() { RetryAfter = TimeSpan.FromSeconds(1) })
-                       .WithAuthenticator(new ClientCredentialsAuthenticator(cliendID, clientSecret));
+            var config = SpotifyClientConfig
+                   .CreateDefault()
+                   .WithRetryHandler(new SimpleRetryHandler() { RetryAfter = TimeSpan.FromSeconds(1) })
+                   .WithAuthenticator(new ClientCredentialsAuthenticator(cliendID, clientSecret));
 
-                _spotifyClient = new SpotifyClient(config);
+            _spotifyClient = new SpotifyClient(config);
 
-                _cancellationToken = new CancellationTokenSource();
-                _availableMarketsTimer = new PeriodicTimer(TimeSpan.FromMinutes(5));
-                _availableMarketsTimerTask = HandleAvailableMarketsTimerAsync(_availableMarketsTimer, _cancellationToken.Token);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            _cancellationToken = new CancellationTokenSource();
+            _availableMarketsTimer = new PeriodicTimer(TimeSpan.FromMinutes(5));
+            _availableMarketsTimerTask = HandleAvailableMarketsTimerAsync(_availableMarketsTimer, _cancellationToken.Token);
         }
 
         public AvailableSearchType GetAvailableSearch() => _availableSearch;
@@ -91,11 +84,11 @@ namespace MusicSearcher.MusicService.Spotify
             if (artist != null && artist.IsMusicArtistExist(MusicServiceType.Spotify))
             {
                 string artistMarket = GetAvailableMarketForArtist(artist);
-                
+
                 var spotifyTracks = await GetSpotifyTopTracks(
-                    (artist.GetMusicArtistByServiceType(MusicServiceType.Spotify) as SpotifyMusicArtist)!.Artist, 
+                    (artist.GetMusicArtistByServiceType(MusicServiceType.Spotify) as SpotifyMusicArtist)!.Artist,
                     artistMarket);
-                
+
                 if (spotifyTracks != null)
                 {
                     return spotifyTracks.Select(x => new SpotifyMusicTrack(x)).ToList<MusicTrackBase>();

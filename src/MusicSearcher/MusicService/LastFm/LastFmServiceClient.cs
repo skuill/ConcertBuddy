@@ -13,14 +13,7 @@ namespace MusicSearcher.MusicService.LastFm
 
         public LastFmServiceClient(string apiKey, string secret)
         {
-            try
-            {
-                _lastFmClient = new LastfmClient(apiKey, secret);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            _lastFmClient = new LastfmClient(apiKey, secret);
         }
 
         public MusicServiceType MusicServiceType => MusicServiceType.LastFm;

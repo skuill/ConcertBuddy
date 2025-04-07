@@ -5,7 +5,7 @@ using SetlistNet;
 
 namespace MusicSearcher.MusicService.SetlistFm
 {
-    public sealed class SetlistFmServiceClient
+    public sealed class SetlistFmServiceClient : ISetlistFmServiceClient
     {
         private readonly SetlistApi _setlistApi;
         private readonly ILogger<SetlistFmServiceClient> _logger;

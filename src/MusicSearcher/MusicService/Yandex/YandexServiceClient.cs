@@ -20,15 +20,8 @@ namespace MusicSearcher.MusicService.Yandex
         /// </summary>
         public YandexServiceClient(string token)
         {
-            try
-            {
-                _yandexClient = new YandexMusicClient();
-                _yandexClient.Authorize(token);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            _yandexClient = new YandexMusicClient();
+            _yandexClient.Authorize(token);
         }
 
         public Task<MusicArtistBase> GetArtistByMBID(string mbid)

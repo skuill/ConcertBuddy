@@ -214,7 +214,7 @@ namespace MusicSearcher.Tests
         private IMusicSearcherClient InitClient()
         {
             var lyricsScraperClientMock = A.Fake<ILyricsScraperClient>();
-            var setlistApiMock = A.Fake<SetlistFmServiceClient>();
+            var setlistApiMock = A.Fake<ISetlistFmServiceClient>();
             var loggerMock = A.Fake<ILogger<MusicSearcherClient>>();
             YandexServiceClient yandexServiceClient = new YandexServiceClient(Configuration.YandexToken);
             SpotifyServiceClient spotifyServiceClient = new SpotifyServiceClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);

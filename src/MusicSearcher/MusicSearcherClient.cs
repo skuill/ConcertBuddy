@@ -34,7 +34,7 @@ namespace MusicSearcher
 
         private readonly ILyricsScraperClient _lyricsScraperClient;
 
-        private readonly SetlistFmServiceClient _setlistFmClient;
+        private readonly ISetlistFmServiceClient _setlistFmClient;
 
         private bool _isMemoryCacheEnabled;
         public bool IsMemoryCacheEnabled => _isMemoryCacheEnabled;
@@ -65,7 +65,7 @@ namespace MusicSearcher
 
         public MusicSearcherClient(
             ILyricsScraperClient lyricsScraperClient,
-            SetlistFmServiceClient setlistFmClient,
+            ISetlistFmServiceClient setlistFmClient,
             YandexServiceClient yandexServiceClient,
             SpotifyServiceClient spotifyServiceClient,
             LastFmServiceClient lastFmServiceClient,
