@@ -47,16 +47,16 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             string replyText = string.Empty;
 
             var parameters = Data.GetParametersFromMessageText(CurrentCommand);
-            if (!int.TryParse(parameters[0], out var page))
+            if (!int.TryParse(parameters[0], out var currentPage)
+                || !int.TryParse(parameters[1], out var previousPage))
             {
                 _logger?.LogError($"Command: [{CurrentCommand}]. Can't parse parameter: [{parameters[0]}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
-
             }
-            // ingore limit in parameters[1]. NOT USED BY LAST.FM
+
             var artistMBID = parameters[2];
 
-            var setlists = await MusicSearcherClient.SearchArtistSetlists(artistMBID, page);
+            var setlists = await MusicSearcherClient.SearchArtistSetlists(artistMBID, currentPage);
 
             if (setlists == null || setlists.Setlist == null || setlists.Setlist.Count == 0)
             {
@@ -66,7 +66,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                     callbackQueryId: Data.Id,
                     text: $"{replyText}");
 
-                if (page == SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT)
+                if (currentPage == SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT)
                 {
                     var deleteKeyboard = InlineKeyboardMarkup.Empty()
                         .WithDeleteButton();
@@ -77,28 +77,36 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 }
 
                 var navigationKeyboard = InlineKeyboardMarkup.Empty()
-                    .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page, isForwardNavigationEnabled: false);
-                
+                    .WithNavigationButtons(
+                        CommandList.CALLBACK_DATA_FORMAT_SETLISTS,
+                        artistMBID,
+                        currentPage,
+                        isPreviousPageUsed: true,
+                        isForwardNavigationEnabled: false);
+
                 return await TelegramBotClient.SendMessage(
                     chatId: Data.Message.Chat.Id,
                     text: replyText,
                     replyMarkup: navigationKeyboard);
             }
 
-            replyText = $"Found {setlists.Total} setlists 📝. Page: [{page}/{setlists.TotalPages}]. Please select a setlist:";
+            replyText = $"Found {setlists.Total} setlists 📝. Page: [{currentPage}/{setlists.TotalPages}]. Please select a setlist:";
 
             bool isForwardNavigationEnabled = setlists.ItemsPerPage == setlists.Setlist.Count;
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetSetlistsInlineKeyboardMenu(setlists.Setlist)
-                .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, artistMBID, page, isForwardNavigationEnabled: isForwardNavigationEnabled);
+                .WithNavigationButtons(
+                    CommandList.CALLBACK_DATA_FORMAT_SETLISTS,
+                    artistMBID, currentPage,
+                    isPreviousPageUsed: true,
+                    isForwardNavigationEnabled: isForwardNavigationEnabled);
 
-            if (page != SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT)
+            if (currentPage != previousPage)
                 return await TelegramBotClient.EditMessageText(
                     chatId: Data.Message.Chat.Id,
                     messageId: Data.Message.MessageId,
                     text: replyText,
                     replyMarkup: inlineKeyboard,
                     parseMode: ParseMode.Html);
-
 
             return await TelegramBotClient.SendMessage(
                 chatId: Data.Message.Chat.Id,

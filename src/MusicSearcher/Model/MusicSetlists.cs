@@ -36,7 +36,7 @@
                     return 1;
                 }
 
-                return (int)Math.Floor((double)Total / (double)ItemsPerPage);
+                return (int)Math.Ceiling((double)Total / (double)ItemsPerPage);
             }
         }
 

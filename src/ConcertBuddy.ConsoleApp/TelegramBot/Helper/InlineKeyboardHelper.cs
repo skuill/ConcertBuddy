@@ -82,8 +82,18 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
         {
             List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
             inlineKeyboardButtons.Add(new[] {
-                InlineKeyboardButton.WithCallbackData("🎓 Biography", string.Format(CommandList.CALLBACK_DATA_FORMAT_BIOGRAPHY, mbid)),
-                InlineKeyboardButton.WithCallbackData("📝 Setlists", string.Format(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT, 0, mbid)),
+                InlineKeyboardButton.WithCallbackData(
+                    "🎓 Biography", 
+                    string.Format(
+                        CommandList.CALLBACK_DATA_FORMAT_BIOGRAPHY, 
+                        mbid)),
+                InlineKeyboardButton.WithCallbackData(
+                    "📝 Setlists", 
+                    string.Format(
+                        CommandList.CALLBACK_DATA_FORMAT_SETLISTS, 
+                        SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT, 
+                        SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT, // two default values mean that it is newly created message
+                        mbid)),
             });
 
             if (Configuration.IsSpotifyAvailable())
@@ -93,17 +103,28 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
             return new InlineKeyboardMarkup(inlineKeyboardButtons);
         }
 
-        public static InlineKeyboardMarkup WithNavigationButtons(this InlineKeyboardMarkup inlineKeyboardMarkup, string commandFormat, string data, int page, int limit = 0, bool isForwardNavigationEnabled = true)
+        public static InlineKeyboardMarkup WithNavigationButtons(
+            this InlineKeyboardMarkup inlineKeyboardMarkup,
+            string commandFormat,
+            string data,
+            int currentPage,
+            int limit = 0,
+            bool isPreviousPageUsed = false,
+            bool isForwardNavigationEnabled = true)
         {
             var inlineKeyboard = inlineKeyboardMarkup.InlineKeyboard;
             var navigationButtons = new List<InlineKeyboardButton>();
             int shift = limit == 0 ? 1 : limit;
 
-            if (page - shift >= 0 && !(limit == 0 && page == 1))
-                navigationButtons.Add(InlineKeyboardButton.WithCallbackData("⬅️", string.Format(commandFormat, page - shift, limit, data)));
+            if (currentPage - shift >= 0 && !(limit == 0 && currentPage == 1))
+                navigationButtons.Add(
+                    InlineKeyboardButton.WithCallbackData("⬅️", string.Format(commandFormat, currentPage - shift, isPreviousPageUsed ? currentPage : limit, data))
+                    );
             navigationButtons.Add(GetDeleteButton());
             if (isForwardNavigationEnabled)
-                navigationButtons.Add(InlineKeyboardButton.WithCallbackData("➡️", string.Format(commandFormat, page + shift, limit, data)));
+                navigationButtons.Add(
+                    InlineKeyboardButton.WithCallbackData("➡️", string.Format(commandFormat, currentPage + shift, isPreviousPageUsed ? currentPage : limit, data))
+                    );
 
             inlineKeyboard = inlineKeyboard.Append(navigationButtons);
             return new InlineKeyboardMarkup(inlineKeyboard);

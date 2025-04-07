@@ -34,7 +34,7 @@
         /// Search setlists by artist mbid on page. Example: /setlists 1 b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d
         /// Args:
         /// 0 - search page (navigation). Above 1.
-        /// 1 - search limit (navigation). NOT USE. 
+        /// 1 - previous search page (navigation). Value 1 here and 1 in [search page] argument means that it's a newly sent message.
         /// 2 - artist mbid
         /// </summary>
         public const string CALLBACK_DATA_FORMAT_SETLISTS = $"{COMMAND_SETLISTS} {{0}} {{1}} {{2}}";
