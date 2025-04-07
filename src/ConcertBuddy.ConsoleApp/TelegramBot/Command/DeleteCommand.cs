@@ -1,6 +1,7 @@
 ﻿using ConcertBuddy.ConsoleApp.Search;
 using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using Microsoft.Extensions.Logging;
+using MusicSearcher;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -12,8 +13,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         private ILogger<DeleteCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<DeleteCommand>>();
 
-        public DeleteCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
-            : base(searchHandler, telegramBotClient, data)
+        public DeleteCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+            : base(musicSearcherClient, telegramBotClient, data)
         {
         }
 

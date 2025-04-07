@@ -6,7 +6,7 @@ using MusicSearcher.MusicService.Abstract;
 
 namespace MusicSearcher.MusicService.LastFm
 {
-    internal class LastFmServiceClient : IMusicServiceClient
+    public sealed class LastFmServiceClient : IMusicServiceClient
     {
         private LastfmClient _lastFmClient;
         private AvailableSearchType availableSearch = AvailableSearchType.All;

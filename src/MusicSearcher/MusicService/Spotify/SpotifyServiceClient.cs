@@ -7,7 +7,7 @@ using SpotifyAPI.Web;
 
 namespace MusicSearcher.MusicService.Spotify
 {
-    internal class SpotifyServiceClient : IMusicServiceClient, IAsyncDisposable
+    public sealed class SpotifyServiceClient : IMusicServiceClient, IAsyncDisposable
     {
         private SpotifyClient _spotifyClient;
         private AvailableSearchType _availableSearch = AvailableSearchType.Name;

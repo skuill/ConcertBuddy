@@ -1,6 +1,6 @@
-﻿using ConcertBuddy.ConsoleApp.Search;
-using ConcertBuddy.ConsoleApp.TelegramBot.Command;
+﻿using ConcertBuddy.ConsoleApp.TelegramBot.Command;
 using Microsoft.Extensions.Logging;
+using MusicSearcher;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
@@ -11,12 +11,12 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
     public class BotHandlers : IBotHandlers
     {
         private readonly ILogger<IBotHandlers> _logger;
-        private readonly ISearchHandler _searchHandler;
+        private readonly IMusicSearcherClient _musicSearcherClient;
 
-        public BotHandlers(ILogger<IBotHandlers> logger, ISearchHandler searchHandler)
+        public BotHandlers(ILogger<IBotHandlers> logger, IMusicSearcherClient musicSearcherClient)
         {
             _logger = logger;
-            _searchHandler = searchHandler;
+            _musicSearcherClient = musicSearcherClient;
         }
 
         public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -69,8 +69,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
                 return;
             var action = message.GetSplitMessageText()[0] switch
             {
-                $"{CommandList.COMMAND_START}" => new UsageCommand(_searchHandler, botClient, message).ExecuteAsync(),
-                _ => new SearchMessageCommand(_searchHandler, botClient, message).ExecuteAsync()
+                $"{CommandList.COMMAND_START}" => new UsageCommand(_musicSearcherClient, botClient, message).ExecuteAsync(),
+                _ => new SearchMessageCommand(_musicSearcherClient, botClient, message).ExecuteAsync()
             };
         }
 
@@ -79,16 +79,16 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler
         {
             var action = callbackQuery.GetSplitMessageText()[0] switch
             {
-                $"{CommandList.COMMAND_ARTIST}" => new ArtistCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
-                $"{CommandList.COMMAND_SEARCH}" => new SearchCallbackCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
-                $"{CommandList.COMMAND_BIOGRAPHY}" => new BiographyCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
-                $"{CommandList.COMMAND_SETLISTS}" => new SetlistsCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
-                $"{CommandList.COMMAND_SETLIST}" => new SetlistCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
-                $"{CommandList.COMMAND_TRACK}" => new TrackCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
-                $"{CommandList.COMMAND_LYRIC}" => new LyricCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
-                $"{CommandList.COMMAND_DELETE}" => new DeleteCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
-                $"{CommandList.COMMAND_TOP}" => new TopCommand(_searchHandler, botClient, callbackQuery).ExecuteAsync(),
-                _ => new UsageCommand(_searchHandler, botClient, callbackQuery.Message).ExecuteAsync()
+                $"{CommandList.COMMAND_ARTIST}" => new ArtistCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_SEARCH}" => new SearchCallbackCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_BIOGRAPHY}" => new BiographyCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_SETLISTS}" => new SetlistsCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_SETLIST}" => new SetlistCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_TRACK}" => new TrackCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_LYRIC}" => new LyricCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_DELETE}" => new DeleteCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
+                $"{CommandList.COMMAND_TOP}" => new TopCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
+                _ => new UsageCommand(_musicSearcherClient, botClient, callbackQuery.Message).ExecuteAsync()
             };
         }
 

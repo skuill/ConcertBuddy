@@ -7,7 +7,7 @@ using Yandex.Music.Client;
 
 namespace MusicSearcher.MusicService.Yandex
 {
-    internal class YandexServiceClient : IMusicServiceClient
+    public class YandexServiceClient : IMusicServiceClient
     {
         private YandexMusicClient _yandexClient;
         private AvailableSearchType availableSearch = AvailableSearchType.All;

@@ -2,7 +2,7 @@
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.MusicBrainz;
 
-namespace MusicSearcher.Abstract
+namespace MusicSearcher
 {
     public interface IMusicSearcherClient : IDisposable
     {
@@ -26,13 +26,5 @@ namespace MusicSearcher.Abstract
         Task<MusicSetlists> SearchArtistSetlists(string artistMBID, int page = 1);
 
         Task<MusicSetlist> SearchSetlist(string setlistId);
-
-        void WithLastFmClient(string apiKey, string secret);
-
-        void WithSpotifyClient(string cliendID, string clientSecret);
-
-        void WithYandexClient(string token);
-
-        void WithMemoryCache();
     }
 }

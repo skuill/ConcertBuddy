@@ -2,10 +2,12 @@
 using LyricsScraperNET;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MusicSearcher.Abstract;
 using MusicSearcher.Model;
 using MusicSearcher.MusicService;
-using SetlistNet;
+using MusicSearcher.MusicService.LastFm;
+using MusicSearcher.MusicService.SetlistFm;
+using MusicSearcher.MusicService.Spotify;
+using MusicSearcher.MusicService.Yandex;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -114,7 +116,6 @@ namespace MusicSearcher.Tests
             string artist = "The Beatles";
             string mbid = "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d";
             var client = InitClient();
-            client.WithLastFmClient(Configuration.LastFmApiKey, Configuration.LastFmApiSecret);
 
             // Act
             var result = await client.SearchArtistByMBID(mbid) as MusicArtist;
@@ -134,7 +135,6 @@ namespace MusicSearcher.Tests
         {
             // Arrange
             var client = InitClient();
-            client.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
 
             // Act
             var result = await client.SearchArtistByMBID(mbid) as MusicArtist;
@@ -159,7 +159,6 @@ namespace MusicSearcher.Tests
         {
             // Arrange
             var client = InitClient();
-            client.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
 
             // Act
             var result = await client.SearchArtistByMBID(mbid) as MusicArtist;
@@ -181,7 +180,6 @@ namespace MusicSearcher.Tests
             string trackSearch = "wishing wells";
             string trackExpected = "Wishing Wells";
             var client = InitClient();
-            client.WithSpotifyClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
 
             // Act
             var result = await client.SearchTrack(artist, trackSearch) as MusicTrack;
@@ -216,9 +214,19 @@ namespace MusicSearcher.Tests
         private IMusicSearcherClient InitClient()
         {
             var lyricsScraperClientMock = A.Fake<ILyricsScraperClient>();
-            var setlistApiMock = A.Fake<SetlistApi>();
+            var setlistApiMock = A.Fake<SetlistFmServiceClient>();
             var loggerMock = A.Fake<ILogger<MusicSearcherClient>>();
-            return new MusicSearcherClient(lyricsScraperClientMock, setlistApiMock, loggerMock);
+            YandexServiceClient yandexServiceClient = new YandexServiceClient(Configuration.YandexToken);
+            SpotifyServiceClient spotifyServiceClient = new SpotifyServiceClient(Configuration.SpotifyClientID, Configuration.SpotifyClientSecret);
+            LastFmServiceClient lastFmServiceClient = new LastFmServiceClient(Configuration.LastFmApiKey, Configuration.LastFmApiSecret);
+
+            return new MusicSearcherClient(
+                lyricsScraperClientMock,
+                setlistApiMock,
+                yandexServiceClient,
+                spotifyServiceClient,
+                lastFmServiceClient,
+                loggerMock);
         }
     }
 }

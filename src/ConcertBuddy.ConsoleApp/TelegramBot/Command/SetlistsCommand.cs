@@ -3,6 +3,7 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;
+using MusicSearcher;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -16,8 +17,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         private ILogger<SetlistsCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SetlistsCommand>>();
 
-        public SetlistsCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
-            : base(searchHandler, telegramBotClient, data)
+        public SetlistsCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+            : base(musicSearcherClient, telegramBotClient, data)
         {
         }
 
@@ -55,7 +56,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             // ingore limit in parameters[1]. NOT USED BY LAST.FM
             var artistMBID = parameters[2];
 
-            var setlists = await SearchHandler.SearchArtistSetlists(artistMBID, page);
+            var setlists = await MusicSearcherClient.SearchArtistSetlists(artistMBID, page);
 
             if (setlists == null || setlists.Setlist == null || setlists.Setlist.Count == 0)
             {

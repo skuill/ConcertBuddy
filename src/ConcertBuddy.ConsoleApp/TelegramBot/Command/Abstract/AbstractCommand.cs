@@ -1,19 +1,20 @@
 ﻿using ConcertBuddy.ConsoleApp.Search;
+using MusicSearcher;
 using Telegram.Bot;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract
 {
     public abstract class AbstractCommand<TResult, TData> : ICommand<TResult>
     {
-        protected ISearchHandler SearchHandler { get; set; }
+        protected IMusicSearcherClient MusicSearcherClient { get; set; }
 
         protected ITelegramBotClient TelegramBotClient { get; set; }
 
         protected TData Data { get; set; }
 
-        public AbstractCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, TData data)
+        public AbstractCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, TData data)
         {
-            SearchHandler = searchHandler;
+            MusicSearcherClient = musicSearcherClient;
             TelegramBotClient = telegramBotClient;
             Data = data;
         }

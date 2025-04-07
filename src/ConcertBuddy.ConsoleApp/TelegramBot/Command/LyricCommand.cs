@@ -3,6 +3,7 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;
+using MusicSearcher;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -15,8 +16,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         private ILogger<LyricCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<LyricCommand>>();
 
-        public LyricCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
-            : base(searchHandler, telegramBotClient, data)
+        public LyricCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+            : base(musicSearcherClient, telegramBotClient, data)
         {
         }
 
@@ -48,10 +49,10 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var mbid = parameters[0];
             var trackName = String.Join(' ', parameters.Skip(1));
 
-            var artistTast = SearchHandler.SearchArtistByMBID(mbid);
+            var artistTast = MusicSearcherClient.SearchArtistByMBID(mbid);
 
             // Return actual name from MusicBrainz. Because other platform can use additional information in name.
-            var recordingTask = SearchHandler.SearchRecordByName(mbid, trackName);
+            var recordingTask = MusicSearcherClient.SearchRecordByName(mbid, trackName);
 
             var artist = await artistTast;
 
@@ -70,7 +71,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var recording = await recordingTask;
             string? trackActualName = recording != null
                 ? recording.Title
-                : ((await SearchHandler.SearchTrack(artist.Name, trackName)).TrackName ?? null);
+                : ((await MusicSearcherClient.SearchTrack(artist.Name, trackName)).TrackName ?? null);
 
             if (string.IsNullOrWhiteSpace(trackActualName))
             {
@@ -78,7 +79,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
-            var searchResult = await SearchHandler.SearchLyric(artist.Name, trackActualName);
+            var searchResult = await MusicSearcherClient.SearchLyric(artist.Name, trackActualName);
             if (!searchResult.IsSuccessSearchResult)
             {
                 _logger?.LogError($"Command: [{CurrentCommand}]. Can't find lyric for track [{artist.Name} - {trackActualName}]");

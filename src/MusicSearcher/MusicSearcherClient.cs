@@ -5,7 +5,6 @@ using LyricsScraperNET.Models.Requests;
 using LyricsScraperNET.Models.Responses;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using MusicSearcher.Abstract;
 using MusicSearcher.Converter;
 using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
@@ -13,9 +12,9 @@ using MusicSearcher.Model.MusicBrainz;
 using MusicSearcher.MusicBrainz;
 using MusicSearcher.MusicService.Abstract;
 using MusicSearcher.MusicService.LastFm;
+using MusicSearcher.MusicService.SetlistFm;
 using MusicSearcher.MusicService.Spotify;
 using MusicSearcher.MusicService.Yandex;
-using SetlistNet;
 using System.Net;
 using System.Reflection;
 
@@ -35,16 +34,7 @@ namespace MusicSearcher
 
         private readonly ILyricsScraperClient _lyricsScraperClient;
 
-        private readonly SetlistApi _setlistFmClient;
-
-        private bool _isLastFmClientEnabled = false;
-        public bool IsLastFmClientEnabled => _isLastFmClientEnabled;
-
-        private bool _isSpotifyClientEnabled = false;
-        private bool IsSpotifyClientEnabled => _isSpotifyClientEnabled;
-
-        private bool _isYandexClientEnabled = false;
-        private bool IsYandexClientEnabled => _isYandexClientEnabled;
+        private readonly SetlistFmServiceClient _setlistFmClient;
 
         private bool _isMemoryCacheEnabled;
         public bool IsMemoryCacheEnabled => _isMemoryCacheEnabled;
@@ -75,13 +65,25 @@ namespace MusicSearcher
 
         public MusicSearcherClient(
             ILyricsScraperClient lyricsScraperClient,
-            SetlistApi setlistFmClient,
+            SetlistFmServiceClient setlistFmClient,
+            YandexServiceClient yandexServiceClient,
+            SpotifyServiceClient spotifyServiceClient,
+            LastFmServiceClient lastFmServiceClient,
             ILogger<MusicSearcherClient> logger)
             : this()
         {
             _logger = logger;
             _lyricsScraperClient = lyricsScraperClient;
             _setlistFmClient = setlistFmClient;
+
+            _musicServiceClients.Add(yandexServiceClient);
+            _musicServiceClients.Add(spotifyServiceClient);
+            _musicServiceClients.Add(lastFmServiceClient);
+
+            _logger?.LogInformation($"Enable memory cache for artist search with size {MEMORY_CACHE_SIZE}");
+            _isMemoryCacheEnabled = true;
+            var memoryCacheOptions = new MemoryCacheOptions { SizeLimit = MEMORY_CACHE_SIZE };
+            _artistMemoryCache = new MemoryCache(memoryCacheOptions);
         }
 
         // TODO: Add additional check for aliases in case of abbreviations. For example: RHCP
@@ -266,92 +268,13 @@ namespace MusicSearcher
 
         public async Task<MusicSetlists> SearchArtistSetlists(string artistMBID, int page = 1)
         {
-            var result = await _setlistFmClient.ArtistSetlists(artistMBID, page: page);
-
-            if (result == null || result.Setlist == null || result.Setlist.Count == 0)
-            {
-                _logger?.LogInformation($"Can't fing setlists for artist with mbid [{artistMBID}]");
-                return null;
-            }
-            return result.ToInternal();
+            return await _setlistFmClient.SearchArtistSetlists(artistMBID, page: page);
         }
 
         public async Task<MusicSetlist> SearchSetlist(string setlistId)
         {
-            var result = await _setlistFmClient.Setlist(setlistId);
-            if (result == null || result.Sets == null || result.Sets.Set == null || result.Sets.Set.Count == 0)
-            {
-                _logger?.LogError($"Can't find setlist by Id: [{setlistId}]");
-                return null;
-            }
-            return result.ToInternal();
+            return await _setlistFmClient.SearchSetlist(setlistId);
         }
-
-        public void WithLastFmClient(string apiKey, string secret)
-        {
-            _logger?.LogInformation($"Enable LastFM client for artist search");
-            if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(secret))
-            {
-                _logger?.LogWarning($"Please set apiKey [{apiKey}] and secret [{secret}] properly!");
-                return;
-            }
-            try
-            {
-                _musicServiceClients.Add(new LastFmServiceClient(apiKey, secret));
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, $"Can't initialize LastFM client!");
-            }
-            _isLastFmClientEnabled = true;
-        }
-
-        public void WithSpotifyClient(string cliendID, string clientSecret)
-        {
-            _logger?.LogInformation($"Enable Spotify client for artist search");
-            if (string.IsNullOrEmpty(cliendID) || string.IsNullOrEmpty(clientSecret))
-            {
-                _logger?.LogWarning($"Please set cliendID [{cliendID}] and clientSecret [{clientSecret}] properly!");
-                return;
-            }
-            try
-            {
-                _musicServiceClients.Add(new SpotifyServiceClient(cliendID, clientSecret));
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, $"Can't initialize Spotify client!");
-            }
-            _isSpotifyClientEnabled = true;
-        }
-
-        public void WithMemoryCache()
-        {
-            _logger?.LogInformation($"Enable memory cache for artist search with size {MEMORY_CACHE_SIZE}");
-            _isMemoryCacheEnabled = true;
-            var memoryCacheOptions = new MemoryCacheOptions { SizeLimit = MEMORY_CACHE_SIZE };
-            _artistMemoryCache = new MemoryCache(memoryCacheOptions);
-        }
-
-        public void WithYandexClient(string token)
-        {
-            _logger?.LogInformation($"Enable Yandex client for artist search");
-            if (string.IsNullOrEmpty(token))
-            {
-                _logger?.LogWarning($"Please set Yandex credentials: token [{token}]!");
-                return;
-            }
-            try
-            {
-                _musicServiceClients.Add(new YandexServiceClient(token));
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, $"Can't initialize Yandex client!");
-            }
-            _isYandexClientEnabled = true;
-        }
-
 
         public void Dispose()
         {

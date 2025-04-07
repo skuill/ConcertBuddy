@@ -3,6 +3,7 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;
+using MusicSearcher;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -15,8 +16,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         private ILogger<SetlistCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SetlistCommand>>();
 
-        public SetlistCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
-            : base(searchHandler, telegramBotClient, data)
+        public SetlistCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+            : base(musicSearcherClient, telegramBotClient, data)
         {
         }
 
@@ -48,7 +49,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var artistMBID = parameters[0];
             var setlistId = parameters[1];
 
-            var setlist = await SearchHandler.SearchSetlist(setlistId);
+            var setlist = await MusicSearcherClient.SearchSetlist(setlistId);
 
             if (setlist == null || !setlist.IsSetsExist())
             {

@@ -1,11 +1,13 @@
-﻿using ConcertBuddy.ConsoleApp.Search;
-using ConcertBuddy.ConsoleApp.TelegramBot.Handler;
+﻿using ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 using LyricsScraperNET.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MusicSearcher;
-using MusicSearcher.Abstract;
+using MusicSearcher.MusicService.LastFm;
+using MusicSearcher.MusicService.SetlistFm;
+using MusicSearcher.MusicService.Spotify;
+using MusicSearcher.MusicService.Yandex;
 using Serilog;
 using SetlistNet;
 
@@ -41,16 +43,28 @@ namespace ConcertBuddy.ConsoleApp
 
             services.AddLyricScraperClientService(configurationRoot);
 
-            services.AddLogging(configure => configure.AddSerilog(dispose: true))
-                    .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
-                    .AddScoped<SetlistApi>(s => new SetlistApi(Configuration.SetlistFmApiKey!))
-                    .AddScoped<IBotHandlers, BotHandlers>()
-                    .AddScoped<IMusicSearcherClient, MusicSearcherClient>()
-                    .AddScoped<ISearchHandler, SearchHandler>();
-
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configurationRoot)
                 .CreateLogger();
+
+            services.AddLogging(configure => configure.AddSerilog(dispose: true))
+                    .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
+                    .AddScoped<SetlistApi>(
+                        s => new SetlistApi(Configuration.SetlistFmApiKey!))
+                    .AddScoped<SpotifyServiceClient>(
+                        s => new SpotifyServiceClient(Configuration.SpotifyClientID!, Configuration.SpotifyClientSecret!))
+                    .AddScoped<LastFmServiceClient>(
+                        s => new LastFmServiceClient(Configuration.LastFmApiKey!, Configuration.LastFmApiSecret!))
+                    .AddScoped<YandexServiceClient>(
+                        s => new YandexServiceClient(Configuration.YandexToken!))
+                    .AddScoped<SetlistFmServiceClient>(provider =>
+                        {
+                            var logger = provider.GetRequiredService<ILogger<SetlistFmServiceClient>>();
+                            var token = Configuration.SetlistFmApiKey!;
+                            return new SetlistFmServiceClient(logger, token);
+                        })
+                    .AddScoped<IBotHandlers, BotHandlers>()
+                    .AddScoped<IMusicSearcherClient, MusicSearcherClient>();
         }
 
         private IConfigurationRoot GetConfiguration()

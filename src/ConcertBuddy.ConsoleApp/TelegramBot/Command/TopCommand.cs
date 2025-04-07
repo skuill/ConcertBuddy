@@ -4,6 +4,7 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;
+using MusicSearcher;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -16,8 +17,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         private ILogger<TopCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<TopCommand>>();
 
-        public TopCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
-            : base(searchHandler, telegramBotClient, data)
+        public TopCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+            : base(musicSearcherClient, telegramBotClient, data)
         {
         }
 
@@ -68,14 +69,14 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
         private async Task<Message> ProcessTracks(string mbid)
         {
             // !!!SWITCH TO SEARCH TOP TRACKS BY MBID!!!
-            //var artist = await SearchHandler.SearchArtistByMBID(mbid);
+            //var artist = await MusicSearcherClient.SearchArtistByMBID(mbid);
             //if (artist == null)
             //{
             //    _logger?.LogError($"Can't find artist with mbid [{mbid}]");
             //    return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             //}
 
-            var topTracks = await SearchHandler.SearchTopTracks(mbid);
+            var topTracks = await MusicSearcherClient.SearchTopTracks(mbid);
 
             if (topTracks == null || !topTracks.Any())
             {

@@ -3,6 +3,7 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;
+using MusicSearcher;
 using MusicSearcher.Model;
 using MusicSearcher.MusicService;
 using Telegram.Bot;
@@ -18,8 +19,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         private ILogger<ArtistCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<ArtistCommand>>();
 
-        public ArtistCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
-            : base(searchHandler, telegramBotClient, data)
+        public ArtistCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+            : base(musicSearcherClient, telegramBotClient, data)
         {
         }
 
@@ -49,7 +50,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             var artistMBID = Data.GetParameterFromMessageText(CurrentCommand);
 
-            var artist = await SearchHandler.SearchArtistByMBID(artistMBID) as MusicArtist;
+            var artist = await MusicSearcherClient.SearchArtistByMBID(artistMBID) as MusicArtist;
 
             if (artist == null)
             {

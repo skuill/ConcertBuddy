@@ -3,6 +3,7 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;
+using MusicSearcher;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -16,8 +17,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         private ILogger<TrackCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<TrackCommand>>();
 
-        public TrackCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, CallbackQuery data)
-            : base(searchHandler, telegramBotClient, data)
+        public TrackCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+            : base(musicSearcherClient, telegramBotClient, data)
         {
         }
 
@@ -49,7 +50,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             var mbid = parameters[0];
             var trackName = String.Join(' ', parameters.Skip(1));
 
-            var artist = await SearchHandler.SearchArtistByMBID(mbid);
+            var artist = await MusicSearcherClient.SearchArtistByMBID(mbid);
             if (artist == null)
             {
                 _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist with mbid [{mbid}]");
@@ -62,7 +63,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 
-            var track = await SearchHandler.SearchTrack(artist.Name, trackName);
+            var track = await MusicSearcherClient.SearchTrack(artist.Name, trackName);
 
             if (track == null)
             {

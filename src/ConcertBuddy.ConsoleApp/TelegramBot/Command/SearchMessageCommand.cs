@@ -2,6 +2,7 @@
 using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using Microsoft.Extensions.Logging;
+using MusicSearcher;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -14,8 +15,8 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
         private ILogger<SearchMessageCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SearchMessageCommand>>();
 
-        public SearchMessageCommand(ISearchHandler searchHandler, ITelegramBotClient telegramBotClient, Message data)
-            : base(searchHandler, telegramBotClient, data)
+        public SearchMessageCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, Message data)
+            : base(musicSearcherClient, telegramBotClient, data)
         {
         }
 
@@ -32,7 +33,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             string replyText = string.Empty;
             string artistName = Data.GetClearMessage();
 
-            var artists = await SearchHandler.SearchArtistsByName(artistName);
+            var artists = await MusicSearcherClient.SearchArtistsByName(artistName);
 
             if (artists == null || !artists.Any())
             {
@@ -44,7 +45,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             {
                 // TODO return artist immediately
                 //Data.Data = artists.First().Name;
-                //return await new ArtistCommand(SearchHandler, TelegramBotClient, artistName).Execute();
+                //return await new ArtistCommand(MusicSearcherClient, TelegramBotClient, artistName).Execute();
             }
 
             bool isForwardNavigationEnabled = artists.Count() == SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT;
