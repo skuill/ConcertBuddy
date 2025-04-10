@@ -6,6 +6,7 @@ Your personal Telegram bot for discovering artists, setlists, and lyrics. Perfec
 <img src="https://github.com/skuill/ConcertBuddy/blob/master/resources/BotImage.png" align="center" width="40%" height="40%">
 </p>
 <p align="center">
+  <a href="https://github.com/skuill/ConcertBuddy/actions/workflows/cicd.yml" ><img src="https://github.com/skuill/ConcertBuddy/actions/workflows/cicd.yml/badge.svg"/>
   <a href="https://www.codefactor.io/repository/github/skuill/concertbuddy"><img src="https://www.codefactor.io/repository/github/skuill/concertbuddy/badge" alt="CodeFactor" /></a>
  </a>
 </p>
