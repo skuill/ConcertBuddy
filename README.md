@@ -1,10 +1,12 @@
-# ConcertBuddy
-
-<img src="https://github.com/skuill/ConcertBuddy/blob/master/resources/BotImage.jpg" width="30%" height="30%">
-
+<h1 align="center">ConcertBuddy</h1>
+<p align="center">
+  <a href="https://www.codefactor.io/repository/github/skuill/concertbuddy"><img src="https://www.codefactor.io/repository/github/skuill/concertbuddy/badge" alt="CodeFactor" /></a>
+ </a>
+</p>
+<p align="center">
 Your personal Telegram bot for discovering artists, setlists, and lyrics. Perfect for music enthusiasts and concert-goers! 🎵
-
-[![CodeFactor](https://www.codefactor.io/repository/github/skuill/concertbuddy/badge)](https://www.codefactor.io/repository/github/skuill/concertbuddy)
+</p>
+<img src="https://github.com/skuill/ConcertBuddy/blob/master/resources/BotImage.png" width="30%" height="30%">
 
 ## Table of contents
 - [General info](#general-info)
