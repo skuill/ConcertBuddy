@@ -366,6 +366,7 @@ FodyWeavers.xsd
 app*.config
 appsettings*.json
 !appsettings.template.json
+!appsettings.json
 
 # Hosting settings and credentials
 doc/hosting/
