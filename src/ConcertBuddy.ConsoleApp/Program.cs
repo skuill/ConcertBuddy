@@ -1,5 +1,6 @@
 ﻿using ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 
@@ -37,7 +38,10 @@ namespace ConcertBuddy.ConsoleApp
             var botUser = botClient.GetMe().GetAwaiter().GetResult();
 
             Console.Title = botUser.Username ?? "My awesome Bot";
-            _logger?.LogInformation($"Bot {botUser.FirstName} [{botUser.Id}] start listening.");
+
+            var assemblyVersion = Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString();
+            var currentEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            _logger?.LogInformation($"Bot {botUser.FirstName} [{botUser.Id}] start listening. Version: [{assemblyVersion}]. Environment: [{currentEnvironment}]");
 
             Console.ReadLine();
 

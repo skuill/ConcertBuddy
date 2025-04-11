@@ -22,6 +22,7 @@ services:
         max-file: "20"
     volumes:
       - ./appsettings.json:/app/appsettings.json
+      - ./appsettings.Production.json:/app/appsettings.Production.json
       - ./logs:/app/logs
     networks:
       - common-skuill-network
