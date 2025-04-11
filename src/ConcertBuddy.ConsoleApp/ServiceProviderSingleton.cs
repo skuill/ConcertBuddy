@@ -69,9 +69,11 @@ namespace ConcertBuddy.ConsoleApp
 
         private IConfigurationRoot GetConfiguration()
         {
+            var currentEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
             return new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{currentEnvironment}.json", optional: false, reloadOnChange: true)
                 .Build();
         }
     }

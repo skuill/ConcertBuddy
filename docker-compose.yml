@@ -6,6 +6,8 @@ services:
     tty: true
     stdin_open: true
     container_name: CONCERT_BUDDY
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production 
     deploy:
       #replicas: 2
       restart_policy:
