@@ -363,7 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Credentials
-app*.config
+# app*.config
 appsettings*.json
 !appsettings.template.json
 !appsettings.json
