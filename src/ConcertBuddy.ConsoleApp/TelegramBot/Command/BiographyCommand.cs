@@ -1,5 +1,4 @@
-﻿using ConcertBuddy.ConsoleApp.Search;
-using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
+﻿using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;

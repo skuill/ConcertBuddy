@@ -141,31 +141,25 @@ namespace MusicSearcher
 
                 foreach (var musicServiceClient in _musicServiceClients.OrderByDescending(x => x.GetAvailableSearch()))
                 {
-                    try
+                    var currentSearchType = musicServiceClient.GetAvailableSearch();
+
+                    var currentSearchResult = await TrySearchArtist(musicServiceClient, currentSearchType, artistMBID, result.Name!);
+
+                    // Try search artist by name if failed for All/MBID.
+                    if (!currentSearchResult.Success && currentSearchType.HasFlag(AvailableSearchType.All))
                     {
-                        switch (musicServiceClient.GetAvailableSearch())
-                        {
-                            case AvailableSearchType.MBID:
-                            case AvailableSearchType.All:
-                                result.Add(await musicServiceClient.GetArtistByMBID(artistMBID));
-                                break;
-                            case AvailableSearchType.Name:
-                                result.Add(await musicServiceClient.SearchArtistByName(result.Name));
-                                break;
-                        }
+                        currentSearchResult = await TrySearchArtist(musicServiceClient, AvailableSearchType.Name, artistMBID, result.Name!);
                     }
-                    catch (NotImplementedException)
+
+                    if (currentSearchResult.Success)
                     {
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogError(ex, $"Can't get artist from music service [{musicServiceClient.GetType().Name}]");
+                        result.Add(currentSearchResult.MusicArtist!);
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"Can't get artist by mbid [{artistMBID}] from LastFM");
+                _logger?.LogError(ex, $"Can't get artist by mbid [{artistMBID}].");
                 return new MusicArtist();
             }
 
@@ -173,6 +167,38 @@ namespace MusicSearcher
                 _artistMemoryCache!.Set(artistMBID, result, _memoryCacheEntryOptions);
 
             return result;
+        }
+
+        private async Task<(bool Success, MusicArtistBase? MusicArtist)> TrySearchArtist(
+            IMusicServiceClient client,
+            AvailableSearchType searchType,
+            string artistMBID,
+            string artistName)
+        {
+            MusicArtistBase? result = null;
+            try
+            {
+                switch (searchType)
+                {
+                    case AvailableSearchType.MBID:
+                    case AvailableSearchType.All:
+                        result = await client.GetArtistByMBID(artistMBID);
+                        break;
+                    case AvailableSearchType.Name:
+                        result = await client.SearchArtistByName(artistName);
+                        break;
+                }
+            }
+            catch (NotImplementedException)
+            {
+                return (false, null);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, $"Can't get artist from music service [{client.GetType().Name}].");
+                return (false, null);
+            }
+            return (true, result);
         }
 
         public async Task<MusicTrackBase> SearchTrack(string artistName, string trackName)
@@ -190,7 +216,7 @@ namespace MusicSearcher
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, $"Can't get track from music service [{musicServiceClient.GetType().Name}]");
+                    _logger?.LogError(ex, $"Can't get track from music service [{musicServiceClient.GetType().Name}].");
                 }
             }
             return result;

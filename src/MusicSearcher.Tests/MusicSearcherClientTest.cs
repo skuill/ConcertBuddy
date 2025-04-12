@@ -127,6 +127,23 @@ namespace MusicSearcher.Tests
             Assert.IsTrue(string.Equals(artist, result[MusicServiceType.LastFm].Name));
         }
 
+        [TestMethod]
+        public async Task SearchArtistByMBID_WithLastFmClient_WithNotSpecifiedMBID_ShouldBeFound()
+        {
+            // Arrange
+            string artist = "Rosé";
+            string mbid = "7f233cda-eacb-4235-b681-5f7be343a1a2";
+            var client = InitClient();
+
+            // Act
+            var result = await client.SearchArtistByMBID(mbid) as MusicArtist;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result[MusicServiceType.LastFm]);
+            Assert.IsTrue(string.Equals(artist, result[MusicServiceType.LastFm].Name));
+        }
+
         [DataTestMethod]
         [DataRow("b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "The Beatles")]
         // #28 Can't find Wu tang artist's information and tracks. https://github.com/skuill/ConcertBuddy/issues/28
