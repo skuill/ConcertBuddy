@@ -75,6 +75,7 @@ Project is created with:
 * [HtmlAgilityPack](https://html-agility-pack.net/) - agile HTML parser that builds a read/write DOM and supports plain XPATH or XSLT (you actually don't HAVE to understand XPATH nor XSLT to use it, don't worry...)
 * [Serilog](https://serilog.net/) - simple .NET logging with fully-structured events
 * [Yandex.Music API](https://github.com/K1llMan/Yandex.Music.Api) - unofficial wrapper for the Yandex.Music API
+* [SetlistNet](https://github.com/MolinRE/SetlistNet) - C# library to interact with setlist.fm API.
 
 ## Documentation
 
