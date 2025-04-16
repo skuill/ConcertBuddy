@@ -1,5 +1,4 @@
-﻿using ConcertBuddy.ConsoleApp.Search;
-using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
+﻿using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using Microsoft.Extensions.Logging;
 using MusicSearcher;
 using Telegram.Bot;
@@ -20,7 +19,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
         public override async Task<Message?> ExecuteAsync()
         {
             string usage = $"Hi, {Data.From?.FirstName}! 👋\n" +
-                $"Please, write any artist and I will find him! 🔍";
+                $"Please, write any artist or band name and I will find! 🔍";
 
             return await TelegramBotClient.SendMessage(
                 chatId: Data.Chat.Id,

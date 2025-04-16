@@ -31,7 +31,7 @@ namespace MusicSearcher.MusicService.SetlistFm
         public async Task<MusicSetlist> SearchSetlist(string setlistId)
         {
             var result = await _setlistApi.Setlist(setlistId);
-            if (result == null || result.Sets == null || result.Sets.Set == null || result.Sets.Set.Count == 0)
+            if (result == null)
             {
                 _logger?.LogError($"Can't find setlist by Id: [{setlistId}]");
                 return null;

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 
 namespace MusicSearcher.Model
 {
@@ -23,6 +24,11 @@ namespace MusicSearcher.Model
         public string? CityName { get; set; }
 
         public MusicSets? Sets { get; set; }
+
+        public bool IsFutureEvent()
+        {
+            return DateTime.ParseExact(EventDate, "dd-MM-yyyy", CultureInfo.InvariantCulture).Date >= DateTime.Today;
+        }
 
         public bool IsSetsExist()
         {

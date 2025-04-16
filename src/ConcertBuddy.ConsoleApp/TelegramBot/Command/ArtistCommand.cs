@@ -1,5 +1,4 @@
-﻿using ConcertBuddy.ConsoleApp.Search;
-using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
+﻿using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;
@@ -54,7 +53,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             if (artist == null)
             {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist with mbid [{artistMBID}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist by mbid [{artistMBID}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
             }
 

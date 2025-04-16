@@ -41,6 +41,10 @@ namespace MusicSearcher.MusicService.LastFm
             {
                 throw new Exception($"Request to LastFM for MBID [{mbid}] timed out.", ex);
             }
+            catch (ServiceException ex)
+            {
+                throw new Exception($"Hqub.Lastfm returns error with code [{ex.ErrorCode}] and message [{ex.Message}]");
+            }
             catch (Exception ex)
             {
                 throw new Exception($"An unexpected error occurred while getting artist by MBID [{mbid}].", ex);

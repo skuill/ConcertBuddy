@@ -1,5 +1,4 @@
-﻿using ConcertBuddy.ConsoleApp.Search;
-using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
+﻿using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;
@@ -51,10 +50,21 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
 
             var setlist = await MusicSearcherClient.SearchSetlist(setlistId);
 
-            if (setlist == null || !setlist.IsSetsExist())
+            if (setlist == null)
             {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find setlist. Id: [{setlistId}], mbid: [{artistMBID}]");
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find setlist by Id: [{setlistId}], mbid: [{artistMBID}]");
                 return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            }
+
+            if (!setlist.IsSetsExist())
+            {
+                _logger?.LogInformation($"Command: [{CurrentCommand}]. Can't find sets in setlist with Id: [{setlistId}], mbid: [{artistMBID}]");
+
+                string reasonMessage = setlist.IsFutureEvent()
+                    ? "ℹ️ There are no songs in this setlist because the concert hasn't started yet. Please try again later.."
+                    : "ℹ️ Sorry, there are no information about songs in this setlist yet..";
+
+                return await MessageHelper.SendTextMessageAsync(TelegramBotClient, Data.Message.Chat.Id, reasonMessage);
             }
 
             // Save message ids for delete command 

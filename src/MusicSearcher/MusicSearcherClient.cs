@@ -195,7 +195,7 @@ namespace MusicSearcher
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, $"Can't get artist from music service [{client.GetType().Name}].");
+                _logger?.LogWarning(ex, $"Can't get artist by [{searchType}] from music service [{client.GetType().Name}]. Artist name: [{artistName}], mbid: [{artistMBID}]");
                 return (false, null);
             }
             return (true, result);

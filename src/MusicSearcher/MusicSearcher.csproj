@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Hqub.Last.fm" Version="2.4.0" />
-    <PackageReference Include="KM.Yandex.Music.Client" Version="2.0.1" />
+    <PackageReference Include="Hqub.Last.fm" Version="2.5.0" />
+    <PackageReference Include="KM.Yandex.Music.Client" Version="2.0.2" />
     <PackageReference Include="LyricsScraperNET" Version="2.2.2" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
