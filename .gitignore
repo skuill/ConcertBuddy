@@ -375,3 +375,6 @@ doc/external_sites_credentials/
 # Logs
 logs/
 log*.txt
+
+# Claude Code personal notes
+CLAUDE.local.md
