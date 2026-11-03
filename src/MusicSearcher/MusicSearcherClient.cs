@@ -49,9 +49,6 @@ namespace MusicSearcher
                 Size = 1
             };
 
-            // Make sure that TLS 1.2 is available.
-            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-
             // Get path for local file cache.
             var location = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
