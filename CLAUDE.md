@@ -21,5 +21,6 @@ Notes for AI coding agents working in this repository. Personal or machine-speci
 - Branches `feature/<issue>_<desc>`, `bugfix/<issue>_<desc>`; pull requests target `master`; commit messages and PR titles start with the issue numbers, e.g. `#39 ...`.
 - Follow existing patterns; do not silently change working configs (CI, Docker, lint, coverage).
 - Trust code over README when they disagree.
+- Never commit keys, tokens or passwords, also not in test configs: values for local runs stay in git-ignored files.
 - Never open secrets: real `appsettings*.json`, `.env` values, certificates, keys, `doc/hosting/`, `doc/external_sites_credentials/`.
 - Skip `bin/ obj/ .vs/ TestResults/ logs/` when searching.
