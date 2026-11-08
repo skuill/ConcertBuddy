@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Serilog.Extensions.Logging;
 using Shouldly;
 using System.Collections.Concurrent;
 using System.Net;
@@ -62,6 +63,19 @@ public class BotHostTest
         // Assert
         telegram.Answers.Count.ShouldBe(2);
         logs.Entries.ShouldContain(x => x.Level == LogLevel.Error && x.Message.Contains("Bad Request: test failure"));
+    }
+
+    [Fact]
+    public void Logging_ResilienceHandler_OnlyWarningsReachSerilog()
+    {
+        // Arrange
+        using var host = Program.CreateHost(new[] { TokenArgument });
+
+        // Act
+        var rules = host.Services.GetRequiredService<IOptions<LoggerFilterOptions>>().Value.Rules;
+
+        // Assert
+        rules.ShouldContain(x => x.ProviderName == typeof(SerilogLoggerProvider).FullName && x.CategoryName == "Polly" && x.LogLevel == LogLevel.Warning);
     }
 
     private static IHost CreateHost(FakeTelegram telegram, CapturingLoggerProvider logs)

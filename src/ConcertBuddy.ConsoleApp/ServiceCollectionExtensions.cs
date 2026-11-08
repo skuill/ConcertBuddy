@@ -11,6 +11,7 @@ using MusicSearcher.MusicService.LastFm;
 using MusicSearcher.MusicService.SetlistFm;
 using MusicSearcher.MusicService.Yandex;
 using Serilog;
+using Serilog.Extensions.Logging;
 using SetlistNet;
 using Telegram.Bot;
 
@@ -36,7 +37,8 @@ public static class ServiceCollectionExtensions
             .ReadFrom.Configuration(configuration)
             .CreateLogger();
 
-        services.AddLogging(configure => configure.AddSerilog(dispose: true).AddFilter("Polly", LogLevel.Warning))
+        // AddSerilog adds a rule for its provider, and only a rule for the same provider can override it.
+        services.AddLogging(configure => configure.AddSerilog(dispose: true).AddFilter<SerilogLoggerProvider>("Polly", LogLevel.Warning))
                 .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug);
 
         services.AddHttpClient(TelegramClientName)
