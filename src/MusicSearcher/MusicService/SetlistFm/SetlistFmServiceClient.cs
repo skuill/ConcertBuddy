@@ -23,7 +23,7 @@ public sealed class SetlistFmServiceClient : ISetlistFmServiceClient
         if (result == null || result.Setlist == null || result.Setlist.Count == 0)
         {
             _logger?.LogInformation($"Can't fing setlists for artist with mbid [{artistMBID}]");
-            return null;
+            return null!;
         }
         return result.ToInternal();
     }
@@ -34,7 +34,7 @@ public sealed class SetlistFmServiceClient : ISetlistFmServiceClient
         if (result == null)
         {
             _logger?.LogError($"Can't find setlist by Id: [{setlistId}]");
-            return null;
+            return null!;
         }
         return result.ToInternal();
     }

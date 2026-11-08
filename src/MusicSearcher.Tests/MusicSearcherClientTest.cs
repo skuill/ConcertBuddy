@@ -121,7 +121,7 @@ public class MusicSearcherClientTest
         Assert.IsNotNull(result);
         Assert.IsNotNull(result[MusicServiceType.LastFm]);
         Assert.IsTrue(string.Equals(artist, result.Name));
-        Assert.IsTrue(string.Equals(artist, result[MusicServiceType.LastFm].Name));
+        Assert.IsTrue(string.Equals(artist, result[MusicServiceType.LastFm]!.Name));
     }
 
     [TestMethod]
@@ -138,7 +138,7 @@ public class MusicSearcherClientTest
         // Assert
         Assert.IsNotNull(result);
         Assert.IsNotNull(result[MusicServiceType.LastFm]);
-        Assert.IsTrue(string.Equals(artist, result[MusicServiceType.LastFm].Name));
+        Assert.IsTrue(string.Equals(artist, result[MusicServiceType.LastFm]!.Name));
     }
 
     [TestMethod]

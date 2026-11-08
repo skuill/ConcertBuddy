@@ -19,7 +19,7 @@ public sealed class MusicLyric
     /// </summary>
     public bool Instrumental { get; internal set; } = false;
 
-    public static MusicLyric Empty () => new MusicLyric
+    public static MusicLyric Empty() => new MusicLyric
     {
         IsSuccessSearchResult = false
     };

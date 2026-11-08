@@ -13,7 +13,7 @@ public static class MessageHelper
             text: text);
 
         await botClient.SendMessage(
-            chatId: callbackQuery.Message.Chat.Id,
+            chatId: callbackQuery.Message!.Chat.Id,
             text: text);
     }
 

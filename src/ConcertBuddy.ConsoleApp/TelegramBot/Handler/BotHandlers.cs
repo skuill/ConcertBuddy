@@ -89,7 +89,7 @@ public class BotHandlers : IBotHandlers
             $"{CommandList.COMMAND_LYRIC}" => new LyricCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
             $"{CommandList.COMMAND_DELETE}" => new DeleteCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
             $"{CommandList.COMMAND_TOP}" => new TopCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
-            _ => new UsageCommand(_musicSearcherClient, botClient, callbackQuery.Message).ExecuteAsync()
+            _ => new UsageCommand(_musicSearcherClient, botClient, callbackQuery.Message!).ExecuteAsync()
         };
     }
 

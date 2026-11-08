@@ -50,7 +50,7 @@ public class TopCommand : AbstractCommand<Message?, CallbackQuery>
         if (!parseResult || searchType == SearchType.Unknown)
         {
             _logger?.LogError($"Command: [{CurrentCommand}]. Can't parse [{parameters[0]}] parameter");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
         }
 
         string mbid = parameters[1];
@@ -80,7 +80,7 @@ public class TopCommand : AbstractCommand<Message?, CallbackQuery>
         if (topTracks == null || !topTracks.Any())
         {
             _logger?.LogError($"Command: [{CurrentCommand}]. Can't find top tracks for artist with mbid [{mbid}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
         }
 
         var replyText = $"Top {topTracks.Count()} tracks 🎵. Please select a track:";
@@ -89,7 +89,7 @@ public class TopCommand : AbstractCommand<Message?, CallbackQuery>
             .WithDeleteButton();
 
         return await TelegramBotClient.SendMessage(
-            chatId: Data.Message.Chat.Id,
+            chatId: Data.Message!.Chat.Id,
             text: replyText,
             replyMarkup: inlineKeyboard);
     }

@@ -2,7 +2,7 @@
 
 public class MusicSetlists
 {
-    public List<MusicSetlist> Setlist { get; set; }
+    public List<MusicSetlist> Setlist { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets the total amount of items matching the query

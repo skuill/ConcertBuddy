@@ -27,7 +27,7 @@ public class MusicSetlist
 
     public bool IsFutureEvent()
     {
-        return DateTime.ParseExact(EventDate, "dd-MM-yyyy", CultureInfo.InvariantCulture).Date >= DateTime.Today;
+        return DateTime.ParseExact(EventDate!, "dd-MM-yyyy", CultureInfo.InvariantCulture).Date >= DateTime.Today;
     }
 
     public bool IsSetsExist()

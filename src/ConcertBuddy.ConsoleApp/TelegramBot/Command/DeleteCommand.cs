@@ -40,12 +40,12 @@ public class DeleteCommand : AbstractCommand<Message?, CallbackQuery>
 
             foreach (var messageId in messageIds)
             {
-                await TelegramBotClient.DeleteMessage(Data!.Message.Chat.Id, int.Parse(messageId));
+                await TelegramBotClient.DeleteMessage(Data.Message!.Chat.Id, int.Parse(messageId));
             }
         }
 
-        await TelegramBotClient.DeleteMessage(Data!.Message.Chat.Id, Data.Message.MessageId);
-        
+        await TelegramBotClient.DeleteMessage(Data.Message!.Chat.Id, Data.Message.MessageId);
+
         return null;
     }
 }

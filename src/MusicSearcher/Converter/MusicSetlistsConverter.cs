@@ -12,7 +12,7 @@ internal static class MusicSetlistsConverter
             ItemsPerPage = setlists.ItemsPerPage,
             Page = setlists.Page,
             Total = setlists.Total,
-            Setlist = setlists.Setlist?.Select(s => s.ToInternal()).ToList()
+            Setlist = setlists.Setlist?.Select(s => s.ToInternal()).ToList()!
         };
     }
 }

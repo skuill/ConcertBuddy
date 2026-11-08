@@ -2,5 +2,5 @@
 
 public class MusicSets
 {
-    public List<MusicSet> Set { get; set; }
+    public List<MusicSet> Set { get; set; } = null!;
 }

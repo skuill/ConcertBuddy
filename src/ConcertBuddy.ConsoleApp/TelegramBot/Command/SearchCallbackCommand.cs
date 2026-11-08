@@ -57,7 +57,7 @@ public class SearchCallbackCommand : AbstractCommand<Message?, CallbackQuery>
             replyText = $"Please pass artist's name as a parameter. For example: [{CurrentCommand} The Beatles]";
 
             return await TelegramBotClient.SendMessage(
-                chatId: Data.Message.Chat.Id,
+                chatId: Data.Message!.Chat.Id,
                 text: replyText,
                 replyMarkup: new ReplyKeyboardRemove());
         }
@@ -74,7 +74,7 @@ public class SearchCallbackCommand : AbstractCommand<Message?, CallbackQuery>
             if (offset == SearchConstants.SEARCH_ARTISTS_OFFSET_DEFAULT)
             {
                 _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist [{artistName}]");
-                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
             }
 
             InlineKeyboardMarkup navigationKeyboard = InlineKeyboardMarkup.Empty()
@@ -82,7 +82,7 @@ public class SearchCallbackCommand : AbstractCommand<Message?, CallbackQuery>
 
             replyText = "Nothing found here 😕! Try another search or go back";
             return await TelegramBotClient.EditMessageText(
-                chatId: Data.Message.Chat.Id,
+                chatId: Data.Message!.Chat.Id,
                 messageId: Data.Message.MessageId,
                 text: replyText,
                 replyMarkup: navigationKeyboard);
@@ -100,7 +100,7 @@ public class SearchCallbackCommand : AbstractCommand<Message?, CallbackQuery>
         replyText = "Choose the correct artist 💭:";
 
         return await TelegramBotClient.EditMessageText(
-            chatId: Data.Message.Chat.Id,
+            chatId: Data.Message!.Chat.Id,
             messageId: Data.Message.MessageId,
             text: replyText,
             replyMarkup: inlineKeyboard);

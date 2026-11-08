@@ -53,13 +53,13 @@ public class TrackCommand : AbstractCommand<Message?, CallbackQuery>
         if (artist == null)
         {
             _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist with mbid [{mbid}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
         }
 
         if (string.IsNullOrWhiteSpace(artist.Name))
         {
             _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist name by mbid [{mbid}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
         }
 
         var track = await MusicSearcherClient.SearchTrack(artist.Name, trackName);
@@ -67,7 +67,7 @@ public class TrackCommand : AbstractCommand<Message?, CallbackQuery>
         if (track == null)
         {
             _logger?.LogError($"Command: [{CurrentCommand}]. Can't find track [{artist} - {trackName}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
         }
 
         InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetLyricInlineKeyboardMenu(mbid, trackName);
@@ -81,7 +81,7 @@ public class TrackCommand : AbstractCommand<Message?, CallbackQuery>
         if (!string.IsNullOrEmpty(trackLink))
         {
             var sendAudioResult = await TelegramBotClient.SendAudio(
-                chatId: Data.Message.Chat.Id,
+                chatId: Data.Message!.Chat.Id,
                 performer: artist.Name,
                 title: track.TrackName,
                 audio: InputFile.FromString(trackLink),
@@ -96,7 +96,7 @@ public class TrackCommand : AbstractCommand<Message?, CallbackQuery>
         _logger?.LogWarning($"Command: [{CurrentCommand}]. Can't send audio: {artist.Name} - {track.TrackName}");
 
         return await TelegramBotClient.SendMessage(
-            chatId: Data.Message.Chat.Id,
+            chatId: Data.Message!.Chat.Id,
             text: trackMarkdown,
             replyMarkup: inlineKeyboard,
             parseMode: ParseMode.Html);

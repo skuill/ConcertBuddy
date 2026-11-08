@@ -24,7 +24,7 @@ public static class InlineKeyboardHelper
         foreach (var song in set.Songs)
         {
             string callbackText = $"{counter++}. {song.ToString()}";
-            string callbackData = GetTrackCallbackData(song.Name, mbid);
+            string callbackData = GetTrackCallbackData(song.Name!, mbid);
             inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
         }
         return new InlineKeyboardMarkup(inlineKeyboardButtons);
@@ -37,7 +37,7 @@ public static class InlineKeyboardHelper
         foreach (var track in tracks)
         {
             string callbackText = $"{counter++}. {track.TrackName}";
-            string callbackData = GetTrackCallbackData(track.TrackName, mbid);
+            string callbackData = GetTrackCallbackData(track.TrackName!, mbid);
             inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
         }
         return new InlineKeyboardMarkup(inlineKeyboardButtons);
@@ -83,15 +83,15 @@ public static class InlineKeyboardHelper
         List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
         inlineKeyboardButtons.Add(new[] {
             InlineKeyboardButton.WithCallbackData(
-                "🎓 Biography", 
+                "🎓 Biography",
                 string.Format(
-                    CommandList.CALLBACK_DATA_FORMAT_BIOGRAPHY, 
+                    CommandList.CALLBACK_DATA_FORMAT_BIOGRAPHY,
                     mbid)),
             InlineKeyboardButton.WithCallbackData(
-                "📝 Setlists", 
+                "📝 Setlists",
                 string.Format(
-                    CommandList.CALLBACK_DATA_FORMAT_SETLISTS, 
-                    SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT, 
+                    CommandList.CALLBACK_DATA_FORMAT_SETLISTS,
+                    SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT,
                     SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT, // two default values mean that it is newly created message
                     mbid)),
         });

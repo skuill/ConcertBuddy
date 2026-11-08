@@ -65,7 +65,7 @@ public class FileRequestCache : IRequestCache
     {
         var item = CacheEntry.Read(path, request);
 
-        stream = null;
+        stream = null!;
 
         if (item == null)
         {
@@ -122,13 +122,13 @@ public class FileRequestCache : IRequestCache
         //      0  Timestamp (Int64 = 8 bytes)
         //      8  Request string (char*, max 504 bytes, null-terminated)
 
-        public Stream Stream { get; private set; }
+        public Stream Stream { get; private set; } = null!;
 
         public DateTime TimeStamp { get; private set; }
 
-        public string Request { get; set; }
+        public string Request { get; set; } = null!;
 
-        public static CacheEntry Read(string path, string request)
+        public static CacheEntry? Read(string path, string request)
         {
             const int REQUEST_LENGTH = HEADER_LENGTH - 8; // sizeof(long)
 

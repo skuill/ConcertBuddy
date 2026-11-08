@@ -30,9 +30,9 @@ public class MusicSearcherClient : IMusicSearcherClient
     private IMemoryCache? _artistMemoryCache;
     private readonly MemoryCacheEntryOptions _memoryCacheEntryOptions;
 
-    private readonly ILyricsScraperClient _lyricsScraperClient;
+    private readonly ILyricsScraperClient _lyricsScraperClient = null!;
 
-    private readonly ISetlistFmServiceClient _setlistFmClient;
+    private readonly ISetlistFmServiceClient _setlistFmClient = null!;
 
     private bool _isMemoryCacheEnabled;
     public bool IsMemoryCacheEnabled => _isMemoryCacheEnabled;
@@ -82,7 +82,7 @@ public class MusicSearcherClient : IMusicSearcherClient
     // TODO: Add additional check for aliases in case of abbreviations. For example: RHCP
     public async Task<MusicArtistBase> SearchArtistByName(string name, ScoreType scoreType = ScoreType.MusicBrainz)
     {
-        return (await SearchArtistsByName(name, scoreType, 5)).FirstOrDefault();
+        return (await SearchArtistsByName(name, scoreType, 5)).FirstOrDefault()!;
     }
 
     // TODO: Add additional check for aliases in case of abbreviations. For example: RHCP
@@ -127,7 +127,7 @@ public class MusicSearcherClient : IMusicSearcherClient
             if (IsMemoryCacheEnabled)
                 isResultFromCache = _artistMemoryCache!.TryGetValue(artistMBID, out result);
             if (isResultFromCache)
-                return result;
+                return result!;
 
             result = new MusicArtist();
             result.Add(new MusicBrainzMusicArtist(await _musicBrainzClient.Artists.GetAsync(artistMBID)));
@@ -265,7 +265,7 @@ public class MusicSearcherClient : IMusicSearcherClient
                 _logger?.LogError(ex, $"Can't get top tracks from music service [{musicServiceClient.GetType().Name}]");
             }
         }
-        return result;
+        return result!;
     }
 
     /// <inheritdoc />

@@ -54,7 +54,7 @@ public class ArtistCommand : AbstractCommand<Message?, CallbackQuery>
         if (artist == null)
         {
             _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist by mbid [{artistMBID}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
         }
 
         var lastFmUrl = artist[MusicServiceType.LastFm]?.ExternalUrl;
@@ -72,14 +72,14 @@ public class ArtistCommand : AbstractCommand<Message?, CallbackQuery>
 
         if (artist.ImageUri != null)
             return await TelegramBotClient.SendPhoto(
-                chatId: Data.Message.Chat.Id,
+                chatId: Data.Message!.Chat.Id,
                 caption: replyText,
                 photo: InputFile.FromUri(artist.ImageUri),
                 replyMarkup: inlineKeyboard,
                 parseMode: ParseMode.Html);
 
         return await TelegramBotClient.SendMessage(
-            chatId: Data.Message.Chat.Id,
+            chatId: Data.Message!.Chat.Id,
             text: replyText,
             replyMarkup: inlineKeyboard,
             parseMode: ParseMode.Html);

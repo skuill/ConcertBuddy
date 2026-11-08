@@ -9,7 +9,7 @@ internal static class MusicSetsConverter
     {
         return new MusicSets
         {
-            Set = sets.Set?.Select(s => s.ToInternal()).ToList()
+            Set = sets.Set?.Select(s => s.ToInternal()).ToList()!
         };
     }
 }

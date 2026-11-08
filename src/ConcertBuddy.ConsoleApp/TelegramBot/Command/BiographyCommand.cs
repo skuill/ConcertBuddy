@@ -56,7 +56,7 @@ public class BiographyCommand : AbstractCommand<Message?, CallbackQuery>
         InlineKeyboardMarkup inlineKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton();
 
         return await TelegramBotClient.SendMessage(
-            chatId: Data.Message.Chat.Id,
+            chatId: Data.Message!.Chat.Id,
             text: replyText,
             replyMarkup: inlineKeyboard,
             parseMode: ParseMode.Html);

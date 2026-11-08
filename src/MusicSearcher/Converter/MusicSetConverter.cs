@@ -11,7 +11,7 @@ internal static class MusicSetConverter
         {
             Encore = set.Encore,
             Name = set.Name,
-            Songs = set.Songs?.Select(s => s.ToInternal()).ToList()
+            Songs = set.Songs?.Select(s => s.ToInternal()).ToList()!
         };
     }
 }

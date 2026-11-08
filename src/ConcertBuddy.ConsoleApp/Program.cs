@@ -18,9 +18,9 @@ public class Program
 
         AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(UnhandledExceptionsHandler);
 
-        var botClient = new TelegramBotClient(Configuration.TelegramToken);
+        var botClient = new TelegramBotClient(Configuration.TelegramToken!);
 
-        IBotHandlers botHandler = ServiceProviderSingleton.Source.GetService<IBotHandlers>();
+        IBotHandlers botHandler = ServiceProviderSingleton.Source.GetService<IBotHandlers>()!;
 
         using var cts = new CancellationTokenSource();
 

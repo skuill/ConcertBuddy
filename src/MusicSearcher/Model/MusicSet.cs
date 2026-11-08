@@ -6,7 +6,7 @@ public class MusicSet
 
     public int? Encore { get; set; }
 
-    public List<MusicSong> Songs { get; set; }
+    public List<MusicSong> Songs { get; set; } = null!;
 
     public override string ToString()
     {

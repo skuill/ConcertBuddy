@@ -9,7 +9,7 @@ public class MusicTrack : MusicTrackBase, IEnumerable<MusicTrackBase>
     private List<MusicTrackBase> _musicTracks;
 
     // Indexer with only a get accessor with the expression-bodied definition:
-    public MusicTrackBase this[MusicServiceType musicServiceType] => GetMusicTrackByServiceType(musicServiceType);
+    public MusicTrackBase? this[MusicServiceType musicServiceType] => GetMusicTrackByServiceType(musicServiceType);
 
     public MusicTrack()
     {

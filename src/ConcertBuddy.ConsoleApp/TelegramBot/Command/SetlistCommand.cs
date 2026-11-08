@@ -53,7 +53,7 @@ public class SetlistCommand : AbstractCommand<Message?, CallbackQuery>
         if (setlist == null)
         {
             _logger?.LogError($"Command: [{CurrentCommand}]. Can't find setlist by Id: [{setlistId}], mbid: [{artistMBID}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
         }
 
         if (!setlist.IsSetsExist())
@@ -64,7 +64,7 @@ public class SetlistCommand : AbstractCommand<Message?, CallbackQuery>
                 ? "ℹ️ There are no songs in this setlist because the concert hasn't started yet. Please try again later.."
                 : "ℹ️ Sorry, there are no information about songs in this setlist yet..";
 
-            return await MessageHelper.SendTextMessageAsync(TelegramBotClient, Data.Message.Chat.Id, reasonMessage);
+            return await MessageHelper.SendTextMessageAsync(TelegramBotClient, Data.Message!.Chat.Id, reasonMessage);
         }
 
         // Save message ids for delete command 
@@ -73,7 +73,7 @@ public class SetlistCommand : AbstractCommand<Message?, CallbackQuery>
         replyText = setlist.ToString();
 
         messageIds.Add((await TelegramBotClient.SendMessage(
-            chatId: Data.Message.Chat.Id,
+            chatId: Data.Message!.Chat.Id,
             text: replyText,
             replyMarkup: new ReplyKeyboardRemove())).MessageId);
 

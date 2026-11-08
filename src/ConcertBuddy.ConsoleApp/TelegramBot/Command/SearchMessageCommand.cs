@@ -51,10 +51,10 @@ public class SearchMessageCommand : AbstractCommand<Message?, Message>
         bool isForwardNavigationEnabled = artists.Count() == SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT;
         InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists)
             .WithNavigationButtons(
-                CommandList.CALLBACK_DATA_FORMAT_SEARCH, 
-                artistName, 
-                0, 
-                limit: SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT, 
+                CommandList.CALLBACK_DATA_FORMAT_SEARCH,
+                artistName,
+                0,
+                limit: SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT,
                 isForwardNavigationEnabled: isForwardNavigationEnabled);
 
         replyText = "Choose the correct artist 💭:";

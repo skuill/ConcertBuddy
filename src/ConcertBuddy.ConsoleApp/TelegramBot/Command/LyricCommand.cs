@@ -58,13 +58,13 @@ public class LyricCommand : AbstractCommand<Message?, CallbackQuery>
         if (artist == null)
         {
             _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist with mbid [{mbid}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
         }
 
         if (string.IsNullOrWhiteSpace(artist.Name))
         {
             _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist name by mbid [{mbid}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
         }
 
         var recording = await recordingTask;
@@ -75,14 +75,14 @@ public class LyricCommand : AbstractCommand<Message?, CallbackQuery>
         if (string.IsNullOrWhiteSpace(trackActualName))
         {
             _logger?.LogError($"Command: [{CurrentCommand}]. Can't find actual track by provided name: [{artist.Name} - {trackName}].");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
         }
 
         var searchResult = await MusicSearcherClient.SearchLyric(artist.Name, trackActualName);
         if (!searchResult.IsSuccessSearchResult)
         {
             _logger?.LogError($"Command: [{CurrentCommand}]. Can't find lyric for track [{artist.Name} - {trackActualName}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
         }
 
         if (searchResult.Instrumental)
@@ -97,8 +97,8 @@ public class LyricCommand : AbstractCommand<Message?, CallbackQuery>
         InlineKeyboardMarkup inlineKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton();
 
         return await TelegramBotClient.SendMessage(
-            chatId: Data.Message.Chat.Id,
-            text: replyText,
+            chatId: Data.Message!.Chat.Id,
+            text: replyText!,
             replyMarkup: inlineKeyboard);
     }
 }

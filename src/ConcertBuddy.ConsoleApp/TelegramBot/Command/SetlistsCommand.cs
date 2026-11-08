@@ -51,7 +51,7 @@ public class SetlistsCommand : AbstractCommand<Message?, CallbackQuery>
             || !int.TryParse(parameters[1], out var previousPage))
         {
             _logger?.LogError($"Command: [{CurrentCommand}]. Can't parse parameter: [{parameters[0]}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
         }
 
         var artistMBID = parameters[2];
@@ -71,7 +71,7 @@ public class SetlistsCommand : AbstractCommand<Message?, CallbackQuery>
                 var deleteKeyboard = InlineKeyboardMarkup.Empty()
                     .WithDeleteButton();
                 return await TelegramBotClient.SendMessage(
-                    chatId: Data.Message.Chat.Id,
+                    chatId: Data.Message!.Chat.Id,
                     text: replyText,
                     replyMarkup: deleteKeyboard);
             }
@@ -85,7 +85,7 @@ public class SetlistsCommand : AbstractCommand<Message?, CallbackQuery>
                     isForwardNavigationEnabled: false);
 
             return await TelegramBotClient.SendMessage(
-                chatId: Data.Message.Chat.Id,
+                chatId: Data.Message!.Chat.Id,
                 text: replyText,
                 replyMarkup: navigationKeyboard);
         }
@@ -102,14 +102,14 @@ public class SetlistsCommand : AbstractCommand<Message?, CallbackQuery>
 
         if (currentPage != previousPage)
             return await TelegramBotClient.EditMessageText(
-                chatId: Data.Message.Chat.Id,
+                chatId: Data.Message!.Chat.Id,
                 messageId: Data.Message.MessageId,
                 text: replyText,
                 replyMarkup: inlineKeyboard,
                 parseMode: ParseMode.Html);
 
         return await TelegramBotClient.SendMessage(
-            chatId: Data.Message.Chat.Id,
+            chatId: Data.Message!.Chat.Id,
             text: replyText,
             replyMarkup: inlineKeyboard,
             parseMode: ParseMode.Html);
