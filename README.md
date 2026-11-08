@@ -6,12 +6,10 @@ Your personal Telegram bot for discovering artists, setlists, and lyrics. Perfec
 <img src="https://github.com/skuill/ConcertBuddy/blob/master/resources/BotImage.png" align="center" width="40%" height="40%">
 </p>
 <p align="center">
-  <a href="https://github.com/skuill/ConcertBuddy/actions/workflows/cicd.yml" ><img src="https://github.com/skuill/ConcertBuddy/actions/workflows/cicd.yml/badge.svg"/>
-  <a href="https://www.codefactor.io/repository/github/skuill/concertbuddy"><img src="https://www.codefactor.io/repository/github/skuill/concertbuddy/badge" alt="CodeFactor" /></a>
-  <a href="https://hub.docker.com/r/skuill/concertbuddyconsoleapp">
-    <img src="https://img.shields.io/docker/v/skuill/concertbuddyconsoleapp" alt="Docker Image Tag"/>
-  </a>
- </a>
+  <a href="https://github.com/skuill/ConcertBuddy/actions/workflows/cicd.yml"><img src="https://github.com/skuill/ConcertBuddy/actions/workflows/cicd.yml/badge.svg" alt="CI/CD"/></a>
+  <a href="https://www.codefactor.io/repository/github/skuill/concertbuddy"><img src="https://www.codefactor.io/repository/github/skuill/concertbuddy/badge" alt="CodeFactor"/></a>
+  <a href="https://codecov.io/gh/skuill/ConcertBuddy"><img src="https://codecov.io/gh/skuill/ConcertBuddy/graph/badge.svg" alt="Codecov"/></a>
+  <a href="https://hub.docker.com/r/skuill/concertbuddyconsoleapp"><img src="https://img.shields.io/docker/v/skuill/concertbuddyconsoleapp" alt="Docker Image Tag"/></a>
 </p>
  
 ## Table of contents
