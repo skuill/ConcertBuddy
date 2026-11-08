@@ -9,7 +9,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace ConcertBuddy.ConsoleApp.Tests.TelegramBot.Helper;
 
-public sealed class InlineKeyboardHelperTest : IDisposable
+public sealed class InlineKeyboardHelperTest
 {
     private const string Mbid = "827e1b52-1782-4e73-b8e7-a7b6939370f5";
     private const int CallbackDataMaxBytes = 64;
@@ -21,12 +21,6 @@ public sealed class InlineKeyboardHelperTest : IDisposable
         string.Concat(Enumerable.Repeat("🎸", 30)),
         "Стволок за поясок и ещё немного русского текста 🎸 with mixed English",
     };
-
-    public void Dispose()
-    {
-        Configuration.LastFmApiKey = null;
-        Configuration.LastFmApiSecret = null;
-    }
 
     [Theory]
     [MemberData(nameof(LongNames))]
@@ -155,12 +149,8 @@ public sealed class InlineKeyboardHelperTest : IDisposable
     [Fact]
     public void GetArtistInlineKeyboardMenu_LastFmAvailable_HasTopTracksButton()
     {
-        // Arrange
-        Configuration.LastFmApiKey = "key";
-        Configuration.LastFmApiSecret = "secret";
-
         // Act
-        var result = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(Mbid);
+        var result = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(Mbid, isTopTracksAvailable: true);
 
         // Assert
         Buttons(result).Select(x => x.Text).ShouldBe(new[] { "🎓 Biography", "📝 Setlists", "📻 Top tracks" });
@@ -170,7 +160,7 @@ public sealed class InlineKeyboardHelperTest : IDisposable
     public void GetArtistInlineKeyboardMenu_LastFmNotAvailable_NoTopTracksButton()
     {
         // Act
-        var result = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(Mbid);
+        var result = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(Mbid, isTopTracksAvailable: false);
 
         // Assert
         Buttons(result).Select(x => x.Text).ShouldBe(new[] { "🎓 Biography", "📝 Setlists" });

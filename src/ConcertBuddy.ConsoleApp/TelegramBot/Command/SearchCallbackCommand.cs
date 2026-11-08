@@ -14,11 +14,12 @@ public class SearchCallbackCommand : AbstractCommand<Message?, CallbackQuery>
 {
     private const string CurrentCommand = CommandList.COMMAND_SEARCH;
 
-    private ILogger<SearchCallbackCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SearchCallbackCommand>>();
+    private readonly ILogger<SearchCallbackCommand> _logger;
 
-    public SearchCallbackCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+    public SearchCallbackCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ILogger<SearchCallbackCommand> logger, CallbackQuery data)
         : base(musicSearcherClient, telegramBotClient, data)
     {
+        _logger = logger;
     }
 
     public override async Task<Message?> ExecuteAsync()

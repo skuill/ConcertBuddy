@@ -14,11 +14,12 @@ public class TopCommand : AbstractCommand<Message?, CallbackQuery>
 {
     private const string CurrentCommand = CommandList.COMMAND_TOP;
 
-    private ILogger<TopCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<TopCommand>>();
+    private readonly ILogger<TopCommand> _logger;
 
-    public TopCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+    public TopCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ILogger<TopCommand> logger, CallbackQuery data)
         : base(musicSearcherClient, telegramBotClient, data)
     {
+        _logger = logger;
     }
 
     public override async Task<Message?> ExecuteAsync()

@@ -14,11 +14,12 @@ public class BiographyCommand : AbstractCommand<Message?, CallbackQuery>
 {
     private const string CurrentCommand = CommandList.COMMAND_BIOGRAPHY;
 
-    private ILogger<BiographyCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<BiographyCommand>>();
+    private readonly ILogger<BiographyCommand> _logger;
 
-    public BiographyCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+    public BiographyCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ILogger<BiographyCommand> logger, CallbackQuery data)
         : base(musicSearcherClient, telegramBotClient, data)
     {
+        _logger = logger;
     }
 
     public override async Task<Message?> ExecuteAsync()

@@ -1,7 +1,7 @@
 ﻿using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Command;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MusicSearcher;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
@@ -12,12 +12,12 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 public class BotHandlers : IBotHandlers
 {
     private readonly ILogger<IBotHandlers> _logger;
-    private readonly IMusicSearcherClient _musicSearcherClient;
+    private readonly IServiceProvider _serviceProvider;
 
-    public BotHandlers(ILogger<IBotHandlers> logger, IMusicSearcherClient musicSearcherClient)
+    public BotHandlers(ILogger<IBotHandlers> logger, IServiceProvider serviceProvider)
     {
         _logger = logger;
-        _musicSearcherClient = musicSearcherClient;
+        _serviceProvider = serviceProvider;
     }
 
     public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -47,11 +47,11 @@ public class BotHandlers : IBotHandlers
             // UpdateType.PreCheckoutQuery:
             // UpdateType.Poll:
             // UpdateType.InlineQuery:
-            UpdateType.Message => BotOnMessageReceived(botClient, update.Message!),
-            UpdateType.EditedMessage => BotOnMessageReceived(botClient, update.EditedMessage!),
-            UpdateType.CallbackQuery => BotOnCallbackQueryReceived(botClient, update.CallbackQuery!),
-            UpdateType.ChosenInlineResult => BotOnChosenInlineResultReceived(botClient, update.ChosenInlineResult!),
-            _ => UnknownUpdateHandlerAsync(botClient, update)
+            UpdateType.Message => BotOnMessageReceived(update.Message!),
+            UpdateType.EditedMessage => BotOnMessageReceived(update.EditedMessage!),
+            UpdateType.CallbackQuery => BotOnCallbackQueryReceived(update.CallbackQuery!),
+            UpdateType.ChosenInlineResult => BotOnChosenInlineResultReceived(update.ChosenInlineResult!),
+            _ => UnknownUpdateHandlerAsync(update)
         };
 
         try
@@ -64,42 +64,49 @@ public class BotHandlers : IBotHandlers
         }
     }
 
-    private async Task BotOnMessageReceived(ITelegramBotClient botClient, Message message)
+    private async Task BotOnMessageReceived(Message message)
     {
         if (message.Type != MessageType.Text)
             return;
-        var action = message.GetSplitMessageText()[0] switch
+        Task action = message.GetSplitMessageText()[0] switch
         {
-            $"{CommandList.COMMAND_START}" => new UsageCommand(_musicSearcherClient, botClient, message).ExecuteAsync(),
-            _ => new SearchMessageCommand(_musicSearcherClient, botClient, message).ExecuteAsync()
+            $"{CommandList.COMMAND_START}" => Create<UsageCommand>(message).ExecuteAsync(),
+            _ => Create<SearchMessageCommand>(message).ExecuteAsync()
         };
+        await action;
     }
 
     // Process Inline Keyboard callback data
-    private async Task BotOnCallbackQueryReceived(ITelegramBotClient botClient, CallbackQuery callbackQuery)
+    private async Task BotOnCallbackQueryReceived(CallbackQuery callbackQuery)
     {
-        var action = callbackQuery.GetSplitMessageText()[0] switch
+        Task action = callbackQuery.GetSplitMessageText()[0] switch
         {
-            $"{CommandList.COMMAND_ARTIST}" => new ArtistCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_SEARCH}" => new SearchCallbackCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_BIOGRAPHY}" => new BiographyCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_SETLISTS}" => new SetlistsCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_SETLIST}" => new SetlistCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_TRACK}" => new TrackCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_LYRIC}" => new LyricCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_DELETE}" => new DeleteCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_TOP}" => new TopCommand(_musicSearcherClient, botClient, callbackQuery).ExecuteAsync(),
-            _ => new UsageCommand(_musicSearcherClient, botClient, callbackQuery.Message!).ExecuteAsync()
+            $"{CommandList.COMMAND_ARTIST}" => Create<ArtistCommand>(callbackQuery).ExecuteAsync(),
+            $"{CommandList.COMMAND_SEARCH}" => Create<SearchCallbackCommand>(callbackQuery).ExecuteAsync(),
+            $"{CommandList.COMMAND_BIOGRAPHY}" => Create<BiographyCommand>(callbackQuery).ExecuteAsync(),
+            $"{CommandList.COMMAND_SETLISTS}" => Create<SetlistsCommand>(callbackQuery).ExecuteAsync(),
+            $"{CommandList.COMMAND_SETLIST}" => Create<SetlistCommand>(callbackQuery).ExecuteAsync(),
+            $"{CommandList.COMMAND_TRACK}" => Create<TrackCommand>(callbackQuery).ExecuteAsync(),
+            $"{CommandList.COMMAND_LYRIC}" => Create<LyricCommand>(callbackQuery).ExecuteAsync(),
+            $"{CommandList.COMMAND_DELETE}" => Create<DeleteCommand>(callbackQuery).ExecuteAsync(),
+            $"{CommandList.COMMAND_TOP}" => Create<TopCommand>(callbackQuery).ExecuteAsync(),
+            _ => Create<UsageCommand>(callbackQuery.Message!).ExecuteAsync()
         };
+        await action;
     }
 
-    private Task BotOnChosenInlineResultReceived(ITelegramBotClient botClient, ChosenInlineResult chosenInlineResult)
+    private TCommand Create<TCommand>(object data) where TCommand : class
+    {
+        return ActivatorUtilities.CreateInstance<TCommand>(_serviceProvider, data);
+    }
+
+    private Task BotOnChosenInlineResultReceived(ChosenInlineResult chosenInlineResult)
     {
         _logger?.LogInformation($"Received inline result: {chosenInlineResult.ResultId}");
         return Task.CompletedTask;
     }
 
-    private Task UnknownUpdateHandlerAsync(ITelegramBotClient botClient, Update update)
+    private Task UnknownUpdateHandlerAsync(Update update)
     {
         _logger?.LogInformation($"Unknown update type: {update.Type}");
         return Task.CompletedTask;

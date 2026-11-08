@@ -80,7 +80,7 @@ public static class InlineKeyboardHelper
         return new InlineKeyboardMarkup(inlineKeyboardButtons);
     }
 
-    public static InlineKeyboardMarkup GetArtistInlineKeyboardMenu(string mbid)
+    public static InlineKeyboardMarkup GetArtistInlineKeyboardMenu(string mbid, bool isTopTracksAvailable)
     {
         List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
         inlineKeyboardButtons.Add(new[] {
@@ -98,7 +98,7 @@ public static class InlineKeyboardHelper
                     mbid)),
         });
 
-        if (Configuration.IsLastFmAvailable())
+        if (isTopTracksAvailable)
             inlineKeyboardButtons.Add(new[] {
                 InlineKeyboardButton.WithCallbackData("📻 Top tracks", string.Format(CommandList.CALLBACK_DATA_FORMAT_TOP, SearchType.Track.ConvertToString(), mbid))
             });
