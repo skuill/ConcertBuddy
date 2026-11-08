@@ -14,11 +14,12 @@ public class TrackCommand : AbstractCommand<Message?, CallbackQuery>
 {
     private const string CurrentCommand = CommandList.COMMAND_TRACK;
 
-    private ILogger<TrackCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<TrackCommand>>();
+    private readonly ILogger<TrackCommand> _logger;
 
-    public TrackCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+    public TrackCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ILogger<TrackCommand> logger, CallbackQuery data)
         : base(musicSearcherClient, telegramBotClient, data)
     {
+        _logger = logger;
     }
 
     public override async Task<Message?> ExecuteAsync()

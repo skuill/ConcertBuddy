@@ -2,6 +2,7 @@
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MusicSearcher;
 using MusicSearcher.Model;
 using MusicSearcher.MusicService;
@@ -16,11 +17,14 @@ public class ArtistCommand : AbstractCommand<Message?, CallbackQuery>
 {
     private const string CurrentCommand = CommandList.COMMAND_ARTIST;
 
-    private ILogger<ArtistCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<ArtistCommand>>();
+    private readonly ILogger<ArtistCommand> _logger;
+    private readonly Configuration _configuration;
 
-    public ArtistCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+    public ArtistCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, IOptions<Configuration> configuration, ILogger<ArtistCommand> logger, CallbackQuery data)
         : base(musicSearcherClient, telegramBotClient, data)
     {
+        _logger = logger;
+        _configuration = configuration.Value;
     }
 
     public override async Task<Message?> ExecuteAsync()
@@ -63,7 +67,7 @@ public class ArtistCommand : AbstractCommand<Message?, CallbackQuery>
         if (lastFmUrl != default)
             replyText = replyText + "<i>Links</i>: <a href=\"" + lastFmUrl.ToString() + "\">last.fm</a>";
 
-        InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(artistMBID)
+        InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(artistMBID, _configuration.IsLastFmAvailable())
             .WithDeleteButton();
 
         await TelegramBotClient.AnswerCallbackQuery(

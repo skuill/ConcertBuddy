@@ -11,11 +11,12 @@ public class DeleteCommand : AbstractCommand<Message?, CallbackQuery>
 {
     private const string CurrentCommand = CommandList.COMMAND_DELETE;
 
-    private ILogger<DeleteCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<DeleteCommand>>();
+    private readonly ILogger<DeleteCommand> _logger;
 
-    public DeleteCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+    public DeleteCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ILogger<DeleteCommand> logger, CallbackQuery data)
         : base(musicSearcherClient, telegramBotClient, data)
     {
+        _logger = logger;
     }
 
     public override async Task<Message?> ExecuteAsync()

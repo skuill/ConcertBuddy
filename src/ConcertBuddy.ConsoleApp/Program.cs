@@ -1,58 +1,43 @@
-﻿using ConcertBuddy.ConsoleApp.TelegramBot.Handler;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
-using Telegram.Bot;
-using Telegram.Bot.Polling;
+using Serilog;
 
 namespace ConcertBuddy.ConsoleApp;
 
 public class Program
 {
-    private static ILogger<Program>? _logger;
-
-    public static void Main(string[] args)
+    public static async Task<int> Main(string[] args)
     {
-        _logger = ServiceProviderSingleton.Source.GetService<ILogger<Program>>();
-
-        _logger?.LogInformation($"Start ConcertBoddy application.");
-
-        AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(UnhandledExceptionsHandler);
-
-        var botClient = new TelegramBotClient(Configuration.TelegramToken!);
-
-        IBotHandlers botHandler = ServiceProviderSingleton.Source.GetService<IBotHandlers>()!;
-
-        using var cts = new CancellationTokenSource();
-
-        // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
-        var receiverOptions = new ReceiverOptions
+        try
         {
-            AllowedUpdates = { } // receive all update types
-        };
-        botClient.StartReceiving(
-            botHandler!.HandleUpdateAsync,
-            botHandler!.HandleErrorAsync,
-            receiverOptions,
-            cancellationToken: cts.Token);
-
-        var botUser = botClient.GetMe().GetAwaiter().GetResult();
-
-        Console.Title = botUser.Username ?? "My awesome Bot";
-
-        var assemblyVersion = Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString();
-        var currentEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-        _logger?.LogInformation($"Bot {botUser.FirstName} [{botUser.Id}] start listening. Version: [{assemblyVersion}]. Environment: [{currentEnvironment}]");
-
-        Console.ReadLine();
-
-        _logger?.LogInformation($"Stop ConcertBoddy application.");
-        // Send cancellation request to stop bot
-        cts.Cancel();
-        return;
+            await CreateHost(args).RunAsync();
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "The application failed");
+            return 1;
+        }
+        finally
+        {
+            await Log.CloseAndFlushAsync();
+        }
     }
 
-    static void UnhandledExceptionsHandler(object sender, UnhandledExceptionEventArgs ex)
+    public static IHost CreateHost(string[] args, Action<IServiceCollection>? configureServices = null)
     {
-        _logger?.LogCritical((ex.ExceptionObject as Exception)?.ToString());
+        var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
+        {
+            Args = args,
+            // The server and launchSettings.json set this variable.
+            EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+        });
+
+        builder.Logging.ClearProviders();
+        builder.Services.AddConcertBuddy(builder.Configuration);
+        configureServices?.Invoke(builder.Services);
+
+        return builder.Build();
     }
 }

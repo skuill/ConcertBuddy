@@ -13,11 +13,12 @@ public class SearchMessageCommand : AbstractCommand<Message?, Message>
 {
     private const string CurrentCommand = CommandList.COMMAND_SEARCH;
 
-    private ILogger<SearchMessageCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SearchMessageCommand>>();
+    private readonly ILogger<SearchMessageCommand> _logger;
 
-    public SearchMessageCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, Message data)
+    public SearchMessageCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ILogger<SearchMessageCommand> logger, Message data)
         : base(musicSearcherClient, telegramBotClient, data)
     {
+        _logger = logger;
     }
 
     public override async Task<Message?> ExecuteAsync()

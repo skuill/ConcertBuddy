@@ -9,11 +9,12 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command;
 
 public class UsageCommand : AbstractCommand<Message?, Message>
 {
-    private ILogger<UsageCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<UsageCommand>>();
+    private readonly ILogger<UsageCommand> _logger;
 
-    public UsageCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, Message data)
+    public UsageCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ILogger<UsageCommand> logger, Message data)
         : base(musicSearcherClient, telegramBotClient, data)
     {
+        _logger = logger;
     }
 
     public override async Task<Message?> ExecuteAsync()

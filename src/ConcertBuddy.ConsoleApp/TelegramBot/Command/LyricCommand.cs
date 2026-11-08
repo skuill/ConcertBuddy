@@ -13,11 +13,12 @@ public class LyricCommand : AbstractCommand<Message?, CallbackQuery>
 {
     private const string CurrentCommand = CommandList.COMMAND_LYRIC;
 
-    private ILogger<LyricCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<LyricCommand>>();
+    private readonly ILogger<LyricCommand> _logger;
 
-    public LyricCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+    public LyricCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ILogger<LyricCommand> logger, CallbackQuery data)
         : base(musicSearcherClient, telegramBotClient, data)
     {
+        _logger = logger;
     }
 
     public override async Task<Message?> ExecuteAsync()

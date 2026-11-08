@@ -15,11 +15,12 @@ public class SetlistsCommand : AbstractCommand<Message?, CallbackQuery>
 {
     private const string CurrentCommand = CommandList.COMMAND_SETLISTS;
 
-    private ILogger<SetlistsCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SetlistsCommand>>();
+    private readonly ILogger<SetlistsCommand> _logger;
 
-    public SetlistsCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+    public SetlistsCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ILogger<SetlistsCommand> logger, CallbackQuery data)
         : base(musicSearcherClient, telegramBotClient, data)
     {
+        _logger = logger;
     }
 
     public override async Task<Message?> ExecuteAsync()

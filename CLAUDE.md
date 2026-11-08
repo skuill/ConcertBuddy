@@ -9,6 +9,7 @@ Notes for AI coding agents working in this repository. Personal or machine-speci
 ## Layout
 - Bot commands: `src/ConcertBuddy.ConsoleApp/TelegramBot/Command/`; routing `TelegramBot/Handler/BotHandlers.cs`.
 - External music services: `src/MusicSearcher/` (MusicBrainz, Last.fm, Setlist.fm, Yandex Music, LyricsScraperNET).
+- Startup: `Program.cs` (Generic Host), registrations in `ServiceCollectionExtensions.cs`, polling in `TelegramBot/Handler/BotPollingService.cs`.
 - Config keys: `Configuration.cs`, template `appsettings.template.json`. Real keys live only on the server (edited by hand): the repo `appsettings.json` keeps empty values, never put real keys in it.
 - Version: `AssemblyVersion` in the ConsoleApp csproj. A release tag pushes the Docker image and deploys it over SSH (`.github/workflows/cicd.yml`).
 
