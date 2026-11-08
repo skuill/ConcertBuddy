@@ -35,6 +35,11 @@ public class MusicSearcherClient : IMusicSearcherClient
     public bool IsMemoryCacheEnabled => _isMemoryCacheEnabled;
 
     public MusicSearcherClient()
+        : this(new MusicBrainzClient())
+    {
+    }
+
+    private MusicSearcherClient(MusicBrainzClient musicBrainzClient)
     {
         _isMemoryCacheEnabled = false;
         _memoryCacheEntryOptions = new MemoryCacheEntryOptions
@@ -47,10 +52,8 @@ public class MusicSearcherClient : IMusicSearcherClient
         // Get path for local file cache.
         var location = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-        _musicBrainzClient = new MusicBrainzClient()
-        {
-            Cache = new FileRequestCache(Path.Combine(location!, "cache"))
-        };
+        _musicBrainzClient = musicBrainzClient;
+        _musicBrainzClient.Cache = new FileRequestCache(Path.Combine(location!, "cache"));
 
         _musicServiceClients = new List<IMusicServiceClient>();
     }
@@ -59,8 +62,9 @@ public class MusicSearcherClient : IMusicSearcherClient
         ILyricsScraperClient lyricsScraperClient,
         ISetlistFmServiceClient setlistFmClient,
         IEnumerable<IMusicServiceClient> musicServiceClients,
+        MusicBrainzClient musicBrainzClient,
         ILogger<MusicSearcherClient> logger)
-        : this()
+        : this(musicBrainzClient)
     {
         _logger = logger;
         _lyricsScraperClient = lyricsScraperClient;

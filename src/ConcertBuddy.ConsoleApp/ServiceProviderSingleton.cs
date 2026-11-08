@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MusicSearcher;
+using MusicSearcher.Http;
 using MusicSearcher.MusicService.Abstract;
 using MusicSearcher.MusicService.LastFm;
 using MusicSearcher.MusicService.SetlistFm;
@@ -47,20 +48,18 @@ public sealed class ServiceProviderSingleton
             .ReadFrom.Configuration(configurationRoot)
             .CreateLogger();
 
-        services.AddLogging(configure => configure.AddSerilog(dispose: true))
+        services.AddLogging(configure => configure.AddSerilog(dispose: true).AddFilter("Polly", LogLevel.Warning))
                 .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
+                .AddMusicServiceHttpClients()
                 .AddScoped<SetlistApi>(
-                    s => new SetlistApi(Configuration.SetlistFmApiKey!))
+                    s => new SetlistApi(
+                        Configuration.SetlistFmApiKey!,
+                        httpClient: s.GetRequiredService<IHttpClientFactory>().CreateClient(MusicServiceHttpClients.SetlistFmClientName)))
                 .AddScoped<IMusicServiceClient>(
                     s => new YandexServiceClient(Configuration.YandexToken!))
                 .AddScoped<IMusicServiceClient>(
                     s => new LastFmServiceClient(Configuration.LastFmApiKey!, Configuration.LastFmApiSecret!))
-                .AddScoped<ISetlistFmServiceClient>(provider =>
-                    {
-                        var logger = provider.GetRequiredService<ILogger<SetlistFmServiceClient>>();
-                        var token = Configuration.SetlistFmApiKey!;
-                        return new SetlistFmServiceClient(logger, token);
-                    })
+                .AddScoped<ISetlistFmServiceClient, SetlistFmServiceClient>()
                 .AddScoped<IBotHandlers, BotHandlers>()
                 .AddScoped<IMusicSearcherClient, MusicSearcherClient>();
     }
