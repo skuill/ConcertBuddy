@@ -1,16 +1,15 @@
 ﻿using MusicSearcher.Model;
 using SetlistNet.Models;
 
-namespace MusicSearcher.Converter
+namespace MusicSearcher.Converter;
+
+internal static class MusicSetsConverter
 {
-    internal static class MusicSetsConverter
+    public static MusicSets ToInternal(this Sets sets)
     {
-        public static MusicSets ToInternal(this Sets sets)
+        return new MusicSets
         {
-            return new MusicSets
-            {
-                Set = sets.Set?.Select(s => s.ToInternal()).ToList()
-            };
-        }
+            Set = sets.Set?.Select(s => s.ToInternal()).ToList()
+        };
     }
 }

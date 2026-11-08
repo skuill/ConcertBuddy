@@ -1,10 +1,9 @@
-﻿namespace MusicSearcher.Model
+﻿namespace MusicSearcher.Model;
+
+public enum AvailableSearchType
 {
-    public enum AvailableSearchType
-    {
-        None = 0,
-        Name = 1,
-        MBID = 2,
-        All = Name | MBID
-    }
+    None = 0,
+    Name = 1,
+    MBID = 2,
+    All = Name | MBID
 }

@@ -7,62 +7,61 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
+namespace ConcertBuddy.ConsoleApp.TelegramBot.Command;
+
+public class SearchMessageCommand : AbstractCommand<Message?, Message>
 {
-    public class SearchMessageCommand : AbstractCommand<Message?, Message>
+    private const string CurrentCommand = CommandList.COMMAND_SEARCH;
+
+    private ILogger<SearchMessageCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SearchMessageCommand>>();
+
+    public SearchMessageCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, Message data)
+        : base(musicSearcherClient, telegramBotClient, data)
     {
-        private const string CurrentCommand = CommandList.COMMAND_SEARCH;
+    }
 
-        private ILogger<SearchMessageCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SearchMessageCommand>>();
+    public override async Task<Message?> ExecuteAsync()
+    {
+        _logger?.LogDebug($"Handle [{CurrentCommand}] message command: [{Data.Text}]");
 
-        public SearchMessageCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, Message data)
-            : base(musicSearcherClient, telegramBotClient, data)
+        if (Data == null)
         {
+            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
+            return null;
         }
 
-        public override async Task<Message?> ExecuteAsync()
+        string replyText = string.Empty;
+        string artistName = Data.GetClearMessage();
+
+        var artists = await MusicSearcherClient.SearchArtistsByName(artistName);
+
+        if (artists == null || !artists.Any())
         {
-            _logger?.LogDebug($"Handle [{CurrentCommand}] message command: [{Data.Text}]");
-
-            if (Data == null)
-            {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
-                return null;
-            }
-
-            string replyText = string.Empty;
-            string artistName = Data.GetClearMessage();
-
-            var artists = await MusicSearcherClient.SearchArtistsByName(artistName);
-
-            if (artists == null || !artists.Any())
-            {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist [{artistName}]");
-                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Chat.Id);
-            }
-
-            if (artists.Count() == 1)
-            {
-                // TODO return artist immediately
-                //Data.Data = artists.First().Name;
-                //return await new ArtistCommand(MusicSearcherClient, TelegramBotClient, artistName).Execute();
-            }
-
-            bool isForwardNavigationEnabled = artists.Count() == SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT;
-            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists)
-                .WithNavigationButtons(
-                    CommandList.CALLBACK_DATA_FORMAT_SEARCH, 
-                    artistName, 
-                    0, 
-                    limit: SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT, 
-                    isForwardNavigationEnabled: isForwardNavigationEnabled);
-
-            replyText = "Choose the correct artist 💭:";
-
-            return await TelegramBotClient.SendMessage(
-                chatId: Data.Chat.Id,
-                text: replyText,
-                replyMarkup: inlineKeyboard);
+            _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist [{artistName}]");
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Chat.Id);
         }
+
+        if (artists.Count() == 1)
+        {
+            // TODO return artist immediately
+            //Data.Data = artists.First().Name;
+            //return await new ArtistCommand(MusicSearcherClient, TelegramBotClient, artistName).Execute();
+        }
+
+        bool isForwardNavigationEnabled = artists.Count() == SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT;
+        InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists)
+            .WithNavigationButtons(
+                CommandList.CALLBACK_DATA_FORMAT_SEARCH, 
+                artistName, 
+                0, 
+                limit: SearchConstants.SEARCH_ARTISTS_LIMIT_DEFAULT, 
+                isForwardNavigationEnabled: isForwardNavigationEnabled);
+
+        replyText = "Choose the correct artist 💭:";
+
+        return await TelegramBotClient.SendMessage(
+            chatId: Data.Chat.Id,
+            text: replyText,
+            replyMarkup: inlineKeyboard);
     }
 }

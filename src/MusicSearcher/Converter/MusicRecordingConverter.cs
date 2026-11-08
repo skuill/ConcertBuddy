@@ -1,17 +1,16 @@
 ﻿using Hqub.MusicBrainz.Entities;
 using MusicSearcher.Model;
 
-namespace MusicSearcher.Converter
+namespace MusicSearcher.Converter;
+
+internal static class MusicRecordingConverter
 {
-    internal static class MusicRecordingConverter
+    public static MusicRecording ToInternal(this Recording recording)
     {
-        public static MusicRecording ToInternal(this Recording recording)
+        return new MusicRecording
         {
-            return new MusicRecording
-            {
-                Id = recording.Id,
-                Title = recording.Title,
-            };
-        }
+            Id = recording.Id,
+            Title = recording.Title,
+        };
     }
 }

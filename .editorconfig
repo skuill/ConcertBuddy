@@ -1,0 +1,16 @@
+root = true
+
+# Rules checked in the build (EnforceCodeStyleInBuild in src/Directory.Build.props)
+# and in CI (dotnet format --verify-no-changes). Add rules in small sets and fix
+# the existing violations in the same pull request.
+[*.cs]
+# IDE0005: remove unnecessary usings.
+dotnet_diagnostic.IDE0005.severity = warning
+
+# IDE0130: the namespace matches the folder.
+dotnet_style_namespace_match_folder = true
+dotnet_diagnostic.IDE0130.severity = warning
+
+# IDE0161: file-scoped namespaces (namespace X; on one line).
+csharp_style_namespace_declarations = file_scoped:warning
+dotnet_diagnostic.IDE0161.severity = warning

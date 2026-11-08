@@ -7,94 +7,93 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
+namespace ConcertBuddy.ConsoleApp.TelegramBot.Command;
+
+public class SetlistCommand : AbstractCommand<Message?, CallbackQuery>
 {
-    public class SetlistCommand : AbstractCommand<Message?, CallbackQuery>
+    private const string CurrentCommand = CommandList.COMMAND_SETLIST;
+
+    private ILogger<SetlistCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SetlistCommand>>();
+
+    public SetlistCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+        : base(musicSearcherClient, telegramBotClient, data)
     {
-        private const string CurrentCommand = CommandList.COMMAND_SETLIST;
+    }
 
-        private ILogger<SetlistCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SetlistCommand>>();
+    public override async Task<Message?> ExecuteAsync()
+    {
+        _logger?.LogDebug($"Handle [{CurrentCommand}] command: [{Data.Data}]");
 
-        public SetlistCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
-            : base(musicSearcherClient, telegramBotClient, data)
+        if (Data == null)
         {
+            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
+            return null;
+        }
+        if (Data!.Message == null)
+        {
+            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
         }
 
-        public override async Task<Message?> ExecuteAsync()
+        var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
+        if (!isValidQuery)
         {
-            _logger?.LogDebug($"Handle [{CurrentCommand}] command: [{Data.Data}]");
+            _logger?.LogError(errorMessage);
+            await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
+            return null;
+        }
 
-            if (Data == null)
-            {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
-                return null;
-            }
-            if (Data!.Message == null)
-            {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
-            }
+        var replyText = string.Empty;
 
-            var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
-            if (!isValidQuery)
-            {
-                _logger?.LogError(errorMessage);
-                await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
-                return null;
-            }
+        var parameters = Data.GetParametersFromMessageText(CurrentCommand);
+        var artistMBID = parameters[0];
+        var setlistId = parameters[1];
 
-            var replyText = string.Empty;
+        var setlist = await MusicSearcherClient.SearchSetlist(setlistId);
 
-            var parameters = Data.GetParametersFromMessageText(CurrentCommand);
-            var artistMBID = parameters[0];
-            var setlistId = parameters[1];
+        if (setlist == null)
+        {
+            _logger?.LogError($"Command: [{CurrentCommand}]. Can't find setlist by Id: [{setlistId}], mbid: [{artistMBID}]");
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
+        }
 
-            var setlist = await MusicSearcherClient.SearchSetlist(setlistId);
+        if (!setlist.IsSetsExist())
+        {
+            _logger?.LogInformation($"Command: [{CurrentCommand}]. Can't find sets in setlist with Id: [{setlistId}], mbid: [{artistMBID}]");
 
-            if (setlist == null)
-            {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find setlist by Id: [{setlistId}], mbid: [{artistMBID}]");
-                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
-            }
+            string reasonMessage = setlist.IsFutureEvent()
+                ? "ℹ️ There are no songs in this setlist because the concert hasn't started yet. Please try again later.."
+                : "ℹ️ Sorry, there are no information about songs in this setlist yet..";
 
-            if (!setlist.IsSetsExist())
-            {
-                _logger?.LogInformation($"Command: [{CurrentCommand}]. Can't find sets in setlist with Id: [{setlistId}], mbid: [{artistMBID}]");
+            return await MessageHelper.SendTextMessageAsync(TelegramBotClient, Data.Message.Chat.Id, reasonMessage);
+        }
 
-                string reasonMessage = setlist.IsFutureEvent()
-                    ? "ℹ️ There are no songs in this setlist because the concert hasn't started yet. Please try again later.."
-                    : "ℹ️ Sorry, there are no information about songs in this setlist yet..";
+        // Save message ids for delete command 
+        var messageIds = new List<int>();
 
-                return await MessageHelper.SendTextMessageAsync(TelegramBotClient, Data.Message.Chat.Id, reasonMessage);
-            }
+        replyText = setlist.ToString();
 
-            // Save message ids for delete command 
-            var messageIds = new List<int>();
+        messageIds.Add((await TelegramBotClient.SendMessage(
+            chatId: Data.Message.Chat.Id,
+            text: replyText,
+            replyMarkup: new ReplyKeyboardRemove())).MessageId);
 
-            replyText = setlist.ToString();
-
-            messageIds.Add((await TelegramBotClient.SendMessage(
+        var sendTextMessageTasks = new List<Task<Message>>();
+        foreach (var set in setlist.Sets!.Set)
+        {
+            replyText = $"{set.ToString()}";
+            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetTracksInlineKeyboardMenu(set, artistMBID);
+            sendTextMessageTasks.Add(TelegramBotClient.SendMessage(
                 chatId: Data.Message.Chat.Id,
                 text: replyText,
-                replyMarkup: new ReplyKeyboardRemove())).MessageId);
-
-            var sendTextMessageTasks = new List<Task<Message>>();
-            foreach (var set in setlist.Sets!.Set)
-            {
-                replyText = $"{set.ToString()}";
-                InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetTracksInlineKeyboardMenu(set, artistMBID);
-                sendTextMessageTasks.Add(TelegramBotClient.SendMessage(
-                    chatId: Data.Message.Chat.Id,
-                    text: replyText,
-                    replyMarkup: inlineKeyboard));
-            }
-
-            messageIds.AddRange(Task.WhenAll(sendTextMessageTasks).Result.Select(x => x.MessageId).ToList());
-
-            InlineKeyboardMarkup deleteKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton(messageIds.ToArray());
-            return await TelegramBotClient.SendMessage(
-                chatId: Data.Message.Chat.Id,
-                text: "Delete",
-                replyMarkup: deleteKeyboard);
+                replyMarkup: inlineKeyboard));
         }
+
+        messageIds.AddRange(Task.WhenAll(sendTextMessageTasks).Result.Select(x => x.MessageId).ToList());
+
+        InlineKeyboardMarkup deleteKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton(messageIds.ToArray());
+        return await TelegramBotClient.SendMessage(
+            chatId: Data.Message.Chat.Id,
+            text: "Delete",
+            replyMarkup: deleteKeyboard);
     }
 }

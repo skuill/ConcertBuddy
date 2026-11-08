@@ -2,83 +2,82 @@
 using MusicSearcher.MusicService;
 using System.Collections;
 
-namespace MusicSearcher.Model
+namespace MusicSearcher.Model;
+
+public class MusicArtist : MusicArtistBase, IEnumerable<MusicArtistBase>
 {
-    public class MusicArtist : MusicArtistBase, IEnumerable<MusicArtistBase>
+    private List<MusicArtistBase> _musicArtists;
+
+    // Indexer with only a get accessor with the expression-bodied definition:
+    public MusicArtistBase this[MusicServiceType musicServiceType] => GetMusicArtistByServiceType(musicServiceType);
+
+    public MusicArtist()
     {
-        private List<MusicArtistBase> _musicArtists;
+        _musicArtists = new List<MusicArtistBase>();
+    }
 
-        // Indexer with only a get accessor with the expression-bodied definition:
-        public MusicArtistBase this[MusicServiceType musicServiceType] => GetMusicArtistByServiceType(musicServiceType);
+    public MusicArtist(MusicArtistBase musicArtist)
+    {
+        _musicArtists = new List<MusicArtistBase> { musicArtist };
+    }
 
-        public MusicArtist()
-        {
-            _musicArtists = new List<MusicArtistBase>();
-        }
+    public MusicArtist(List<MusicArtistBase> musicArtists)
+    {
+        _musicArtists = musicArtists;
+    }
 
-        public MusicArtist(MusicArtistBase musicArtist)
-        {
-            _musicArtists = new List<MusicArtistBase> { musicArtist };
-        }
+    public override MusicServiceType MusicServiceType => MusicServiceType.None;
 
-        public MusicArtist(List<MusicArtistBase> musicArtists)
-        {
-            _musicArtists = musicArtists;
-        }
+    public override string? Name => GetFirstNonDefaultValue(x => x.Name);
 
-        public override MusicServiceType MusicServiceType => MusicServiceType.None;
+    public override string? MBID => GetFirstNonDefaultValue(x => x.MBID);
 
-        public override string? Name => GetFirstNonDefaultValue(x => x.Name);
+    public override int? Score => GetFirstNonDefaultValue(x => x.Score);
 
-        public override string? MBID => GetFirstNonDefaultValue(x => x.MBID);
+    public override Uri? ImageUri => GetFirstNonDefaultValue(x => x.ImageUri);
 
-        public override int? Score => GetFirstNonDefaultValue(x => x.Score);
+    public override string? Biography => GetFirstNonDefaultValue(x => x.Biography);
 
-        public override Uri? ImageUri => GetFirstNonDefaultValue(x => x.ImageUri);
+    public override string? Area => GetFirstNonDefaultValue(x => x.Area);
 
-        public override string? Biography => GetFirstNonDefaultValue(x => x.Biography);
+    public override string? ActiveYears => GetFirstNonDefaultValue(x => x.ActiveYears);
 
-        public override string? Area => GetFirstNonDefaultValue(x => x.Area);
+    public override string? Type => GetFirstNonDefaultValue(x => x.Type);
 
-        public override string? ActiveYears => GetFirstNonDefaultValue(x => x.ActiveYears);
+    public override string? Country => GetFirstNonDefaultValue(x => x.Country);
 
-        public override string? Type => GetFirstNonDefaultValue(x => x.Type);
+    public override Uri? ExternalUrl => GetFirstNonDefaultValue(x => x.ExternalUrl);
 
-        public override string? Country => GetFirstNonDefaultValue(x => x.Country);
+    private T? GetFirstNonDefaultValue<T>(Func<MusicArtistBase, T> selector)
+    {
+        return _musicArtists.Select(selector).FirstOrDefault(x => !EqualityComparer<T>.Default.Equals(x, default));
+    }
 
-        public override Uri? ExternalUrl => GetFirstNonDefaultValue(x => x.ExternalUrl);
+    public void Add(MusicArtistBase artist)
+    {
+        if (!_musicArtists.Contains(artist))
+            _musicArtists.Add(artist);
+        else
+            throw new InvalidOperationException($"Try to add already exist artist {artist.MusicServiceType}");
+    }
 
-        private T? GetFirstNonDefaultValue<T>(Func<MusicArtistBase, T> selector)
-        {
-            return _musicArtists.Select(selector).FirstOrDefault(x => !EqualityComparer<T>.Default.Equals(x, default));
-        }
+    public override bool IsMusicArtistExist(MusicServiceType musicServiceType)
+    {
+        return _musicArtists != null && _musicArtists.Any(x => x.MusicServiceType == musicServiceType);
+    }
 
-        public void Add(MusicArtistBase artist)
-        {
-            if (!_musicArtists.Contains(artist))
-                _musicArtists.Add(artist);
-            else
-                throw new InvalidOperationException($"Try to add already exist artist {artist.MusicServiceType}");
-        }
+    public override MusicArtistBase? GetMusicArtistByServiceType(MusicServiceType musicServiceType)
+    {
+        return _musicArtists?.FirstOrDefault(x => x.MusicServiceType == musicServiceType);
+    }
 
-        public override bool IsMusicArtistExist(MusicServiceType musicServiceType)
-        {
-            return _musicArtists != null && _musicArtists.Any(x => x.MusicServiceType == musicServiceType);
-        }
+    public IEnumerator<MusicArtistBase> GetEnumerator()
+    {
+        return _musicArtists.GetEnumerator();
+    }
 
-        public override MusicArtistBase? GetMusicArtistByServiceType(MusicServiceType musicServiceType)
-        {
-            return _musicArtists?.FirstOrDefault(x => x.MusicServiceType == musicServiceType);
-        }
-
-        public IEnumerator<MusicArtistBase> GetEnumerator()
-        {
-            return _musicArtists.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }

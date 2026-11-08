@@ -3,40 +3,39 @@ using MusicSearcher.Converter;
 using MusicSearcher.Model;
 using SetlistNet;
 
-namespace MusicSearcher.MusicService.SetlistFm
+namespace MusicSearcher.MusicService.SetlistFm;
+
+public sealed class SetlistFmServiceClient : ISetlistFmServiceClient
 {
-    public sealed class SetlistFmServiceClient : ISetlistFmServiceClient
+    private readonly SetlistApi _setlistApi;
+    private readonly ILogger<SetlistFmServiceClient> _logger;
+
+    public SetlistFmServiceClient(ILogger<SetlistFmServiceClient> logger, string token)
     {
-        private readonly SetlistApi _setlistApi;
-        private readonly ILogger<SetlistFmServiceClient> _logger;
+        _setlistApi = new SetlistApi(token);
+        _logger = logger;
+    }
 
-        public SetlistFmServiceClient(ILogger<SetlistFmServiceClient> logger, string token)
+    public async Task<MusicSetlists> SearchArtistSetlists(string artistMBID, int page = 1)
+    {
+        var result = await _setlistApi.ArtistSetlists(artistMBID, page: page);
+
+        if (result == null || result.Setlist == null || result.Setlist.Count == 0)
         {
-            _setlistApi = new SetlistApi(token);
-            _logger = logger;
+            _logger?.LogInformation($"Can't fing setlists for artist with mbid [{artistMBID}]");
+            return null;
         }
+        return result.ToInternal();
+    }
 
-        public async Task<MusicSetlists> SearchArtistSetlists(string artistMBID, int page = 1)
+    public async Task<MusicSetlist> SearchSetlist(string setlistId)
+    {
+        var result = await _setlistApi.Setlist(setlistId);
+        if (result == null)
         {
-            var result = await _setlistApi.ArtistSetlists(artistMBID, page: page);
-
-            if (result == null || result.Setlist == null || result.Setlist.Count == 0)
-            {
-                _logger?.LogInformation($"Can't fing setlists for artist with mbid [{artistMBID}]");
-                return null;
-            }
-            return result.ToInternal();
+            _logger?.LogError($"Can't find setlist by Id: [{setlistId}]");
+            return null;
         }
-
-        public async Task<MusicSetlist> SearchSetlist(string setlistId)
-        {
-            var result = await _setlistApi.Setlist(setlistId);
-            if (result == null)
-            {
-                _logger?.LogError($"Can't find setlist by Id: [{setlistId}]");
-                return null;
-            }
-            return result.ToInternal();
-        }
+        return result.ToInternal();
     }
 }

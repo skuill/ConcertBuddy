@@ -1,7 +1,6 @@
-﻿namespace ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract
+﻿namespace ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
+
+public interface ICommand<TResult>
 {
-    public interface ICommand<TResult>
-    {
-        Task<TResult> ExecuteAsync();
-    }
+    Task<TResult> ExecuteAsync();
 }

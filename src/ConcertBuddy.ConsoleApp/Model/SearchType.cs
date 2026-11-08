@@ -1,10 +1,9 @@
-﻿namespace ConcertBuddy.ConsoleApp.Model
+﻿namespace ConcertBuddy.ConsoleApp.Model;
+
+public enum SearchType
 {
-    public enum SearchType
-    {
-        Unknown,
-        Artist,
-        Album,
-        Track
-    }
+    Unknown,
+    Artist,
+    Album,
+    Track
 }

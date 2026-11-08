@@ -4,56 +4,55 @@ using System.Reflection;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 
-namespace ConcertBuddy.ConsoleApp
+namespace ConcertBuddy.ConsoleApp;
+
+public class Program
 {
-    public class Program
+    private static ILogger<Program>? _logger;
+
+    public static void Main(string[] args)
     {
-        private static ILogger<Program>? _logger;
+        _logger = ServiceProviderSingleton.Source.GetService<ILogger<Program>>();
 
-        public static void Main(string[] args)
+        _logger?.LogInformation($"Start ConcertBoddy application.");
+
+        AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(UnhandledExceptionsHandler);
+
+        var botClient = new TelegramBotClient(Configuration.TelegramToken);
+
+        IBotHandlers botHandler = ServiceProviderSingleton.Source.GetService<IBotHandlers>();
+
+        using var cts = new CancellationTokenSource();
+
+        // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
+        var receiverOptions = new ReceiverOptions
         {
-            _logger = ServiceProviderSingleton.Source.GetService<ILogger<Program>>();
+            AllowedUpdates = { } // receive all update types
+        };
+        botClient.StartReceiving(
+            botHandler!.HandleUpdateAsync,
+            botHandler!.HandleErrorAsync,
+            receiverOptions,
+            cancellationToken: cts.Token);
 
-            _logger?.LogInformation($"Start ConcertBoddy application.");
+        var botUser = botClient.GetMe().GetAwaiter().GetResult();
 
-            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(UnhandledExceptionsHandler);
+        Console.Title = botUser.Username ?? "My awesome Bot";
 
-            var botClient = new TelegramBotClient(Configuration.TelegramToken);
+        var assemblyVersion = Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString();
+        var currentEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        _logger?.LogInformation($"Bot {botUser.FirstName} [{botUser.Id}] start listening. Version: [{assemblyVersion}]. Environment: [{currentEnvironment}]");
 
-            IBotHandlers botHandler = ServiceProviderSingleton.Source.GetService<IBotHandlers>();
+        Console.ReadLine();
 
-            using var cts = new CancellationTokenSource();
+        _logger?.LogInformation($"Stop ConcertBoddy application.");
+        // Send cancellation request to stop bot
+        cts.Cancel();
+        return;
+    }
 
-            // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
-            var receiverOptions = new ReceiverOptions
-            {
-                AllowedUpdates = { } // receive all update types
-            };
-            botClient.StartReceiving(
-                botHandler!.HandleUpdateAsync,
-                botHandler!.HandleErrorAsync,
-                receiverOptions,
-                cancellationToken: cts.Token);
-
-            var botUser = botClient.GetMe().GetAwaiter().GetResult();
-
-            Console.Title = botUser.Username ?? "My awesome Bot";
-
-            var assemblyVersion = Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString();
-            var currentEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            _logger?.LogInformation($"Bot {botUser.FirstName} [{botUser.Id}] start listening. Version: [{assemblyVersion}]. Environment: [{currentEnvironment}]");
-
-            Console.ReadLine();
-
-            _logger?.LogInformation($"Stop ConcertBoddy application.");
-            // Send cancellation request to stop bot
-            cts.Cancel();
-            return;
-        }
-
-        static void UnhandledExceptionsHandler(object sender, UnhandledExceptionEventArgs ex)
-        {
-            _logger?.LogCritical((ex.ExceptionObject as Exception)?.ToString());
-        }
+    static void UnhandledExceptionsHandler(object sender, UnhandledExceptionEventArgs ex)
+    {
+        _logger?.LogCritical((ex.ExceptionObject as Exception)?.ToString());
     }
 }

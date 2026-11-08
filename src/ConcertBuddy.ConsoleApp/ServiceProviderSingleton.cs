@@ -10,68 +10,67 @@ using MusicSearcher.MusicService.Yandex;
 using Serilog;
 using SetlistNet;
 
-namespace ConcertBuddy.ConsoleApp
+namespace ConcertBuddy.ConsoleApp;
+
+public sealed class ServiceProviderSingleton
 {
-    public sealed class ServiceProviderSingleton
+    private ServiceProvider _serviceProvider;
+
+    private ServiceProviderSingleton()
     {
-        private ServiceProvider _serviceProvider;
+        var serviceCollection = new ServiceCollection();
+        ConfigureServices(serviceCollection);
 
-        private ServiceProviderSingleton()
-        {
-            var serviceCollection = new ServiceCollection();
-            ConfigureServices(serviceCollection);
+        _serviceProvider = serviceCollection.BuildServiceProvider();
+    }
 
-            _serviceProvider = serviceCollection.BuildServiceProvider();
-        }
+    private static readonly Lazy<ServiceProviderSingleton> lazy =
+        new Lazy<ServiceProviderSingleton>(() => new ServiceProviderSingleton());
 
-        private static readonly Lazy<ServiceProviderSingleton> lazy =
-            new Lazy<ServiceProviderSingleton>(() => new ServiceProviderSingleton());
+    public static ServiceProviderSingleton Source { get { return lazy.Value; } }
 
-        public static ServiceProviderSingleton Source { get { return lazy.Value; } }
+    public T? GetService<T>() => _serviceProvider.GetService<T>();
 
-        public T? GetService<T>() => _serviceProvider.GetService<T>();
+    private void ConfigureServices(IServiceCollection services)
+    {
+        IConfigurationRoot configurationRoot = GetConfiguration();
+        services.AddSingleton<IConfigurationRoot>(configurationRoot);
 
-        private void ConfigureServices(IServiceCollection services)
-        {
-            IConfigurationRoot configurationRoot = GetConfiguration();
-            services.AddSingleton<IConfigurationRoot>(configurationRoot);
+        var appConfiguration = new Configuration();
+        configurationRoot.GetSection("Configuration").Bind(appConfiguration);
+        services.AddSingleton<Configuration>(appConfiguration);
 
-            var appConfiguration = new Configuration();
-            configurationRoot.GetSection("Configuration").Bind(appConfiguration);
-            services.AddSingleton<Configuration>(appConfiguration);
+        services.AddLyricScraperClientService(configurationRoot);
 
-            services.AddLyricScraperClientService(configurationRoot);
+        Log.Logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(configurationRoot)
+            .CreateLogger();
 
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configurationRoot)
-                .CreateLogger();
+        services.AddLogging(configure => configure.AddSerilog(dispose: true))
+                .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
+                .AddScoped<SetlistApi>(
+                    s => new SetlistApi(Configuration.SetlistFmApiKey!))
+                .AddScoped<LastFmServiceClient>(
+                    s => new LastFmServiceClient(Configuration.LastFmApiKey!, Configuration.LastFmApiSecret!))
+                .AddScoped<YandexServiceClient>(
+                    s => new YandexServiceClient(Configuration.YandexToken!))
+                .AddScoped<ISetlistFmServiceClient>(provider =>
+                    {
+                        var logger = provider.GetRequiredService<ILogger<SetlistFmServiceClient>>();
+                        var token = Configuration.SetlistFmApiKey!;
+                        return new SetlistFmServiceClient(logger, token);
+                    })
+                .AddScoped<IBotHandlers, BotHandlers>()
+                .AddScoped<IMusicSearcherClient, MusicSearcherClient>();
+    }
 
-            services.AddLogging(configure => configure.AddSerilog(dispose: true))
-                    .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
-                    .AddScoped<SetlistApi>(
-                        s => new SetlistApi(Configuration.SetlistFmApiKey!))
-                    .AddScoped<LastFmServiceClient>(
-                        s => new LastFmServiceClient(Configuration.LastFmApiKey!, Configuration.LastFmApiSecret!))
-                    .AddScoped<YandexServiceClient>(
-                        s => new YandexServiceClient(Configuration.YandexToken!))
-                    .AddScoped<ISetlistFmServiceClient>(provider =>
-                        {
-                            var logger = provider.GetRequiredService<ILogger<SetlistFmServiceClient>>();
-                            var token = Configuration.SetlistFmApiKey!;
-                            return new SetlistFmServiceClient(logger, token);
-                        })
-                    .AddScoped<IBotHandlers, BotHandlers>()
-                    .AddScoped<IMusicSearcherClient, MusicSearcherClient>();
-        }
+    private IConfigurationRoot GetConfiguration()
+    {
+        var currentEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
-        private IConfigurationRoot GetConfiguration()
-        {
-            var currentEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-
-            return new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile($"appsettings.{currentEnvironment}.json", optional: false, reloadOnChange: true)
-                .Build();
-        }
+        return new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile($"appsettings.{currentEnvironment}.json", optional: false, reloadOnChange: true)
+            .Build();
     }
 }
