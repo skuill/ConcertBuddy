@@ -3,7 +3,7 @@ using MusicSearcher.Model.Abstract;
 
 namespace MusicSearcher.MusicService.Abstract;
 
-internal interface IMusicServiceClient
+public interface IMusicServiceClient
 {
     public MusicServiceType MusicServiceType { get; }
 

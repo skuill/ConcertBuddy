@@ -13,7 +13,9 @@ Notes for AI coding agents working in this repository. Personal or machine-speci
 - Version: `AssemblyVersion` in the ConsoleApp csproj. A release tag pushes the Docker image and deploys it over SSH (`.github/workflows/cicd.yml`).
 
 ## Tests
-- MSTest, FakeItEasy. `MusicSearcher.Tests` calls the real services with keys from `app.config`.
+- xunit.v3 on Microsoft Testing Platform (`global.json`), FakeItEasy, Shouldly. How to run them: `docs/testing.md`.
+- `ConcertBuddy.ConsoleApp.Tests` and `MusicSearcher.Tests`: no network, no keys, run in CI. `MusicSearcher.ContractTests` call the real services and are not part of CI.
+- Mutation check for every fix or new behavior: break it, run the tests, at least one must fail, restore.
 - New functionality must be covered by tests: assert whole objects and stored data, verify calls to external clients. Keep this repo's existing style.
 
 ## Conventions

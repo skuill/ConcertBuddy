@@ -1,178 +1,164 @@
-﻿using FakeItEasy;
+using FakeItEasy;
 using LyricsScraperNET;
+using LyricsScraperNET.Models.Requests;
+using LyricsScraperNET.Models.Responses;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MusicSearcher.Model;
+using MusicSearcher.Model.Abstract;
 using MusicSearcher.MusicService;
-using MusicSearcher.MusicService.LastFm;
+using MusicSearcher.MusicService.Abstract;
 using MusicSearcher.MusicService.SetlistFm;
-using MusicSearcher.MusicService.Yandex;
+using Shouldly;
 
 namespace MusicSearcher.Tests;
 
-[TestClass]
 public class MusicSearcherClientTest
 {
-    [TestMethod]
-    public async Task SearchArtistByName_EmptyArtist_IsNull()
+    private const string Artist = "Metallica";
+    private const string Song = "One";
+    private const string Mbid = "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab";
+
+    private readonly ILyricsScraperClient _lyricsClient = A.Fake<ILyricsScraperClient>();
+    private readonly ISetlistFmServiceClient _setlistClient = A.Fake<ISetlistFmServiceClient>();
+
+    [Fact]
+    public async Task SearchTrack_TwoServices_CombinesTheirResults()
     {
         // Arrange
-        string artist = "";
-        var client = InitClient();
+        var yandex = CreateService(CreateTrack(MusicServiceType.Yandex, "One", downloadLink: "https://audio"));
+        var lastFm = CreateService(CreateTrack(MusicServiceType.LastFm, "One (Live)", externalLink: "https://last.fm"));
+        var client = CreateClient(yandex, lastFm);
 
         // Act
-        var result = await client.SearchArtistByName(artist);
+        var result = (MusicTrack)await client.SearchTrack(Artist, Song);
 
         // Assert
-        Assert.IsNull(result);
+        result.Count().ShouldBe(2);
+        result.TrackName.ShouldBe("One");
+        result.DownloadLink.ShouldBe("https://audio");
+        result.TrackExternalLink.ShouldBe("https://last.fm");
+        A.CallTo(() => yandex.SearchTrack(Artist, Song)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => lastFm.SearchTrack(Artist, Song)).MustHaveHappenedOnceExactly();
     }
 
-    [TestMethod]
-    public async Task SearchArtistByName_DefaultExample_AreEqual()
+    [Fact]
+    public async Task SearchTrack_ServiceFails_UsesOtherServices()
     {
         // Arrange
-        string artist = "Parkway Drive";
-        var client = InitClient();
+        var failing = A.Fake<IMusicServiceClient>();
+        A.CallTo(() => failing.SearchTrack(A<string>._, A<string>._)).ThrowsAsync(new InvalidOperationException("Service is down"));
+        var notImplemented = A.Fake<IMusicServiceClient>();
+        A.CallTo(() => notImplemented.SearchTrack(A<string>._, A<string>._)).ThrowsAsync(new NotImplementedException());
+        var working = CreateService(CreateTrack(MusicServiceType.Yandex, "One"));
+        var client = CreateClient(failing, notImplemented, working);
 
         // Act
-        var result = await client.SearchArtistByName(artist);
+        var result = (MusicTrack)await client.SearchTrack(Artist, Song);
 
         // Assert
-        Assert.IsTrue(string.Equals(artist, result.Name));
+        result.Count().ShouldBe(1);
+        result.TrackName.ShouldBe("One");
     }
 
-    [TestMethod]
-    public async Task SearchArtistByName_LowercaseArtist_AreEqual()
+    [Fact]
+    public async Task SearchLyric_Found_ReturnsLyricAndSendsArtistAndSong()
     {
         // Arrange
-        string artist = "parkway drive";
-        string expected = "Parkway Drive";
-        var client = InitClient();
+        A.CallTo(() => _lyricsClient.SearchLyricAsync(A<SearchRequest>._, A<CancellationToken>._))
+            .Returns(LyricsScraperModelFactory.SearchResult(SearchResultCode.Found, "Lyric text"));
+        var client = CreateClient();
 
         // Act
-        var result = await client.SearchArtistByName(artist);
+        var result = await client.SearchLyric(Artist, Song);
 
         // Assert
-        Assert.IsTrue(string.Equals(expected, result.Name));
+        result.ShouldBeEquivalentTo(new MusicLyric { IsSuccessSearchResult = true, LyricText = "Lyric text" });
+        A.CallTo(() => _lyricsClient.SearchLyricAsync(
+            A<SearchRequest>.That.Matches(x => x is ArtistAndSongSearchRequest && ((ArtistAndSongSearchRequest)x).Artist == Artist && ((ArtistAndSongSearchRequest)x).Song == Song),
+            A<CancellationToken>._)).MustHaveHappenedOnceExactly();
     }
 
-    [TestMethod]
-    [Ignore("abbreviations don't work correctly")]
-    public async Task SearchArtistByName_AbbreviatedArtist_AreEqual()
+    [Fact]
+    public async Task SearchLyric_NotFound_IsNotSuccess()
     {
         // Arrange
-        string artist = "RHCP";
-        string expected = "Red Hot Chili Peppers";
-        var client = InitClient();
+        A.CallTo(() => _lyricsClient.SearchLyricAsync(A<SearchRequest>._, A<CancellationToken>._))
+            .Returns(LyricsScraperModelFactory.SearchResult(SearchResultCode.NotFound));
+        var client = CreateClient();
 
         // Act
-        var result = await client.SearchArtistByName(artist);
+        var result = await client.SearchLyric(Artist, Song);
 
         // Assert
-        Assert.IsTrue(string.Equals(expected, result.Name));
+        result.IsSuccessSearchResult.ShouldBeFalse();
     }
 
-    [TestMethod]
-    public async Task SearchArtistByMBID_MalformedMbid_IsNull()
+    [Fact]
+    public async Task SearchLyric_NoResult_IsNotSuccess()
     {
         // Arrange
-        string mbid = "gafgxvbasdf23423";
-        var client = InitClient();
+        A.CallTo(() => _lyricsClient.SearchLyricAsync(A<SearchRequest>._, A<CancellationToken>._))
+            .Returns(Task.FromResult<SearchResult>(null!));
+        var client = CreateClient();
 
         // Act
-        var result = await client.SearchArtistByMBID(mbid) as MusicArtist;
+        var result = await client.SearchLyric(Artist, Song);
 
         // Assert
-        Assert.IsNotNull(result);
-        Assert.IsNull(result[MusicServiceType.MusicBrainz]);
-        Assert.IsNull(result[MusicServiceType.LastFm]);
-        Assert.IsTrue(string.IsNullOrEmpty(result.Name));
-        Assert.IsTrue(string.IsNullOrEmpty(result.Biography));
-        Assert.IsTrue(string.IsNullOrEmpty(result.MBID));
+        result.ShouldBeEquivalentTo(MusicLyric.Empty());
     }
 
-    [TestMethod]
-    public async Task SearchArtistByMBID_DefaultExample_AreEqual()
+    [Fact]
+    public async Task SearchArtistSetlists_Page_ReturnsResultOfSetlistClient()
     {
         // Arrange
-        string artist = "The Beatles";
-        string mbid = "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d";
-        var client = InitClient();
+        var setlists = new MusicSetlists { Total = 851, Page = 2 };
+        A.CallTo(() => _setlistClient.SearchArtistSetlists(Mbid, 2)).Returns(setlists);
+        var client = CreateClient();
 
         // Act
-        var result = await client.SearchArtistByMBID(mbid);
+        var result = await client.SearchArtistSetlists(Mbid, 2);
 
         // Assert
-        Assert.IsTrue(string.Equals(artist, result.Name));
+        result.ShouldBeSameAs(setlists);
+        A.CallTo(() => _setlistClient.SearchArtistSetlists(Mbid, 2)).MustHaveHappenedOnceExactly();
     }
 
-    [TestMethod]
-    public async Task SearchArtistByMBID_WithLastFmClient_AreEqual()
+    [Fact]
+    public async Task SearchSetlist_Id_ReturnsResultOfSetlistClient()
     {
         // Arrange
-        string artist = "The Beatles";
-        string mbid = "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d";
-        var client = InitClient();
+        var setlist = new MusicSetlist { Id = "4b48efd6" };
+        A.CallTo(() => _setlistClient.SearchSetlist("4b48efd6")).Returns(setlist);
+        var client = CreateClient();
 
         // Act
-        var result = await client.SearchArtistByMBID(mbid) as MusicArtist;
+        var result = await client.SearchSetlist("4b48efd6");
 
         // Assert
-        Assert.IsNotNull(result);
-        Assert.IsNotNull(result[MusicServiceType.LastFm]);
-        Assert.IsTrue(string.Equals(artist, result.Name));
-        Assert.IsTrue(string.Equals(artist, result[MusicServiceType.LastFm]!.Name));
+        result.ShouldBeSameAs(setlist);
+        A.CallTo(() => _setlistClient.SearchSetlist("4b48efd6")).MustHaveHappenedOnceExactly();
     }
 
-    [TestMethod]
-    public async Task SearchArtistByMBID_WithLastFmClient_WithNotSpecifiedMBID_ShouldBeFound()
+    private MusicSearcherClient CreateClient(params IMusicServiceClient[] services)
     {
-        // Arrange
-        string artist = "Rosé";
-        string mbid = "7f233cda-eacb-4235-b681-5f7be343a1a2";
-        var client = InitClient();
-
-        // Act
-        var result = await client.SearchArtistByMBID(mbid) as MusicArtist;
-
-        // Assert
-        Assert.IsNotNull(result);
-        Assert.IsNotNull(result[MusicServiceType.LastFm]);
-        Assert.IsTrue(string.Equals(artist, result[MusicServiceType.LastFm]!.Name));
+        return new MusicSearcherClient(_lyricsClient, _setlistClient, services, A.Fake<ILogger<MusicSearcherClient>>());
     }
 
-    [TestMethod]
-    public async Task SearchRecordByName_DefaultExample_AreEqual()
+    private static IMusicServiceClient CreateService(MusicTrackBase track)
     {
-        // Arrange
-        string artistMBID = "a436dd02-0549-4c91-b608-df451217fdeb"; // Artist name: Parkway Drive
-        string songName = "Wishing Wells";
-
-        var expectedRecordingMBID = "a99d7f83-75b1-46f6-8b71-cd230b7c3060";
-
-        var client = InitClient();
-
-        // Act
-        var result = await client.SearchRecordByName(artistMBID, songName);
-
-        // Assert
-        Assert.IsNotNull(result);
-        Assert.IsTrue(string.Equals(expectedRecordingMBID, result.Id));
+        var service = A.Fake<IMusicServiceClient>();
+        A.CallTo(() => service.SearchTrack(A<string>._, A<string>._)).Returns(track);
+        return service;
     }
 
-    private IMusicSearcherClient InitClient()
+    private static MusicTrackBase CreateTrack(MusicServiceType type, string name, string? downloadLink = null, string? externalLink = null)
     {
-        var lyricsScraperClientMock = A.Fake<ILyricsScraperClient>();
-        var setlistApiMock = A.Fake<ISetlistFmServiceClient>();
-        var loggerMock = A.Fake<ILogger<MusicSearcherClient>>();
-        YandexServiceClient yandexServiceClient = new YandexServiceClient(Configuration.YandexToken);
-        LastFmServiceClient lastFmServiceClient = new LastFmServiceClient(Configuration.LastFmApiKey, Configuration.LastFmApiSecret);
-
-        return new MusicSearcherClient(
-            lyricsScraperClientMock,
-            setlistApiMock,
-            yandexServiceClient,
-            lastFmServiceClient,
-            loggerMock);
+        var track = A.Fake<MusicTrackBase>();
+        A.CallTo(() => track.MusicServiceType).Returns(type);
+        A.CallTo(() => track.TrackName).Returns(name);
+        A.CallTo(() => track.DownloadLink).Returns(downloadLink);
+        A.CallTo(() => track.TrackExternalLink).Returns(externalLink);
+        return track;
     }
 }
