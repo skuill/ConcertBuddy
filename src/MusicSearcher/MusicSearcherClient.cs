@@ -2,7 +2,6 @@
 using Hqub.MusicBrainz.Entities;
 using LyricsScraperNET;
 using LyricsScraperNET.Models.Requests;
-using LyricsScraperNET.Models.Responses;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Converter;
@@ -275,14 +274,13 @@ public class MusicSearcherClient : IMusicSearcherClient
 
         var searchResult = await _lyricsScraperClient.SearchLyricAsync(searchRequest);
 
-        if (searchResult == null
-           || searchResult.ResponseStatusCode != ResponseStatusCode.Success)
+        var lyric = searchResult?.ToInternal() ?? MusicLyric.Empty();
+        if (!lyric.IsSuccessSearchResult)
         {
-            _logger?.LogWarning($"Can't find lyric for track [{artistName} - {songName}]. Reason: [{searchResult?.ResponseStatusCode}]");
-            return MusicLyric.Empty();
+            _logger?.LogWarning($"Can't find lyric for track [{artistName} - {songName}]. Reason: [{searchResult?.Code}]");
         }
 
-        return searchResult.ToInternal();
+        return lyric;
     }
 
     public async Task<MusicSetlists> SearchArtistSetlists(string artistMBID, int page = 1)

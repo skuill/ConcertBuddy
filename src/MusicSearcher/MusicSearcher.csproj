@@ -13,4 +13,8 @@
     <PackageReference Include="SetlistNet" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="MusicSearcher.Tests" />
+  </ItemGroup>
+
 </Project>

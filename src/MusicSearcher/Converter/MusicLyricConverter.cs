@@ -10,7 +10,7 @@ internal static class MusicLyricConverter
         return new MusicLyric
         {
             Instrumental = searchResult.Instrumental,
-            IsSuccessSearchResult = searchResult.ResponseStatusCode == ResponseStatusCode.Success,
+            IsSuccessSearchResult = searchResult.Code == SearchResultCode.Found || searchResult.Code == SearchResultCode.Instrumental,
             LyricText = searchResult.LyricText,
             ResponseMessage = searchResult.ResponseMessage
         };
