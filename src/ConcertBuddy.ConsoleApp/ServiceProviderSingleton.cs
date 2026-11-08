@@ -48,7 +48,7 @@ public sealed class ServiceProviderSingleton
             .ReadFrom.Configuration(configurationRoot)
             .CreateLogger();
 
-        services.AddLogging(configure => configure.AddSerilog(dispose: true))
+        services.AddLogging(configure => configure.AddSerilog(dispose: true).AddFilter("Polly", LogLevel.Warning))
                 .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
                 .AddMusicServiceHttpClients()
                 .AddScoped<SetlistApi>(
