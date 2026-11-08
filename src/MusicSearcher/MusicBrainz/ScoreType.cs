@@ -1,8 +1,7 @@
-﻿namespace MusicSearcher.MusicBrainz
+﻿namespace MusicSearcher.MusicBrainz;
+
+public enum ScoreType
 {
-    public enum ScoreType
-    {
-        MusicBrainz,
-        Levenshtein
-    }
+    MusicBrainz,
+    Levenshtein
 }

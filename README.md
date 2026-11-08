@@ -47,7 +47,6 @@ A few of the things you can do with ConcertBuddy:
   * `Setlist.fm`
 * ✅ Listen to tracks
   * Directly from: `Yandex`
-  * External link: `Spotify`
 * ✅ Read the lyrics of the tracks
   * Different lyric providers: `AZLyrics`, `Genius`, `SongLyrics`, `MusixMatch`, `LyricFind`
 
@@ -68,7 +67,6 @@ Project is created with:
 ## Built with
 * [Telegram.Bot](https://github.com/TelegramBots/telegram.bot) - the most popular .NET Client for 🤖 Telegram Bot API
 * [LyricsScraperNET](https://github.com/skuill/LyricsScraperNET) - 🎼 a library for .NET that provides an API to search for lyrics of a song from the web
-* [SpotifyAPI-NET](https://github.com/JohnnyCrazy/SpotifyAPI-NET) - a client for Spotify's Web API, written in .NET 
 * [MusicBrainzAPI](https://github.com/avatar29A/MusicBrainz) - Implementation of the MuzicBrainz API v2 
 * [Hqub.Last.fm](https://github.com/avatar29A/Last.fm) - Implementation of the Last.fm API for .NET Standard 2.0 or above
 * [Genius.NET](https://github.com/prajjwaldimri/Genius.NET) - C# library to access the Genius REST API in .NET 
@@ -80,12 +78,12 @@ Project is created with:
 ## Documentation
 
 #### Hosting
-The bot is hosted on an Ubuntu 22.10 64-bit server using a [DigitalOcean droplet](https://www.digitalocean.com/products/droplets) and runs in a Docker container from [docker hub repository](https://hub.docker.com/repository/docker/skuill/concertbuddyconsoleapp). Hosting costs $6/month.
+The bot is hosted on a [DigitalOcean droplet](https://www.digitalocean.com/products/droplets) and runs in a Docker container from the [Docker Hub repository](https://hub.docker.com/repository/docker/skuill/concertbuddyconsoleapp).
 
 #### Deployment
-1. Create and configure `ConcertBuddy/ConcertBuddy.ConsoleApp/appsettings.json` file with settings [Configuration.cs](src/ConcertBuddy.ConsoleApp/Configuration.cs) from template [appsettings.template.json](src/ConcertBuddy.ConsoleApp/appsettings.template.json). 
-2. Build and publish docker image usingn the [Dockerfile](src/ConcertBuddy.ConsoleApp/Dockerfile) to [docker hub registry](https://hub.docker.com/). 
-3. Use [docker-compose.yml](docker-compose.yml) to run the container.
+1. A release builds the image from the [Dockerfile](src/ConcertBuddy.ConsoleApp/Dockerfile), pushes it to Docker Hub and restarts the bot on the server ([cicd.yml](.github/workflows/cicd.yml)); [deploy_manual_droplet.yml](.github/workflows/deploy_manual_droplet.yml) does the restart by hand.
+2. The server's compose file and settings (with the keys) are kept in a separate server configuration repository and deployed from there; nothing is edited on the server by hand.
+3. Locally: create `appsettings.json` from [appsettings.template.json](src/ConcertBuddy.ConsoleApp/appsettings.template.json) (settings: [Configuration.cs](src/ConcertBuddy.ConsoleApp/Configuration.cs)) and run the image with it: `docker run --rm -it -v "$PWD/appsettings.json:/app/appsettings.json" skuill/concertbuddyconsoleapp:latest`.
 
 #### Environments
 | Name            | Link               |

@@ -8,102 +8,101 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
+namespace ConcertBuddy.ConsoleApp.TelegramBot.Command;
+
+public class SearchCallbackCommand : AbstractCommand<Message?, CallbackQuery>
 {
-    public class SearchCallbackCommand : AbstractCommand<Message?, CallbackQuery>
+    private const string CurrentCommand = CommandList.COMMAND_SEARCH;
+
+    private ILogger<SearchCallbackCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SearchCallbackCommand>>();
+
+    public SearchCallbackCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+        : base(musicSearcherClient, telegramBotClient, data)
     {
-        private const string CurrentCommand = CommandList.COMMAND_SEARCH;
+    }
 
-        private ILogger<SearchCallbackCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<SearchCallbackCommand>>();
+    public override async Task<Message?> ExecuteAsync()
+    {
+        _logger?.LogDebug($"Handle [{CurrentCommand}] callback command: [{Data.Data}]");
 
-        public SearchCallbackCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
-            : base(musicSearcherClient, telegramBotClient, data)
+        if (Data == null)
         {
+            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
+            return null;
+        }
+        if (Data!.Message == null)
+        {
+            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
         }
 
-        public override async Task<Message?> ExecuteAsync()
+        var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
+        if (!isValidQuery)
         {
-            _logger?.LogDebug($"Handle [{CurrentCommand}] callback command: [{Data.Data}]");
+            _logger?.LogError($"Command: [{CurrentCommand}]. Error: {errorMessage}");
+            await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
+            return null;
+        }
 
-            if (Data == null)
+        _logger?.LogDebug($"Command: [{CurrentCommand}]. Handle search command: [{Data.Data}]");
+
+        string replyText = string.Empty;
+        string artistName = string.Empty;
+        int offset = 0;
+        int limit = 5;
+
+        var splitMessage = Data.GetSplitMessageText();
+
+        if (splitMessage.Count() == 1)
+        {
+            replyText = $"Please pass artist's name as a parameter. For example: [{CurrentCommand} The Beatles]";
+
+            return await TelegramBotClient.SendMessage(
+                chatId: Data.Message!.Chat.Id,
+                text: replyText,
+                replyMarkup: new ReplyKeyboardRemove());
+        }
+
+        var parameters = Data.GetParametersFromMessageText(CurrentCommand);
+        offset = int.Parse(parameters[0]);
+        limit = int.Parse(parameters[1]);
+        artistName = String.Join(' ', parameters.Skip(2));
+
+        var artists = await MusicSearcherClient.SearchArtistsByName(artistName, limit: limit, offset: offset);
+
+        if ((artists == null || !artists.Any()) && offset == 0)
+        {
+            if (offset == SearchConstants.SEARCH_ARTISTS_OFFSET_DEFAULT)
             {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
-                return null;
-            }
-            if (Data!.Message == null)
-            {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
-            }
-
-            var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
-            if (!isValidQuery)
-            {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Error: {errorMessage}");
-                await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
-                return null;
-            }
-
-            _logger?.LogDebug($"Command: [{CurrentCommand}]. Handle search command: [{Data.Data}]");
-
-            string replyText = string.Empty;
-            string artistName = string.Empty;
-            int offset = 0;
-            int limit = 5;
-
-            var splitMessage = Data.GetSplitMessageText();
-
-            if (splitMessage.Count() == 1)
-            {
-                replyText = $"Please pass artist's name as a parameter. For example: [{CurrentCommand} The Beatles]";
-
-                return await TelegramBotClient.SendMessage(
-                    chatId: Data.Message.Chat.Id,
-                    text: replyText,
-                    replyMarkup: new ReplyKeyboardRemove());
-            }
-
-            var parameters = Data.GetParametersFromMessageText(CurrentCommand);
-            offset = int.Parse(parameters[0]);
-            limit = int.Parse(parameters[1]);
-            artistName = String.Join(' ', parameters.Skip(2));
-
-            var artists = await MusicSearcherClient.SearchArtistsByName(artistName, limit: limit, offset: offset);
-
-            if ((artists == null || !artists.Any()) && offset == 0)
-            {
-                if (offset == SearchConstants.SEARCH_ARTISTS_OFFSET_DEFAULT)
-                {
-                    _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist [{artistName}]");
-                    return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
-                }
-
-                InlineKeyboardMarkup navigationKeyboard = InlineKeyboardMarkup.Empty()
-                    .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, offset, limit: limit);
-
-                replyText = "Nothing found here 😕! Try another search or go back";
-                return await TelegramBotClient.EditMessageText(
-                    chatId: Data.Message.Chat.Id,
-                    messageId: Data.Message.MessageId,
-                    text: replyText,
-                    replyMarkup: navigationKeyboard);
+                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist [{artistName}]");
+                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
             }
 
-            bool isForwardNavigationEnabled = artists!.Count() == limit;
-            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists!, offset + 1)
-                .WithNavigationButtons(
-                    CommandList.CALLBACK_DATA_FORMAT_SEARCH,
-                    artistName,
-                    offset,
-                    limit: limit,
-                    isForwardNavigationEnabled: isForwardNavigationEnabled);
+            InlineKeyboardMarkup navigationKeyboard = InlineKeyboardMarkup.Empty()
+                .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SEARCH, artistName, offset, limit: limit);
 
-            replyText = "Choose the correct artist 💭:";
-
+            replyText = "Nothing found here 😕! Try another search or go back";
             return await TelegramBotClient.EditMessageText(
-                chatId: Data.Message.Chat.Id,
+                chatId: Data.Message!.Chat.Id,
                 messageId: Data.Message.MessageId,
                 text: replyText,
-                replyMarkup: inlineKeyboard);
+                replyMarkup: navigationKeyboard);
         }
+
+        bool isForwardNavigationEnabled = artists!.Count() == limit;
+        InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistsInlineKeyboard(artists!, offset + 1)
+            .WithNavigationButtons(
+                CommandList.CALLBACK_DATA_FORMAT_SEARCH,
+                artistName,
+                offset,
+                limit: limit,
+                isForwardNavigationEnabled: isForwardNavigationEnabled);
+
+        replyText = "Choose the correct artist 💭:";
+
+        return await TelegramBotClient.EditMessageText(
+            chatId: Data.Message!.Chat.Id,
+            messageId: Data.Message.MessageId,
+            text: replyText,
+            replyMarkup: inlineKeyboard);
     }
 }

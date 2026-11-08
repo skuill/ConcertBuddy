@@ -1,19 +1,18 @@
 ﻿using LyricsScraperNET.Models.Responses;
 using MusicSearcher.Model;
 
-namespace MusicSearcher.Converter
+namespace MusicSearcher.Converter;
+
+internal static class MusicLyricConverter
 {
-    internal static class MusicLyricConverter
+    public static MusicLyric ToInternal(this SearchResult searchResult)
     {
-        public static MusicLyric ToInternal(this SearchResult searchResult)
+        return new MusicLyric
         {
-            return new MusicLyric
-            {
-                Instrumental = searchResult.Instrumental,
-                IsSuccessSearchResult = searchResult.ResponseStatusCode == ResponseStatusCode.Success,
-                LyricText = searchResult.LyricText,
-                ResponseMessage = searchResult.ResponseMessage
-            };
-        }
+            Instrumental = searchResult.Instrumental,
+            IsSuccessSearchResult = searchResult.ResponseStatusCode == ResponseStatusCode.Success,
+            LyricText = searchResult.LyricText,
+            ResponseMessage = searchResult.ResponseMessage
+        };
     }
 }

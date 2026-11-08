@@ -1,11 +1,9 @@
-﻿namespace MusicSearcher.MusicService
+﻿namespace MusicSearcher.MusicService;
+
+public enum MusicServiceType
 {
-    public enum MusicServiceType
-    {
-        None,
-        MusicBrainz,
-        LastFm,
-        Spotify,
-        Yandex
-    }
+    None,
+    MusicBrainz,
+    LastFm,
+    Yandex
 }

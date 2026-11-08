@@ -3,12 +3,12 @@
 Notes for AI coding agents working in this repository. Personal or machine-specific notes go to `CLAUDE.local.md` (git-ignored).
 
 ## Build
-- .NET 8 console app, solution `src/ConcertBuddy.sln`.
+- .NET 10 console app, solution `src/ConcertBuddy.sln`; target framework in `src/Directory.Build.props`, package versions only in `src/Directory.Packages.props`.
 - `dotnet build src/ConcertBuddy.sln --configuration Release` (same as CI, CI does not run tests yet).
 
 ## Layout
 - Bot commands: `src/ConcertBuddy.ConsoleApp/TelegramBot/Command/`; routing `TelegramBot/Handler/BotHandlers.cs`.
-- External music services: `src/MusicSearcher/` (MusicBrainz, Last.fm, Setlist.fm, Spotify, Yandex Music, LyricsScraperNET).
+- External music services: `src/MusicSearcher/` (MusicBrainz, Last.fm, Setlist.fm, Yandex Music, LyricsScraperNET).
 - Config keys: `Configuration.cs`, template `appsettings.template.json`. Real keys live only on the server (edited by hand): the repo `appsettings.json` keeps empty values, never put real keys in it.
 - Version: `AssemblyVersion` in the ConsoleApp csproj. A release tag pushes the Docker image and deploys it over SSH (`.github/workflows/cicd.yml`).
 

@@ -10,84 +10,78 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
+namespace ConcertBuddy.ConsoleApp.TelegramBot.Command;
+
+public class ArtistCommand : AbstractCommand<Message?, CallbackQuery>
 {
-    public class ArtistCommand : AbstractCommand<Message?, CallbackQuery>
+    private const string CurrentCommand = CommandList.COMMAND_ARTIST;
+
+    private ILogger<ArtistCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<ArtistCommand>>();
+
+    public ArtistCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
+        : base(musicSearcherClient, telegramBotClient, data)
     {
-        private const string CurrentCommand = CommandList.COMMAND_ARTIST;
+    }
 
-        private ILogger<ArtistCommand>? _logger = ServiceProviderSingleton.Source.GetService<ILogger<ArtistCommand>>();
+    public override async Task<Message?> ExecuteAsync()
+    {
+        _logger?.LogDebug($"Handle [{CurrentCommand}] command: [{Data.Data}]");
 
-        public ArtistCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, CallbackQuery data)
-            : base(musicSearcherClient, telegramBotClient, data)
+        if (Data == null)
         {
+            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
+            return null;
+        }
+        if (Data!.Message == null)
+        {
+            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
         }
 
-        public override async Task<Message?> ExecuteAsync()
+        var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
+        if (!isValidQuery)
         {
-            _logger?.LogDebug($"Handle [{CurrentCommand}] command: [{Data.Data}]");
+            _logger?.LogError(errorMessage);
+            await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
+            return null;
+        }
 
-            if (Data == null)
-            {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
-                return null;
-            }
-            if (Data!.Message == null)
-            {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
-            }
+        string replyText = string.Empty;
 
-            var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
-            if (!isValidQuery)
-            {
-                _logger?.LogError(errorMessage);
-                await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
-                return null;
-            }
+        var artistMBID = Data.GetParameterFromMessageText(CurrentCommand);
 
-            string replyText = string.Empty;
+        var artist = await MusicSearcherClient.SearchArtistByMBID(artistMBID) as MusicArtist;
 
-            var artistMBID = Data.GetParameterFromMessageText(CurrentCommand);
+        if (artist == null)
+        {
+            _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist by mbid [{artistMBID}]");
+            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
+        }
 
-            var artist = await MusicSearcherClient.SearchArtistByMBID(artistMBID) as MusicArtist;
+        var lastFmUrl = artist[MusicServiceType.LastFm]?.ExternalUrl;
 
-            if (artist == null)
-            {
-                _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist by mbid [{artistMBID}]");
-                return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message.Chat.Id);
-            }
+        replyText = $"<b>{artist.Name}</b>. ";
+        if (lastFmUrl != default)
+            replyText = replyText + "<i>Links</i>: <a href=\"" + lastFmUrl.ToString() + "\">last.fm</a>";
 
-            var lastFmUrl = artist[MusicServiceType.LastFm]?.ExternalUrl;
-            var spotifyUrl = artist[MusicServiceType.Spotify]?.ExternalUrl;
+        InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(artistMBID)
+            .WithDeleteButton();
 
-            replyText = $"<b>{artist.Name}</b>. ";
-            if (lastFmUrl != default || spotifyUrl != default)
-                replyText = replyText + "<i>Links</i>: ";
-            if (lastFmUrl != default)
-                replyText = replyText + "<a href=\"" + lastFmUrl.ToString() + "\">last.fm</a>, ";
-            if (spotifyUrl != default)
-                replyText = replyText + "<a href=\"" + spotifyUrl.ToString() + "\">spotify</a>";
+        await TelegramBotClient.AnswerCallbackQuery(
+            callbackQueryId: Data.Id,
+            text: $"Artist: {artist.Name}");
 
-            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(artistMBID)
-                .WithDeleteButton();
-
-            await TelegramBotClient.AnswerCallbackQuery(
-                callbackQueryId: Data.Id,
-                text: $"Artist: {artist.Name}");
-
-            if (artist.ImageUri != null)
-                return await TelegramBotClient.SendPhoto(
-                    chatId: Data.Message.Chat.Id,
-                    caption: replyText,
-                    photo: InputFile.FromUri(artist.ImageUri),
-                    replyMarkup: inlineKeyboard,
-                    parseMode: ParseMode.Html);
-
-            return await TelegramBotClient.SendMessage(
-                chatId: Data.Message.Chat.Id,
-                text: replyText,
+        if (artist.ImageUri != null)
+            return await TelegramBotClient.SendPhoto(
+                chatId: Data.Message!.Chat.Id,
+                caption: replyText,
+                photo: InputFile.FromUri(artist.ImageUri),
                 replyMarkup: inlineKeyboard,
                 parseMode: ParseMode.Html);
-        }
+
+        return await TelegramBotClient.SendMessage(
+            chatId: Data.Message!.Chat.Id,
+            text: replyText,
+            replyMarkup: inlineKeyboard,
+            parseMode: ParseMode.Html);
     }
 }

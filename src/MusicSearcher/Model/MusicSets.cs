@@ -1,7 +1,6 @@
-﻿namespace MusicSearcher.Model
+﻿namespace MusicSearcher.Model;
+
+public class MusicSets
 {
-    public class MusicSets
-    {
-        public List<MusicSet> Set { get; set; }
-    }
+    public List<MusicSet> Set { get; set; } = null!;
 }
