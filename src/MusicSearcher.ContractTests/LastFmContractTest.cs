@@ -1,4 +1,5 @@
 using FakeItEasy;
+using Hqub.MusicBrainz;
 using LyricsScraperNET;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Model;
@@ -70,6 +71,7 @@ public class LastFmContractTest
             A.Fake<ILyricsScraperClient>(),
             A.Fake<ISetlistFmServiceClient>(),
             new[] { new LastFmServiceClient(ContractTestContext.LastFmApiKey!, ContractTestContext.LastFmApiSecret!) },
+            new MusicBrainzClient(),
             A.Fake<ILogger<MusicSearcherClient>>());
     }
 }

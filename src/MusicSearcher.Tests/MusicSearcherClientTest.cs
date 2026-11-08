@@ -1,4 +1,5 @@
 using FakeItEasy;
+using Hqub.MusicBrainz;
 using LyricsScraperNET;
 using LyricsScraperNET.Models.Requests;
 using LyricsScraperNET.Models.Responses;
@@ -142,7 +143,7 @@ public class MusicSearcherClientTest
 
     private MusicSearcherClient CreateClient(params IMusicServiceClient[] services)
     {
-        return new MusicSearcherClient(_lyricsClient, _setlistClient, services, A.Fake<ILogger<MusicSearcherClient>>());
+        return new MusicSearcherClient(_lyricsClient, _setlistClient, services, new MusicBrainzClient(), A.Fake<ILogger<MusicSearcherClient>>());
     }
 
     private static IMusicServiceClient CreateService(MusicTrackBase track)
