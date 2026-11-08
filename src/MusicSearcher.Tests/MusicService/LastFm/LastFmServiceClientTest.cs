@@ -1,15 +1,14 @@
 using FakeItEasy;
 using Hqub.Lastfm;
 using Hqub.Lastfm.Entities;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.Model.LastFm;
 using MusicSearcher.MusicService;
 using MusicSearcher.MusicService.LastFm;
+using Shouldly;
 
 namespace MusicSearcher.Tests.MusicService.LastFm;
 
-[TestClass]
 public class LastFmServiceClientTest
 {
     private const string Mbid = "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab";
@@ -24,7 +23,7 @@ public class LastFmServiceClientTest
 
     private readonly ILastFmApi _api = A.Fake<ILastFmApi>();
 
-    [TestMethod]
+    [Fact]
     public async Task SearchTopTracks_MbidIsKnown_ReturnsTracksByMbid()
     {
         // Arrange
@@ -40,7 +39,7 @@ public class LastFmServiceClientTest
         A.CallTo(() => _api.GetTopTracksAsync(A<string>._, A<int>._)).MustNotHaveHappened();
     }
 
-    [TestMethod]
+    [Fact]
     public async Task SearchTopTracks_MbidIsUnknownToLastFm_ReturnsTracksByName()
     {
         // Arrange
@@ -57,7 +56,7 @@ public class LastFmServiceClientTest
         A.CallTo(() => _api.GetTopTracksAsync(ArtistName, ExpectedLimit)).MustHaveHappenedOnceExactly();
     }
 
-    [TestMethod]
+    [Fact]
     public async Task SearchTopTracks_NoTracksByMbid_ReturnsTracksByName()
     {
         // Arrange
@@ -73,7 +72,7 @@ public class LastFmServiceClientTest
         A.CallTo(() => _api.GetTopTracksAsync(ArtistName, ExpectedLimit)).MustHaveHappenedOnceExactly();
     }
 
-    [TestMethod]
+    [Fact]
     public async Task SearchTopTracks_NoMbid_DoesNotCallLastFmByMbid()
     {
         // Arrange
@@ -88,7 +87,7 @@ public class LastFmServiceClientTest
         A.CallTo(() => _api.GetTopTracksByMbidAsync(A<string>._, A<int>._)).MustNotHaveHappened();
     }
 
-    [TestMethod]
+    [Fact]
     public async Task SearchTopTracks_NoMbidAndNoName_ReturnsEmptyWithoutCalls()
     {
         // Arrange
@@ -98,12 +97,12 @@ public class LastFmServiceClientTest
         var result = await client.SearchTopTracks(CreateArtist(null, null));
 
         // Assert
-        Assert.AreEqual(0, result.Count);
+        result.ShouldBeEmpty();
         A.CallTo(_api).MustNotHaveHappened();
     }
 
-    [TestMethod]
-    public async Task SearchTopTracks_OtherErrorByName_IsNotSwallowed()
+    [Fact]
+    public async Task SearchTopTracks_ErrorByName_IsNotSwallowed()
     {
         // Arrange
         A.CallTo(() => _api.GetTopTracksAsync(ArtistName, ExpectedLimit))
@@ -111,18 +110,18 @@ public class LastFmServiceClientTest
         var client = new LastFmServiceClient(_api);
 
         // Act, Assert
-        await Assert.ThrowsExceptionAsync<ServiceException>(() => client.SearchTopTracks(CreateArtist(null, ArtistName)));
+        await Should.ThrowAsync<ServiceException>(() => client.SearchTopTracks(CreateArtist(null, ArtistName)));
     }
 
-    [TestMethod]
+    [Fact]
     public void LastFmMusicTrack_NoArtist_HasNoArtistsNames()
     {
         // Act
         var result = new LastFmMusicTrack(new Track { Name = "One" });
 
         // Assert
-        Assert.AreEqual("One", result.TrackName);
-        Assert.IsNull(result.ArtistsNames);
+        result.TrackName.ShouldBe("One");
+        result.ArtistsNames.ShouldBeNull();
     }
 
     private static MusicArtistBase CreateArtist(string? mbid, string? name)
@@ -132,18 +131,18 @@ public class LastFmServiceClientTest
 
     private static void AssertTracks(List<MusicTrackBase> result)
     {
-        Assert.AreEqual(Tracks.Length, result.Count);
+        result.Count.ShouldBe(Tracks.Length);
         for (int i = 0; i < Tracks.Length; i++)
         {
-            Assert.AreEqual(MusicServiceType.LastFm, result[i].MusicServiceType);
-            Assert.AreEqual(Tracks[i].Name, result[i].TrackName);
-            Assert.AreEqual(Tracks[i].Url, result[i].TrackExternalLink);
-            CollectionAssert.AreEqual(new[] { ArtistName }, result[i].ArtistsNames!.ToArray());
-            Assert.IsNull(result[i].DownloadLink);
-            Assert.IsNull(result[i].AlbumName);
-            Assert.IsNull(result[i].AlbumExternalLink);
-            Assert.IsNull(result[i].ArtistsExternalLinks);
-            Assert.IsNull(result[i].Duration);
+            result[i].MusicServiceType.ShouldBe(MusicServiceType.LastFm);
+            result[i].TrackName.ShouldBe(Tracks[i].Name);
+            result[i].TrackExternalLink.ShouldBe(Tracks[i].Url);
+            result[i].ArtistsNames.ShouldBe(new[] { ArtistName });
+            result[i].DownloadLink.ShouldBeNull();
+            result[i].AlbumName.ShouldBeNull();
+            result[i].AlbumExternalLink.ShouldBeNull();
+            result[i].ArtistsExternalLinks.ShouldBeNull();
+            result[i].Duration.ShouldBeNull();
         }
     }
 }

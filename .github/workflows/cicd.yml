@@ -25,6 +25,18 @@ jobs:
       
     - name: Build
       run: dotnet build src/ConcertBuddy.sln --no-restore --configuration Release --verbosity minimal
+
+    - name: Unit tests with coverage
+      run: |
+        dotnet test src/ConcertBuddy.ConsoleApp.Tests --configuration Release --no-build --results-directory ./TestResults/ConsoleApp -- --coverage --coverage-output-format cobertura
+        dotnet test src/MusicSearcher.Tests --configuration Release --no-build --results-directory ./TestResults/MusicSearcher -- --coverage --coverage-output-format cobertura
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v7
+      with:
+        files: ./TestResults/**/*.cobertura.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
       
   publish_docker_image:
     needs: build_solution

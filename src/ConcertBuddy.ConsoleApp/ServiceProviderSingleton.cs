@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MusicSearcher;
+using MusicSearcher.MusicService.Abstract;
 using MusicSearcher.MusicService.LastFm;
 using MusicSearcher.MusicService.SetlistFm;
 using MusicSearcher.MusicService.Yandex;
@@ -50,10 +51,10 @@ public sealed class ServiceProviderSingleton
                 .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
                 .AddScoped<SetlistApi>(
                     s => new SetlistApi(Configuration.SetlistFmApiKey!))
-                .AddScoped<LastFmServiceClient>(
-                    s => new LastFmServiceClient(Configuration.LastFmApiKey!, Configuration.LastFmApiSecret!))
-                .AddScoped<YandexServiceClient>(
+                .AddScoped<IMusicServiceClient>(
                     s => new YandexServiceClient(Configuration.YandexToken!))
+                .AddScoped<IMusicServiceClient>(
+                    s => new LastFmServiceClient(Configuration.LastFmApiKey!, Configuration.LastFmApiSecret!))
                 .AddScoped<ISetlistFmServiceClient>(provider =>
                     {
                         var logger = provider.GetRequiredService<ILogger<SetlistFmServiceClient>>();
