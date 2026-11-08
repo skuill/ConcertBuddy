@@ -48,7 +48,7 @@ A few of the things you can do with ConcertBuddy:
 * ✅ Listen to tracks
   * Directly from: `Yandex`
 * ✅ Read the lyrics of the tracks
-  * Different lyric providers: `AZLyrics`, `Genius`, `SongLyrics`, `MusixMatch`, `LyricFind`
+  * Different lyric providers: `LRCLIB`, `AZLyrics`, `Genius`, `SongLyrics`, `KPopLyrics`, `LyricsFreak`
 
 ## Feedback
 

@@ -7,8 +7,7 @@
   <ItemGroup>
     <PackageVersion Include="Hqub.Last.fm" Version="2.5.1" />
     <PackageVersion Include="KM.Yandex.Music.Client" Version="2.0.6" />
-    <!-- 3.0.0 comes with #38. -->
-    <PackageVersion Include="LyricsScraperNET" Version="2.2.2" />
+    <PackageVersion Include="LyricsScraperNET" Version="3.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
