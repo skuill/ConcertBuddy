@@ -96,7 +96,7 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Helper
                         mbid)),
             });
 
-            if (Configuration.IsSpotifyAvailable())
+            if (Configuration.IsLastFmAvailable())
                 inlineKeyboardButtons.Add(new[] {
                     InlineKeyboardButton.WithCallbackData("📻 Top tracks", string.Format(CommandList.CALLBACK_DATA_FORMAT_TOP, SearchType.Track.ConvertToString(), mbid))
                 });

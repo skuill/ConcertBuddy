@@ -15,7 +15,7 @@ namespace MusicSearcher
         Task<MusicTrackBase> SearchTrack(string artistName, string trackName);
 
         /// <summary>
-        /// Return TOP tracks from available music services (Spotify,..)
+        /// Return TOP tracks from available music services (Last.fm)
         /// </summary>
         Task<IEnumerable<MusicTrackBase>> SearchTopTracks(string artistMBID);
 

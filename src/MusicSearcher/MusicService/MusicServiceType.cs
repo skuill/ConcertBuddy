@@ -5,7 +5,6 @@
         None,
         MusicBrainz,
         LastFm,
-        Spotify,
         Yandex
     }
 }

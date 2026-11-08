@@ -1,4 +1,5 @@
 ﻿using Hqub.Lastfm;
+using Hqub.Lastfm.Entities;
 using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.Model.LastFm;
@@ -8,12 +9,19 @@ namespace MusicSearcher.MusicService.LastFm
 {
     public sealed class LastFmServiceClient : IMusicServiceClient
     {
-        private LastfmClient _lastFmClient;
+        private const int TOP_TRACKS_LIMIT = 10;
+
+        private readonly ILastFmApi _lastFmApi;
         private AvailableSearchType availableSearch = AvailableSearchType.All;
 
         public LastFmServiceClient(string apiKey, string secret)
+            : this(new LastFmApi(apiKey, secret))
         {
-            _lastFmClient = new LastfmClient(apiKey, secret);
+        }
+
+        public LastFmServiceClient(ILastFmApi lastFmApi)
+        {
+            _lastFmApi = lastFmApi;
         }
 
         public MusicServiceType MusicServiceType => MusicServiceType.LastFm;
@@ -22,7 +30,7 @@ namespace MusicSearcher.MusicService.LastFm
         {
             try
             {
-                var lastFmArtist = await _lastFmClient.Artist.GetInfoByMbidAsync(mbid);
+                var lastFmArtist = await _lastFmApi.GetArtistInfoByMbidAsync(mbid);
 
                 if (lastFmArtist != null)
                 {
@@ -57,7 +65,7 @@ namespace MusicSearcher.MusicService.LastFm
         {
             try
             {
-                var lastFmArtist = await _lastFmClient.Artist.GetInfoAsync(name);
+                var lastFmArtist = await _lastFmApi.GetArtistInfoAsync(name);
 
                 if (lastFmArtist != null)
                 {
@@ -82,9 +90,31 @@ namespace MusicSearcher.MusicService.LastFm
             }
         }
 
-        public Task<List<MusicTrackBase>> SearchTopTracks(MusicArtistBase artist)
+        public async Task<List<MusicTrackBase>> SearchTopTracks(MusicArtistBase artist)
         {
-            throw new NotImplementedException();
+            var tracks = await GetTopTracksByMbid(artist.MBID);
+            if (tracks.Count == 0 && !string.IsNullOrWhiteSpace(artist.Name))
+            {
+                tracks = await _lastFmApi.GetTopTracksAsync(artist.Name, TOP_TRACKS_LIMIT);
+            }
+            return tracks.Select(x => new LastFmMusicTrack(x)).ToList<MusicTrackBase>();
+        }
+
+        private async Task<IReadOnlyList<Track>> GetTopTracksByMbid(string? mbid)
+        {
+            if (string.IsNullOrWhiteSpace(mbid))
+            {
+                return Array.Empty<Track>();
+            }
+            try
+            {
+                return await _lastFmApi.GetTopTracksByMbidAsync(mbid, TOP_TRACKS_LIMIT);
+            }
+            catch (ServiceException)
+            {
+                // Last.fm does not know every MusicBrainz id: the artist name is tried next.
+                return Array.Empty<Track>();
+            }
         }
 
         public Task<MusicTrackBase> SearchTrack(string artistName, string trackName)

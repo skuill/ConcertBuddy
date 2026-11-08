@@ -58,15 +58,10 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Command
             }
 
             var lastFmUrl = artist[MusicServiceType.LastFm]?.ExternalUrl;
-            var spotifyUrl = artist[MusicServiceType.Spotify]?.ExternalUrl;
 
             replyText = $"<b>{artist.Name}</b>. ";
-            if (lastFmUrl != default || spotifyUrl != default)
-                replyText = replyText + "<i>Links</i>: ";
             if (lastFmUrl != default)
-                replyText = replyText + "<a href=\"" + lastFmUrl.ToString() + "\">last.fm</a>, ";
-            if (spotifyUrl != default)
-                replyText = replyText + "<a href=\"" + spotifyUrl.ToString() + "\">spotify</a>";
+                replyText = replyText + "<i>Links</i>: <a href=\"" + lastFmUrl.ToString() + "\">last.fm</a>";
 
             InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(artistMBID)
                 .WithDeleteButton();

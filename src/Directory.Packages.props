@@ -23,8 +23,6 @@
     <PackageVersion Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="SetlistNet" Version="2.1.0" />
-    <PackageVersion Include="SpotifyAPI.Web" Version="7.4.2" />
-    <PackageVersion Include="SpotifyAPI.Web.Auth" Version="7.4.2" />
     <PackageVersion Include="Telegram.Bot" Version="22.10.3.3" />
   </ItemGroup>
 

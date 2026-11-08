@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using MusicSearcher;
 using MusicSearcher.MusicService.LastFm;
 using MusicSearcher.MusicService.SetlistFm;
-using MusicSearcher.MusicService.Spotify;
 using MusicSearcher.MusicService.Yandex;
 using Serilog;
 using SetlistNet;
@@ -51,8 +50,6 @@ namespace ConcertBuddy.ConsoleApp
                     .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug)
                     .AddScoped<SetlistApi>(
                         s => new SetlistApi(Configuration.SetlistFmApiKey!))
-                    .AddScoped<SpotifyServiceClient>(
-                        s => new SpotifyServiceClient(Configuration.SpotifyClientID!, Configuration.SpotifyClientSecret!))
                     .AddScoped<LastFmServiceClient>(
                         s => new LastFmServiceClient(Configuration.LastFmApiKey!, Configuration.LastFmApiSecret!))
                     .AddScoped<YandexServiceClient>(

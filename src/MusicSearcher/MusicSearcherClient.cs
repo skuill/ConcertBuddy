@@ -13,7 +13,6 @@ using MusicSearcher.MusicBrainz;
 using MusicSearcher.MusicService.Abstract;
 using MusicSearcher.MusicService.LastFm;
 using MusicSearcher.MusicService.SetlistFm;
-using MusicSearcher.MusicService.Spotify;
 using MusicSearcher.MusicService.Yandex;
 using System.Net;
 using System.Reflection;
@@ -64,7 +63,6 @@ namespace MusicSearcher
             ILyricsScraperClient lyricsScraperClient,
             ISetlistFmServiceClient setlistFmClient,
             YandexServiceClient yandexServiceClient,
-            SpotifyServiceClient spotifyServiceClient,
             LastFmServiceClient lastFmServiceClient,
             ILogger<MusicSearcherClient> logger)
             : this()
@@ -74,7 +72,6 @@ namespace MusicSearcher
             _setlistFmClient = setlistFmClient;
 
             _musicServiceClients.Add(yandexServiceClient);
-            _musicServiceClients.Add(spotifyServiceClient);
             _musicServiceClients.Add(lastFmServiceClient);
 
             _logger?.LogInformation($"Enable memory cache for artist search with size {MEMORY_CACHE_SIZE}");

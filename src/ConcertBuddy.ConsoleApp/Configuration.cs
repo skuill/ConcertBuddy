@@ -28,26 +28,6 @@
         public static string? LastFmApiSecret { get; set; }
 
         /// <summary>
-        /// The Client Credentials flow is used in server-to-server authentication. 
-        /// Only endpoints that do not access user information can be accessed. 
-        /// By supplying your SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET, you get an access token.
-        /// Documentation:
-        /// 1) Official: https://developer.spotify.com/documentation/web-api/quick-start/
-        /// 2) NET Libraty: https://johnnycrazy.github.io/SpotifyAPI-NET/docs/client_credentials
-        /// </summary>
-        public static string? SpotifyClientID { get; set; }
-
-        /// <summary>
-        /// The Client Credentials flow is used in server-to-server authentication. 
-        /// Only endpoints that do not access user information can be accessed. 
-        /// By supplying your SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET, you get an access token.
-        /// Documentation:
-        /// 1) Official: https://developer.spotify.com/documentation/web-api/quick-start/
-        /// 2) NET Libraty: https://johnnycrazy.github.io/SpotifyAPI-NET/docs/client_credentials
-        /// </summary>
-        public static string? SpotifyClientSecret { get; set; }
-
-        /// <summary>
         /// To access Yandex API you need authorization. You can do it via OAuth token
         /// Documentation 1: https://yandexmusicapicsharp.readthedocs.io/ru/latest/client/root.html
         /// Documentation 2: https://yandex-music.readthedocs.io/en/main/
@@ -57,8 +37,6 @@
         public static bool IsSetlistFmAvailable() => !string.IsNullOrWhiteSpace(SetlistFmApiKey);
 
         public static bool IsLastFmAvailable() => !string.IsNullOrWhiteSpace(LastFmApiKey) && !string.IsNullOrWhiteSpace(LastFmApiSecret);
-
-        public static bool IsSpotifyAvailable() => !string.IsNullOrWhiteSpace(SpotifyClientID) && !string.IsNullOrWhiteSpace(SpotifyClientSecret);
 
         public static bool IsYandexAvailable() => !string.IsNullOrEmpty(YandexToken);
     }

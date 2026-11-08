@@ -11,8 +11,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="MusicBrainzAPI" />
     <PackageReference Include="SetlistNet" />
-    <PackageReference Include="SpotifyAPI.Web" />
-    <PackageReference Include="SpotifyAPI.Web.Auth" />
   </ItemGroup>
 
 </Project>
