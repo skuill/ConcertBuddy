@@ -57,7 +57,7 @@ public static class ServiceCollectionExtensions
                         settings.SetlistFmApiKey!,
                         httpClient: s.GetRequiredService<IHttpClientFactory>().CreateClient(MusicServiceHttpClients.SetlistFmClientName)))
                 .AddScoped<ISetlistFmServiceClient, SetlistFmServiceClient>()
-                .AddScoped<IBotHandlers, BotHandlers>()
+                .AddScoped<IBotHandlers, PrototypeHandlers>()
                 .AddScoped<IMusicSearcherClient, MusicSearcherClient>();
 
         if (settings.IsYandexAvailable())
