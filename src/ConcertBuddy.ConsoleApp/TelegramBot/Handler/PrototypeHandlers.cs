@@ -47,7 +47,14 @@ public sealed partial class PrototypeHandlers : IBotHandlers
 
     private sealed record Screen(string Html, bool IsRich, InlineKeyboardMarkup Keyboard, string? PreviewUrl = null);
 
-    public async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
+    public Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
+    {
+        // Prototype: every update runs on its own, so a slow track download does not hold the other buttons.
+        _ = Task.Run(() => ProcessAsync(update), CancellationToken.None);
+        return Task.CompletedTask;
+    }
+
+    private async Task ProcessAsync(Update update)
     {
         try
         {
@@ -89,11 +96,31 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         }
 
         var parts = payload.Split('|');
-        string? answer = null;
+        switch (parts[0])
+        {
+            case "play":
+                // Slow actions answer at once, so the user sees that the tap worked.
+                await _bot.AnswerCallbackQuery(query.Id, $"⏳ Loading {parts[2]}…");
+                await SendTrackAsync(chatId, parts[1], parts[2]);
+                return;
+            case "lyrics":
+                await _bot.AnswerCallbackQuery(query.Id, "⏳ Looking for the lyrics…");
+                await SendLyricsAsync(chatId, messageId, parts[1], parts[2]);
+                return;
+            case "hidelyrics":
+                await _bot.AnswerCallbackQuery(query.Id);
+                await _bot.DeleteMessage(chatId, int.Parse(parts[1], CultureInfo.InvariantCulture));
+                await _bot.EditMessageReplyMarkup(chatId, messageId, AudioKeyboard(parts[2], parts[3], parts[4], lyricsMessageId: null));
+                return;
+        }
+
         switch (parts[0])
         {
             case "artist":
                 await ShowAsync(chatId, messageId, await ArtistScreenAsync(parts[1]));
+                break;
+            case "bio":
+                await ShowAsync(chatId, messageId, await BiographyScreenAsync(parts[1]));
                 break;
             case "setlists":
                 await ShowAsync(chatId, messageId, await SetlistsScreenAsync(parts[1], int.Parse(parts[2], CultureInfo.InvariantCulture)));
@@ -114,12 +141,6 @@ public sealed partial class PrototypeHandlers : IBotHandlers
             case "top":
                 await ShowAsync(chatId, messageId, await TopTracksScreenAsync(parts[1]));
                 break;
-            case "play":
-                answer = await SendTrackAsync(chatId, parts[1], parts[2]);
-                break;
-            case "lyrics":
-                answer = await SendLyricsAsync(chatId, parts[1], parts[2]);
-                break;
             case "close":
                 await _bot.DeleteMessage(chatId, messageId);
                 break;
@@ -129,7 +150,7 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         }
 
         // Every callback query is answered, otherwise the button keeps spinning.
-        await _bot.AnswerCallbackQuery(query.Id, answer);
+        await _bot.AnswerCallbackQuery(query.Id);
     }
 
     private async Task<Screen> SearchScreenAsync(string text)
@@ -162,7 +183,7 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         var keyboard = new InlineKeyboardMarkup(new[]
         {
             new[] { Styled(Button("📝 Setlists", $"setlists|{mbid}|1"), KeyboardButtonStyle.Primary), Button("🎧 Top tracks", $"top|{mbid}") },
-            new[] { Button("🔍 Another artist", "hint") },
+            new[] { Button("📖 Full biography", $"bio|{mbid}"), Button("🔍 Another artist", "hint") },
         });
         return new Screen(html.ToString(), false, keyboard, lastFm?.ExternalUrl?.ToString());
     }
@@ -223,7 +244,7 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         {
             html.Append($"<p><i>{Encode(Summary(sets, songs))}</i></p>");
             var hasNotes = songs.Any(s => Note(s).Length > 0);
-            html.Append(asTable ? "<table>" : "");
+            html.Append(asTable ? $"<table bordered striped><tr><th>#</th><th>Song</th>{(hasNotes ? "<th>Note</th>" : "")}</tr>" : "");
             var number = 1;
             foreach (var set in sets)
             {
@@ -282,44 +303,75 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         return new Screen("🎧 <b>Top tracks</b> on Last.fm", false, new InlineKeyboardMarkup(rows));
     }
 
-    private async Task<string?> SendTrackAsync(long chatId, string mbid, string song)
+    private async Task SendTrackAsync(long chatId, string mbid, string song)
     {
+        await _bot.SendChatAction(chatId, ChatAction.UploadDocument);
         var artist = await _music.SearchArtistByMBID(mbid);
         var track = await _music.SearchTrack(artist.Name!, song);
         if (string.IsNullOrEmpty(track.DownloadLink))
         {
-            return $"No audio for {song}";
+            await _bot.SendMessage(chatId, $"🔇 No audio for <b>{Encode(song)}</b>.", ParseMode.Html,
+                replyMarkup: new InlineKeyboardMarkup(new[] { new[] { Styled(Button("🗑", "close"), KeyboardButtonStyle.Danger) } }));
+            return;
         }
 
-        var keyboard = new InlineKeyboardMarkup(new[]
+        // Sent by URL, Telegram shows the file name of the link (a hash). Uploaded as a stream, the file gets a readable name.
+        await using var audio = await AudioClient.GetStreamAsync(track.DownloadLink);
+        await _bot.SendAudio(chatId, InputFile.FromStream(audio, $"{artist.Name} - {song}.mp3"), performer: artist.Name, title: song,
+            replyMarkup: AudioKeyboard(mbid, song, artist.Name!, lyricsMessageId: null));
+    }
+
+    private InlineKeyboardMarkup AudioKeyboard(string mbid, string song, string artistName, int? lyricsMessageId)
+    {
+        var lyrics = lyricsMessageId == null
+            ? Button("🎼 Lyrics", $"lyrics|{mbid}|{song}")
+            : Button("🎼 Hide lyrics", $"hidelyrics|{lyricsMessageId}|{mbid}|{song}|{artistName}");
+        return new InlineKeyboardMarkup(new[]
         {
             new[]
             {
-                Button("🎼 Lyrics", $"lyrics|{mbid}|{song}"),
-                new InlineKeyboardButton("📋 Copy name") { CopyText = new CopyTextButton { Text = $"{artist.Name} – {song}" } },
+                lyrics,
+                new InlineKeyboardButton("📋 Copy name") { CopyText = new CopyTextButton { Text = $"{artistName} – {song}" } },
                 Styled(Button("🗑", "close"), KeyboardButtonStyle.Danger),
             },
         });
-        // Sent by URL, Telegram shows the file name of the link (a hash). Uploaded as a stream, the file gets a readable name.
-        await using var audio = await AudioClient.GetStreamAsync(track.DownloadLink);
-        await _bot.SendAudio(chatId, InputFile.FromStream(audio, $"{artist.Name} - {song}.mp3"), performer: artist.Name, title: song, replyMarkup: keyboard);
-        return null;
     }
 
-    private async Task<string?> SendLyricsAsync(long chatId, string mbid, string song)
+    private async Task SendLyricsAsync(long chatId, int audioMessageId, string mbid, string song)
     {
         var artist = await _music.SearchArtistByMBID(mbid);
         var lyric = await _music.SearchLyric(artist.Name!, song);
+        string html;
         if (!lyric.IsSuccessSearchResult || string.IsNullOrWhiteSpace(lyric.LyricText))
         {
-            return lyric.Instrumental ? "Instrumental, no lyrics" : $"No lyrics found for {song}";
+            html = lyric.Instrumental ? "<p>🎼 Instrumental, no lyrics.</p>" : $"<p>🎼 No lyrics found for <b>{Encode(song)}</b>.</p>";
+        }
+        else
+        {
+            var lines = string.Join("<br/>", lyric.LyricText.Trim().Split('\n').Select(line => Encode(line.TrimEnd('\r'))));
+            html = $"<h4>🎼 {Encode(song)} · {Encode(artist.Name)}</h4><p>{lines}</p>";
         }
 
-        var lines = string.Join("<br/>", lyric.LyricText.Trim().Split('\n').Select(line => Encode(line.TrimEnd('\r'))));
-        var html = $"<h4>🎼 {Encode(song)} · {Encode(artist.Name)}</h4><p>{lines}</p>";
-        var keyboard = new InlineKeyboardMarkup(new[] { new[] { Styled(Button("🗑 Close", "close"), KeyboardButtonStyle.Danger) } });
-        await _bot.SendRichMessage(chatId, new InputRichMessage { Html = html }, replyMarkup: keyboard);
-        return null;
+        // The lyrics answer the track message, and the track button turns into "Hide lyrics": the lyrics stay with their song.
+        var sent = await _bot.SendRichMessage(chatId, new InputRichMessage { Html = html }, replyParameters: new ReplyParameters { MessageId = audioMessageId });
+        await _bot.EditMessageReplyMarkup(chatId, audioMessageId, AudioKeyboard(mbid, song, artist.Name!, sent.MessageId));
+    }
+
+    private async Task<Screen> BiographyScreenAsync(string mbid)
+    {
+        var artist = (MusicArtist)await _music.SearchArtistByMBID(mbid);
+        var lastFm = artist[MusicServiceType.LastFm] as MusicSearcher.Model.LastFm.LastFmMusicArtist;
+        var paragraphs = CleanBiography(lastFm?.FullBiography).Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var html = new StringBuilder($"<h3>📖 {Encode(artist.Name)}</h3>");
+        foreach (var paragraph in paragraphs)
+        {
+            html.Append($"<p>{Encode(paragraph)}</p>");
+        }
+        if (lastFm?.ExternalUrl != null)
+        {
+            html.Append($"<footer>Biography from <a href=\"{lastFm.ExternalUrl}\">Last.fm</a>, user-contributed text under CC-BY-SA</footer>");
+        }
+        return new Screen(html.ToString(), true, new InlineKeyboardMarkup(new[] { new[] { Button("⬅️ Artist", $"artist|{mbid}") } }));
     }
 
     private async Task ShowAsync(long chatId, int messageId, Screen screen)
