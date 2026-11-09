@@ -42,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddLogging(configure => configure.AddSerilog(dispose: true).AddFilter<SerilogLoggerProvider>("Polly", LogLevel.Warning));
 
         services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<UserKeys>();
 
         services.AddHttpClient(TelegramClientName)
                 .RemoveAllLoggers()

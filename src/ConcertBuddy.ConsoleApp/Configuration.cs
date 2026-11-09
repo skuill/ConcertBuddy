@@ -34,6 +34,12 @@ public class Configuration
     /// </summary>
     public string? YandexToken { get; set; }
 
+    /// <summary>
+    /// Secret of the pseudonymous user key in the logs (HMAC of the Telegram user id). Without it the logs have no user key.
+    /// Any long random string, for example from `openssl rand -hex 32`. Changing it starts the counting of users anew.
+    /// </summary>
+    public string? UserKeySecret { get; set; }
+
     public bool IsSetlistFmAvailable() => !string.IsNullOrWhiteSpace(SetlistFmApiKey);
 
     public bool IsLastFmAvailable() => !string.IsNullOrWhiteSpace(LastFmApiKey) && !string.IsNullOrWhiteSpace(LastFmApiSecret);
