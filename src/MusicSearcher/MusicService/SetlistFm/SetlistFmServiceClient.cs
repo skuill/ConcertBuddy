@@ -25,14 +25,14 @@ public sealed class SetlistFmServiceClient : ISetlistFmServiceClient
 
             if (result == null || result.Setlist == null || result.Setlist.Count == 0)
             {
-                _logger?.LogInformation($"Can't find setlists for artist with mbid [{artistMBID}]");
+                _logger?.LogInformation("Can't find setlists for artist with mbid [{ArtistMBID}]", artistMBID);
                 return null!;
             }
             return result.ToInternal();
         }
         catch (Exception ex)
         {
-            LogFailure(ex, $"Can't get setlists for artist with mbid [{artistMBID}]");
+            LogFailure(ex, "setlists of artist", artistMBID);
             return null!;
         }
     }
@@ -44,22 +44,22 @@ public sealed class SetlistFmServiceClient : ISetlistFmServiceClient
             var result = await _setlistApi.Setlist(setlistId);
             if (result == null)
             {
-                _logger?.LogError($"Can't find setlist by Id: [{setlistId}]");
+                _logger?.LogInformation("Can't find setlist by Id: [{SetlistId}]", setlistId);
                 return null!;
             }
             return result.ToInternal();
         }
         catch (Exception ex)
         {
-            LogFailure(ex, $"Can't get setlist by Id: [{setlistId}]");
+            LogFailure(ex, "setlist", setlistId);
             return null!;
         }
     }
 
-    private void LogFailure(Exception ex, string message)
+    private void LogFailure(Exception ex, string target, string id)
     {
         // Setlist.fm answers 404 when there is no data: it is a normal result, not a failure of the service.
         var level = ex is HttpRequestException { StatusCode: HttpStatusCode.NotFound } ? LogLevel.Information : LogLevel.Error;
-        _logger?.Log(level, ex, message);
+        _logger?.Log(level, ex, "Can't get {Target} [{Id}]", target, id);
     }
 }

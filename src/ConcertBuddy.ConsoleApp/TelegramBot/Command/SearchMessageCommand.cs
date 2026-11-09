@@ -23,11 +23,11 @@ public class SearchMessageCommand : AbstractCommand<Message?, Message>
 
     public override async Task<Message?> ExecuteAsync()
     {
-        _logger?.LogDebug($"Handle [{CurrentCommand}] message command: [{Data.Text}]");
+        _logger?.LogDebug("Handle [{CurrentCommand}] message command: [{Text}]", CurrentCommand, Data.Text);
 
         if (Data == null)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
+            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.", CurrentCommand);
             return null;
         }
 
@@ -38,8 +38,8 @@ public class SearchMessageCommand : AbstractCommand<Message?, Message>
 
         if (artists == null || !artists.Any())
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist [{artistName}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Chat.Id);
+            _logger?.LogInformation("Command: [{CurrentCommand}]. Can't find artist [{ArtistName}]", CurrentCommand, artistName);
+            return await SendNotFoundAsync(Data.Chat.Id);
         }
 
         if (artists.Count() == 1)

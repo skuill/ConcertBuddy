@@ -24,22 +24,23 @@ public class TrackCommand : AbstractCommand<Message?, CallbackQuery>
 
     public override async Task<Message?> ExecuteAsync()
     {
-        _logger?.LogDebug($"Handle [{CurrentCommand}] command: [{Data.Data}]");
+        _logger?.LogDebug("Handle [{CurrentCommand}] command: [{CallbackData}]", CurrentCommand, Data.Data);
 
         if (Data == null)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
+            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.", CurrentCommand);
             return null;
         }
         if (Data!.Message == null)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
+            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.", CurrentCommand);
         }
 
         var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
         if (!isValidQuery)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Error: {errorMessage}");
+            _logger?.LogError("Command: [{CurrentCommand}]. Error: {ErrorMessage}", CurrentCommand, errorMessage);
+            Result = CommandResult.Error;
             await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
             return null;
         }
@@ -53,22 +54,22 @@ public class TrackCommand : AbstractCommand<Message?, CallbackQuery>
         var artist = await MusicSearcherClient.SearchArtistByMBID(mbid);
         if (artist == null)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist with mbid [{mbid}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
+            _logger?.LogInformation("Command: [{CurrentCommand}]. Can't find artist with mbid [{Mbid}]", CurrentCommand, mbid);
+            return await SendNotFoundAsync(Data.Message!.Chat.Id);
         }
 
         if (string.IsNullOrWhiteSpace(artist.Name))
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Can't find artist name by mbid [{mbid}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
+            _logger?.LogInformation("Command: [{CurrentCommand}]. Can't find artist name by mbid [{Mbid}]", CurrentCommand, mbid);
+            return await SendNotFoundAsync(Data.Message!.Chat.Id);
         }
 
         var track = await MusicSearcherClient.SearchTrack(artist.Name, trackName);
 
         if (track == null)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Can't find track [{artist} - {trackName}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
+            _logger?.LogInformation("Command: [{CurrentCommand}]. Can't find track [{Artist} - {TrackName}]", CurrentCommand, artist, trackName);
+            return await SendNotFoundAsync(Data.Message!.Chat.Id);
         }
 
         InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetLyricInlineKeyboardMenu(mbid, trackName);
@@ -94,7 +95,7 @@ public class TrackCommand : AbstractCommand<Message?, CallbackQuery>
                 return sendAudioResult;
         }
 
-        _logger?.LogWarning($"Command: [{CurrentCommand}]. Can't send audio: {artist.Name} - {track.TrackName}");
+        _logger?.LogWarning("Command: [{CurrentCommand}]. Can't send audio: {ArtistName} - {TrackName}", CurrentCommand, artist.Name, track.TrackName);
 
         return await TelegramBotClient.SendMessage(
             chatId: Data.Message!.Chat.Id,

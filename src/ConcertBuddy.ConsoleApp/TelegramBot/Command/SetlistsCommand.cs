@@ -25,22 +25,23 @@ public class SetlistsCommand : AbstractCommand<Message?, CallbackQuery>
 
     public override async Task<Message?> ExecuteAsync()
     {
-        _logger?.LogDebug($"Handle [{CurrentCommand}] command: [{Data.Data}]");
+        _logger?.LogDebug("Handle [{CurrentCommand}] command: [{CallbackData}]", CurrentCommand, Data.Data);
 
         if (Data == null)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
+            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.", CurrentCommand);
             return null;
         }
         if (Data!.Message == null)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
+            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.", CurrentCommand);
         }
 
         var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
         if (!isValidQuery)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Error: {errorMessage}");
+            _logger?.LogError("Command: [{CurrentCommand}]. Error: {ErrorMessage}", CurrentCommand, errorMessage);
+            Result = CommandResult.Error;
             await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
             return null;
         }
@@ -51,8 +52,8 @@ public class SetlistsCommand : AbstractCommand<Message?, CallbackQuery>
         if (!int.TryParse(parameters[0], out var currentPage)
             || !int.TryParse(parameters[1], out var previousPage))
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Can't parse parameter: [{parameters[0]}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
+            _logger?.LogError("Command: [{CurrentCommand}]. Can't parse parameter: [{Parameters}]", CurrentCommand, parameters[0]);
+            return await SendNotFoundAsync(Data.Message!.Chat.Id);
         }
 
         var artistMBID = parameters[2];
