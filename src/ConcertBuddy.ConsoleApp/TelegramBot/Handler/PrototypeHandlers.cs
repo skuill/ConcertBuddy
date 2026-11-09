@@ -35,6 +35,7 @@ public sealed partial class PrototypeHandlers : IBotHandlers
     private readonly ConcurrentDictionary<string, string> _payloads = new();
     private readonly ConcurrentDictionary<string, string> _ids = new();
     private int _nextId;
+    private string? _botUsername;
 
     public PrototypeHandlers(IMusicSearcherClient music, ITelegramBotClient bot, ILogger<PrototypeHandlers> logger)
     {
@@ -75,6 +76,16 @@ public sealed partial class PrototypeHandlers : IBotHandlers
 
     private async Task OnTextAsync(long chatId, string text)
     {
+        // Deep link from a shared setlist: t.me/<bot>?start=s_<setlist id>
+        if (text.StartsWith("/start s_", StringComparison.Ordinal))
+        {
+            var setlistId = text["/start s_".Length..];
+            var loading = await _bot.SendMessage(chatId, "📝 Opening the shared setlist…");
+            var shared = await _music.SearchSetlist(setlistId);
+            await ShowAsync(chatId, loading.MessageId, await SetlistScreenAsync(setlistId, shared.ArtistMBID!, 1, asTable: true));
+            return;
+        }
+
         if (text.StartsWith('/'))
         {
             await _bot.SendMessage(chatId, "🎸 <b>Prototype of the new screens</b>\nSend an artist or band name.", ParseMode.Html);
@@ -277,10 +288,23 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         var rows = new List<InlineKeyboardButton[]>();
         if (songs.Count > 0)
         {
-            rows.Add(new[] { new InlineKeyboardButton("📋 Copy setlist") { CopyText = new CopyTextButton { Text = CopyTextOf(setlist, songs) } } });
+            rows.Add(new[]
+            {
+                new InlineKeyboardButton("📋 Copy setlist") { CopyText = new CopyTextButton { Text = CopyTextOf(setlist, songs) } },
+                InlineKeyboardButton.WithUrl("↗️ Share", await ShareUrlAsync(setlist)),
+            });
         }
         rows.Add(new[] { Button("⬅️ Setlists", $"setlists|{mbid}|{screen}") });
         return new Screen(html.ToString(), true, new InlineKeyboardMarkup(rows));
+    }
+
+    private async Task<string> ShareUrlAsync(MusicSetlist setlist)
+    {
+        // Telegram's own share dialog: the friend gets a link that opens this setlist in the bot.
+        _botUsername ??= (await _bot.GetMe()).Username;
+        var link = $"https://t.me/{_botUsername}?start=s_{setlist.Id}";
+        var caption = $"{setlist.ArtistName} · {FormatDate(setlist.EventDate)} · {setlist.CityName}";
+        return $"https://t.me/share/url?url={Uri.EscapeDataString(link)}&text={Uri.EscapeDataString(caption)}";
     }
 
     private static string Summary(List<MusicSet> sets, List<MusicSong> songs)
