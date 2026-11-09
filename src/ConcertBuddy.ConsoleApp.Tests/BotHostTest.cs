@@ -1,3 +1,4 @@
+using ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ public class BotHostTest
     private const string TokenArgument = "--Configuration:TelegramToken=123456:test-token";
     private static readonly TimeSpan SafetyTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan AlmostNothing = TimeSpan.FromMilliseconds(1);
+    private const long TesterId = 987654321;
 
     private readonly CapturingLoggerProvider _logs = new();
     private readonly CountingTimeProvider _time = new();
@@ -52,7 +54,26 @@ public class BotHostTest
         // Assert
         telegram.Answers.Single().ShouldContain("Hi, Tester!");
         telegram.PollingStopped.ShouldBeTrue();
-        HandledLines().Single().ShouldStartWith("Handled update: Message /start in Private chat: Found in ");
+        HandledLines().Single().ShouldStartWith("Handled update: Message /start in Private chat from user -: Found in ");
+    }
+
+    [Fact]
+    public async Task Update_UserKeySecretSet_LogsPseudonymousKeyNotTheUserId()
+    {
+        // Arrange
+        var telegram = new FakeTelegram(CreateStartUpdate(1));
+        using var host = CreateHost(telegram, "--Configuration:UserKeySecret=test-secret");
+        var expectedKey = host.Services.GetRequiredService<UserKeys>().Get(TesterId);
+
+        // Act
+        await host.StartAsync(Token);
+        await WaitUntil(() => HandledLines().Count == 1);
+        await host.StopAsync(Token);
+
+        // Assert
+        expectedKey.ShouldNotBe(UserKeys.NoKey);
+        HandledLines().Single().ShouldStartWith($"Handled update: Message /start in Private chat from user {expectedKey}: Found in ");
+        _logs.Entries.ShouldNotContain(x => x.Message.Contains(TesterId.ToString()));
     }
 
     [Fact]
@@ -90,7 +111,7 @@ public class BotHostTest
         await host.StopAsync(Token);
 
         // Assert
-        HandledLines().Single().ShouldStartWith("Handled update: CallbackQuery unknown in Group chat: Found in ");
+        HandledLines().Single().ShouldStartWith("Handled update: CallbackQuery unknown in Group chat from user -: Found in ");
         _logs.Entries.ShouldNotContain(x => x.Message.Contains(secret));
     }
 
@@ -108,7 +129,7 @@ public class BotHostTest
         await host.StopAsync(Token);
 
         // Assert
-        HandledLines().Single().ShouldStartWith("Handled update: CallbackQuery /artist in Private chat: Error in ");
+        HandledLines().Single().ShouldStartWith("Handled update: CallbackQuery /artist in Private chat from user -: Error in ");
         telegram.Answers.Single().ShouldContain("Please pass any parameters");
     }
 
@@ -202,9 +223,9 @@ public class BotHostTest
         rules.ShouldContain(x => x.ProviderName == typeof(SerilogLoggerProvider).FullName && x.CategoryName == "Polly" && x.LogLevel == LogLevel.Warning);
     }
 
-    private IHost CreateHost(FakeTelegram telegram)
+    private IHost CreateHost(FakeTelegram telegram, params string[] arguments)
     {
-        return Program.CreateHost(new[] { TokenArgument }, services =>
+        return Program.CreateHost(arguments.Prepend(TokenArgument).ToArray(), services =>
         {
             services.AddHttpClient(ServiceCollectionExtensions.TelegramClientName).ConfigurePrimaryHttpMessageHandler(() => telegram);
             services.AddSingleton<ILoggerProvider>(_logs);
@@ -253,7 +274,7 @@ public class BotHostTest
 
     private static string CreateStartUpdate(int updateId)
     {
-        return $$$"""{"update_id":{{{updateId}}},"message":{"message_id":{{{updateId}}},"date":1,"chat":{"id":10,"type":"private"},"from":{"id":5,"is_bot":false,"first_name":"Tester"},"text":"/start"}}""";
+        return $$$"""{"update_id":{{{updateId}}},"message":{"message_id":{{{updateId}}},"date":1,"chat":{"id":10,"type":"private"},"from":{"id":{{{TesterId}}},"is_bot":false,"first_name":"Tester"},"text":"/start"}}""";
     }
 
     private sealed class CountingTimeProvider : FakeTimeProvider

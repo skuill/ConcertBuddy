@@ -18,13 +18,15 @@ public class BotHandlers : IBotHandlers
     private readonly IServiceProvider _serviceProvider;
     private readonly ITelegramBotClient _botClient;
     private readonly TimeProvider _timeProvider;
+    private readonly UserKeys _userKeys;
 
-    public BotHandlers(ILogger<IBotHandlers> logger, IServiceProvider serviceProvider, ITelegramBotClient botClient, TimeProvider timeProvider)
+    public BotHandlers(ILogger<IBotHandlers> logger, IServiceProvider serviceProvider, ITelegramBotClient botClient, TimeProvider timeProvider, UserKeys userKeys)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
         _botClient = botClient;
         _timeProvider = timeProvider;
+        _userKeys = userKeys;
     }
 
     public async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
@@ -51,10 +53,11 @@ public class BotHandlers : IBotHandlers
 
         // Only names and numbers here: this line is written for every update, so it must not hold what the user typed.
         _logger.LogInformation(
-            "Handled update: {UpdateType} {Command:l} in {ChatType} chat: {Result} in {ElapsedMs} ms",
+            "Handled update: {UpdateType} {Command:l} in {ChatType} chat from user {UserKey:l}: {Result} in {ElapsedMs} ms",
             update.Type,
             commandName,
             GetChat(update)?.Type,
+            _userKeys.Get(GetUserId(update)),
             result,
             (long)_timeProvider.GetElapsedTime(startTimestamp).TotalMilliseconds);
     }
@@ -123,6 +126,11 @@ public class BotHandlers : IBotHandlers
         {
             _logger.LogWarning(exception, "Can't tell the user about the failed update {UpdateId}", update.Id);
         }
+    }
+
+    private static long? GetUserId(Update update)
+    {
+        return (update.Message?.From ?? update.EditedMessage?.From ?? update.CallbackQuery?.From)?.Id;
     }
 
     private static Chat? GetChat(Update update)

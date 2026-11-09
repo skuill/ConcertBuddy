@@ -18,6 +18,7 @@ Template with all settings: `src/ConcertBuddy.ConsoleApp/appsettings.template.js
 | `SetlistFmApiKey` | no | setlists are not found |
 | `LastFmApiKey`, `LastFmApiSecret` | no | no biographies, no top tracks and no Top tracks button |
 | `YandexToken` | no | tracks are sent without audio |
+| `UserKeySecret` | no | the log has no user key, so users cannot be counted ([logging](logging.md)) |
 
 ## Stopping
 
