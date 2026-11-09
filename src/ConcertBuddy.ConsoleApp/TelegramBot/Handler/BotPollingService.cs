@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MusicSearcher;
 using System.Reflection;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -46,6 +47,8 @@ public sealed class BotPollingService : BackgroundService
         // One scope for the whole run: the music clients keep their caches and sessions as long as the bot works.
         using var scope = _scopeFactory.CreateScope();
         var botHandlers = scope.ServiceProvider.GetRequiredService<IBotHandlers>();
+        // Created now and not with the first message: the Yandex Music client signs in when it is created.
+        scope.ServiceProvider.GetRequiredService<IMusicSearcherClient>();
 
         var isStarted = false;
         int? offset = null;
@@ -84,7 +87,7 @@ public sealed class BotPollingService : BackgroundService
         var botUser = await _botClient.GetMe(stoppingToken);
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         _logger.LogInformation(
-            "Bot {BotName} [{BotId}] start listening. Version: [{Version}]. Environment: [{Environment}]",
+            "Bot {BotName:l} [{BotId}] start listening. Version: [{Version}]. Environment: [{Environment}]",
             botUser.FirstName,
             botUser.Id,
             version,

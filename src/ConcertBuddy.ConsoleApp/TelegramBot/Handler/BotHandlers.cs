@@ -45,13 +45,13 @@ public class BotHandlers : IBotHandlers
         catch (Exception exception)
         {
             result = CommandResult.Error;
-            _logger.LogError(exception, "Failed to handle update {UpdateId} of type {UpdateType}, command {Command}", update.Id, update.Type, commandName);
+            _logger.LogError(exception, "Failed to handle update {UpdateId} of type {UpdateType}, command {Command:l}", update.Id, update.Type, commandName);
             await TrySendErrorAsync(update);
         }
 
         // Only names and numbers here: this line is written for every update, so it must not hold what the user typed.
         _logger.LogInformation(
-            "Handled update: {UpdateType} {Command} in {ChatType} chat: {Result} in {ElapsedMs} ms",
+            "Handled update: {UpdateType} {Command:l} in {ChatType} chat: {Result} in {ElapsedMs} ms",
             update.Type,
             commandName,
             GetChat(update)?.Type,
