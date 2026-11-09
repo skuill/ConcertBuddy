@@ -2,6 +2,7 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 using LyricsScraperNET.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MusicSearcher;
@@ -38,8 +39,9 @@ public static class ServiceCollectionExtensions
             .CreateLogger();
 
         // AddSerilog adds a rule for its provider, and only a rule for the same provider can override it.
-        services.AddLogging(configure => configure.AddSerilog(dispose: true).AddFilter<SerilogLoggerProvider>("Polly", LogLevel.Warning))
-                .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Debug);
+        services.AddLogging(configure => configure.AddSerilog(dispose: true).AddFilter<SerilogLoggerProvider>("Polly", LogLevel.Warning));
+
+        services.TryAddSingleton(TimeProvider.System);
 
         services.AddHttpClient(TelegramClientName)
                 .RemoveAllLoggers()

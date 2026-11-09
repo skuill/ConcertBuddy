@@ -23,22 +23,23 @@ public class SetlistCommand : AbstractCommand<Message?, CallbackQuery>
 
     public override async Task<Message?> ExecuteAsync()
     {
-        _logger?.LogDebug($"Handle [{CurrentCommand}] command: [{Data.Data}]");
+        _logger?.LogDebug("Handle [{CurrentCommand}] command: [{CallbackData}]", CurrentCommand, Data.Data);
 
         if (Data == null)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
+            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.", CurrentCommand);
             return null;
         }
         if (Data!.Message == null)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
+            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.", CurrentCommand);
         }
 
         var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
         if (!isValidQuery)
         {
             _logger?.LogError(errorMessage);
+            Result = CommandResult.Error;
             await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
             return null;
         }
@@ -53,13 +54,13 @@ public class SetlistCommand : AbstractCommand<Message?, CallbackQuery>
 
         if (setlist == null)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Can't find setlist by Id: [{setlistId}], mbid: [{artistMBID}]");
-            return await MessageHelper.SendUnexpectedErrorAsync(TelegramBotClient, Data.Message!.Chat.Id);
+            _logger?.LogInformation("Command: [{CurrentCommand}]. Can't find setlist by Id: [{SetlistId}], mbid: [{ArtistMBID}]", CurrentCommand, setlistId, artistMBID);
+            return await SendNotFoundAsync(Data.Message!.Chat.Id);
         }
 
         if (!setlist.IsSetsExist())
         {
-            _logger?.LogInformation($"Command: [{CurrentCommand}]. Can't find sets in setlist with Id: [{setlistId}], mbid: [{artistMBID}]");
+            _logger?.LogInformation("Command: [{CurrentCommand}]. Can't find sets in setlist with Id: [{SetlistId}], mbid: [{ArtistMBID}]", CurrentCommand, setlistId, artistMBID);
 
             string reasonMessage = setlist.IsFutureEvent()
                 ? "ℹ️ There are no songs in this setlist because the concert hasn't started yet. Please try again later.."

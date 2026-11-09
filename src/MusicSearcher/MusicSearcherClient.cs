@@ -72,7 +72,7 @@ public class MusicSearcherClient : IMusicSearcherClient
 
         _musicServiceClients.AddRange(musicServiceClients);
 
-        _logger?.LogInformation($"Enable memory cache for artist search with size {MEMORY_CACHE_SIZE}");
+        _logger?.LogInformation("Enable memory cache for artist search with size {CacheSize}", MEMORY_CACHE_SIZE);
         _isMemoryCacheEnabled = true;
         var memoryCacheOptions = new MemoryCacheOptions { SizeLimit = MEMORY_CACHE_SIZE };
         _artistMemoryCache = new MemoryCache(memoryCacheOptions);
@@ -96,7 +96,7 @@ public class MusicSearcherClient : IMusicSearcherClient
             var artists = await _musicBrainzClient.Artists.SearchAsync(name.Quote(), limit, offset);
             if (artists == null || !artists.Any())
             {
-                _logger?.LogError($"Can't find artist [{name}] with search limit {limit}");
+                _logger?.LogInformation("Can't find artist [{Name}] with search limit {Limit}", name, limit);
                 return result;
             }
 
@@ -107,12 +107,12 @@ public class MusicSearcherClient : IMusicSearcherClient
                 _ => new List<MusicArtist>()
             };
 
-            _logger?.LogDebug($"Find artists for [{name}]: {string.Join("; ", result.Select(x => $"{x.Name} [score: {x.Score}]"))}");
+            _logger?.LogDebug("Find artists for [{Name}]: {Artists}", name, string.Join("; ", result.Select(x => $"{x.Name} [score: {x.Score}]")));
             return result;
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, $"Can't find artists by name [{name}]");
+            _logger?.LogError(ex, "Can't find artists by name [{Name}]", name);
         }
         return result;
     }
@@ -151,7 +151,7 @@ public class MusicSearcherClient : IMusicSearcherClient
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, $"Can't get artist by mbid [{artistMBID}].");
+            _logger?.LogError(ex, "Can't get artist by mbid [{ArtistMBID}].", artistMBID);
             return new MusicArtist();
         }
 
@@ -187,7 +187,7 @@ public class MusicSearcherClient : IMusicSearcherClient
         }
         catch (Exception ex)
         {
-            _logger?.LogWarning(ex, $"Can't get artist by [{searchType}] from music service [{client.GetType().Name}]. Artist name: [{artistName}], mbid: [{artistMBID}]");
+            _logger?.LogWarning(ex, "Can't get artist by [{SearchType}] from music service [{Client}]. Artist name: [{ArtistName}], mbid: [{ArtistMBID}]", searchType, client.GetType().Name, artistName, artistMBID);
             return (false, null);
         }
         return (true, result);
@@ -208,7 +208,7 @@ public class MusicSearcherClient : IMusicSearcherClient
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"Can't get track from music service [{musicServiceClient.GetType().Name}].");
+                _logger?.LogError(ex, "Can't get track from music service [{Client}].", musicServiceClient.GetType().Name);
             }
         }
         return result;
@@ -227,16 +227,16 @@ public class MusicSearcherClient : IMusicSearcherClient
 
             if (recordings == null || !recordings.Any())
             {
-                _logger?.LogError($"Can't find recording for artist mbid [{artistMBID}] and song name [{recordingName}]");
+                _logger?.LogInformation("Can't find recording for artist mbid [{ArtistMBID}] and song name [{RecordingName}]", artistMBID, recordingName);
                 return null;
             }
 
-            _logger?.LogDebug($"Find recording for artist [{artistMBID}] with song name [{recordingName}]");
+            _logger?.LogDebug("Find recording for artist [{ArtistMBID}] with song name [{RecordingName}]", artistMBID, recordingName);
             return recordings.First().ToInternal();
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, $"Can't find recording for artist mbid [{artistMBID}] and song name [{recordingName}]");
+            _logger?.LogError(ex, "Can't find recording for artist mbid [{ArtistMBID}] and song name [{RecordingName}]", artistMBID, recordingName);
             return null;
         }
     }
@@ -261,7 +261,7 @@ public class MusicSearcherClient : IMusicSearcherClient
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"Can't get top tracks from music service [{musicServiceClient.GetType().Name}]");
+                _logger?.LogError(ex, "Can't get top tracks from music service [{Client}]", musicServiceClient.GetType().Name);
             }
         }
         return result!;
@@ -277,7 +277,7 @@ public class MusicSearcherClient : IMusicSearcherClient
         var lyric = searchResult?.ToInternal() ?? MusicLyric.Empty();
         if (!lyric.IsSuccessSearchResult)
         {
-            _logger?.LogWarning($"Can't find lyric for track [{artistName} - {songName}]. Reason: [{searchResult?.Code}]");
+            _logger?.LogWarning("Can't find lyric for track [{ArtistName} - {SongName}]. Reason: [{SearchResultCode}]", artistName, songName, searchResult?.Code);
         }
 
         return lyric;

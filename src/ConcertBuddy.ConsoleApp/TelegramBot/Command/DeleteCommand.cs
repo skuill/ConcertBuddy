@@ -21,16 +21,16 @@ public class DeleteCommand : AbstractCommand<Message?, CallbackQuery>
 
     public override async Task<Message?> ExecuteAsync()
     {
-        _logger?.LogDebug($"Handle [{CurrentCommand}] command: [{Data?.Data}]");
+        _logger?.LogDebug("Handle [{CurrentCommand}] command: [{CallbackData}]", CurrentCommand, Data?.Data);
 
         if (Data == null)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.");
+            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.", CurrentCommand);
             return null;
         }
         if (Data!.Message == null)
         {
-            _logger?.LogError($"Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.");
+            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.", CurrentCommand);
         }
 
         var splitMessage = Data!.GetSplitMessageText();

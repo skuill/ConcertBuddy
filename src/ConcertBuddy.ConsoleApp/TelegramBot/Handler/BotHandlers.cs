@@ -1,9 +1,9 @@
-﻿using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
-using ConcertBuddy.ConsoleApp.TelegramBot.Command;
+﻿using ConcertBuddy.ConsoleApp.TelegramBot.Command;
+using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
+using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
-using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -11,104 +11,122 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 
 public class BotHandlers : IBotHandlers
 {
+    private const string NoCommand = "none";
+    private const string UnknownCommand = "unknown";
+
     private readonly ILogger<IBotHandlers> _logger;
     private readonly IServiceProvider _serviceProvider;
+    private readonly ITelegramBotClient _botClient;
+    private readonly TimeProvider _timeProvider;
 
-    public BotHandlers(ILogger<IBotHandlers> logger, IServiceProvider serviceProvider)
+    public BotHandlers(ILogger<IBotHandlers> logger, IServiceProvider serviceProvider, ITelegramBotClient botClient, TimeProvider timeProvider)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
+        _botClient = botClient;
+        _timeProvider = timeProvider;
     }
 
-    public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+    public async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
     {
-        // Ignore the unavailability of Telegram servers when polling. 502 - Bad Gateway.
-        if (exception is ApiRequestException apiRequestException && apiRequestException.ErrorCode == 502)
-            return Task.CompletedTask;
-
-        var ErrorMessage = exception switch
-        {
-            ApiRequestException requestException => $"Telegram API Error:\n[{requestException.ErrorCode}]\n{requestException.Message}",
-            _ => exception.ToString()
-        };
-
-        _logger?.LogError(ErrorMessage);
-        return Task.CompletedTask;
-    }
-
-    public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
-    {
-        var handler = update.Type switch
-        {
-            // UpdateType.Unknown:
-            // UpdateType.ChannelPost:
-            // UpdateType.EditedChannelPost:
-            // UpdateType.ShippingQuery:
-            // UpdateType.PreCheckoutQuery:
-            // UpdateType.Poll:
-            // UpdateType.InlineQuery:
-            UpdateType.Message => BotOnMessageReceived(update.Message!),
-            UpdateType.EditedMessage => BotOnMessageReceived(update.EditedMessage!),
-            UpdateType.CallbackQuery => BotOnCallbackQueryReceived(update.CallbackQuery!),
-            UpdateType.ChosenInlineResult => BotOnChosenInlineResultReceived(update.ChosenInlineResult!),
-            _ => UnknownUpdateHandlerAsync(update)
-        };
+        var startTimestamp = _timeProvider.GetTimestamp();
+        var (commandName, createCommand) = FindCommand(update);
+        var result = CommandResult.Found;
 
         try
         {
-            await handler;
+            if (createCommand != null)
+            {
+                var command = createCommand();
+                await command.RunAsync();
+                result = command.Result;
+            }
         }
         catch (Exception exception)
         {
-            await HandleErrorAsync(botClient, exception, cancellationToken);
+            result = CommandResult.Error;
+            _logger.LogError(exception, "Failed to handle update {UpdateId} of type {UpdateType}, command {Command}", update.Id, update.Type, commandName);
+            await TrySendErrorAsync(update);
         }
+
+        // Only names and numbers here: this line is written for every update, so it must not hold what the user typed.
+        _logger.LogInformation(
+            "Handled update: {UpdateType} {Command} in {ChatType} chat: {Result} in {ElapsedMs} ms",
+            update.Type,
+            commandName,
+            GetChat(update)?.Type,
+            result,
+            (long)_timeProvider.GetElapsedTime(startTimestamp).TotalMilliseconds);
     }
 
-    private async Task BotOnMessageReceived(Message message)
+    private (string Name, Func<IExecutableCommand>? Create) FindCommand(Update update)
+    {
+        return update.Type switch
+        {
+            UpdateType.Message => FindMessageCommand(update.Message!),
+            UpdateType.EditedMessage => FindMessageCommand(update.EditedMessage!),
+            UpdateType.CallbackQuery => FindCallbackCommand(update.CallbackQuery!),
+            _ => (NoCommand, null),
+        };
+    }
+
+    private (string Name, Func<IExecutableCommand>? Create) FindMessageCommand(Message message)
     {
         if (message.Type != MessageType.Text)
-            return;
-        Task action = message.GetSplitMessageText()[0] switch
         {
-            $"{CommandList.COMMAND_START}" => Create<UsageCommand>(message).ExecuteAsync(),
-            _ => Create<SearchMessageCommand>(message).ExecuteAsync()
+            return (NoCommand, null);
+        }
+
+        return message.GetSplitMessageText()[0] switch
+        {
+            CommandList.COMMAND_START => Route<UsageCommand>(CommandList.COMMAND_START, message),
+            _ => Route<SearchMessageCommand>(CommandList.COMMAND_SEARCH, message),
         };
-        await action;
     }
 
     // Process Inline Keyboard callback data
-    private async Task BotOnCallbackQueryReceived(CallbackQuery callbackQuery)
+    private (string Name, Func<IExecutableCommand>? Create) FindCallbackCommand(CallbackQuery callbackQuery)
     {
-        Task action = callbackQuery.GetSplitMessageText()[0] switch
+        return callbackQuery.GetSplitMessageText()[0] switch
         {
-            $"{CommandList.COMMAND_ARTIST}" => Create<ArtistCommand>(callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_SEARCH}" => Create<SearchCallbackCommand>(callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_BIOGRAPHY}" => Create<BiographyCommand>(callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_SETLISTS}" => Create<SetlistsCommand>(callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_SETLIST}" => Create<SetlistCommand>(callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_TRACK}" => Create<TrackCommand>(callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_LYRIC}" => Create<LyricCommand>(callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_DELETE}" => Create<DeleteCommand>(callbackQuery).ExecuteAsync(),
-            $"{CommandList.COMMAND_TOP}" => Create<TopCommand>(callbackQuery).ExecuteAsync(),
-            _ => Create<UsageCommand>(callbackQuery.Message!).ExecuteAsync()
+            CommandList.COMMAND_ARTIST => Route<ArtistCommand>(CommandList.COMMAND_ARTIST, callbackQuery),
+            CommandList.COMMAND_SEARCH => Route<SearchCallbackCommand>(CommandList.COMMAND_SEARCH, callbackQuery),
+            CommandList.COMMAND_BIOGRAPHY => Route<BiographyCommand>(CommandList.COMMAND_BIOGRAPHY, callbackQuery),
+            CommandList.COMMAND_SETLISTS => Route<SetlistsCommand>(CommandList.COMMAND_SETLISTS, callbackQuery),
+            CommandList.COMMAND_SETLIST => Route<SetlistCommand>(CommandList.COMMAND_SETLIST, callbackQuery),
+            CommandList.COMMAND_TRACK => Route<TrackCommand>(CommandList.COMMAND_TRACK, callbackQuery),
+            CommandList.COMMAND_LYRIC => Route<LyricCommand>(CommandList.COMMAND_LYRIC, callbackQuery),
+            CommandList.COMMAND_DELETE => Route<DeleteCommand>(CommandList.COMMAND_DELETE, callbackQuery),
+            CommandList.COMMAND_TOP => Route<TopCommand>(CommandList.COMMAND_TOP, callbackQuery),
+            _ => Route<UsageCommand>(UnknownCommand, callbackQuery.Message!),
         };
-        await action;
     }
 
-    private TCommand Create<TCommand>(object data) where TCommand : class
+    private (string Name, Func<IExecutableCommand>? Create) Route<TCommand>(string name, object data) where TCommand : class, IExecutableCommand
     {
-        return ActivatorUtilities.CreateInstance<TCommand>(_serviceProvider, data);
+        return (name, () => ActivatorUtilities.CreateInstance<TCommand>(_serviceProvider, data));
     }
 
-    private Task BotOnChosenInlineResultReceived(ChosenInlineResult chosenInlineResult)
+    private async Task TrySendErrorAsync(Update update)
     {
-        _logger?.LogInformation($"Received inline result: {chosenInlineResult.ResultId}");
-        return Task.CompletedTask;
+        var chat = GetChat(update);
+        if (chat == null)
+        {
+            return;
+        }
+
+        try
+        {
+            await MessageHelper.SendUnexpectedErrorAsync(_botClient, chat.Id);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Can't tell the user about the failed update {UpdateId}", update.Id);
+        }
     }
 
-    private Task UnknownUpdateHandlerAsync(Update update)
+    private static Chat? GetChat(Update update)
     {
-        _logger?.LogInformation($"Unknown update type: {update.Type}");
-        return Task.CompletedTask;
+        return update.Message?.Chat ?? update.EditedMessage?.Chat ?? update.CallbackQuery?.Message?.Chat;
     }
 }
