@@ -24,7 +24,6 @@ public sealed partial class PrototypeHandlers : IBotHandlers
 {
     private const int SetlistsPerScreen = 10;
     private const int SetlistsPerApiPage = 20;
-    private const int ListenColumns = 6;
 
     private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-US");
 
@@ -44,7 +43,9 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         _logger = logger;
     }
 
-    private sealed record Screen(string Html, bool IsRich, InlineKeyboardMarkup Keyboard);
+    private static readonly HttpClient AudioClient = new();
+
+    private sealed record Screen(string Html, bool IsRich, InlineKeyboardMarkup Keyboard, string? PreviewUrl = null);
 
     public async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
     {
@@ -98,10 +99,17 @@ public sealed partial class PrototypeHandlers : IBotHandlers
                 await ShowAsync(chatId, messageId, await SetlistsScreenAsync(parts[1], int.Parse(parts[2], CultureInfo.InvariantCulture)));
                 break;
             case "setlist":
-                await ShowAsync(chatId, messageId, await SetlistScreenAsync(parts[1], parts[2], int.Parse(parts[3], CultureInfo.InvariantCulture), listen: false));
-                break;
-            case "listen":
-                await ShowAsync(chatId, messageId, await SetlistScreenAsync(parts[1], parts[2], int.Parse(parts[3], CultureInfo.InvariantCulture), listen: true));
+                var screen = int.Parse(parts[3], CultureInfo.InvariantCulture);
+                try
+                {
+                    await ShowAsync(chatId, messageId, await SetlistScreenAsync(parts[1], parts[2], screen, asTable: true));
+                }
+                catch (ApiRequestException exception)
+                {
+                    // Prototype check: are buttons allowed in table cells? If not, the songs become a list.
+                    _logger.LogWarning("Setlist table with buttons rejected: {Reason}. Showing a list", exception.Message);
+                    await ShowAsync(chatId, messageId, await SetlistScreenAsync(parts[1], parts[2], screen, asTable: false));
+                }
                 break;
             case "top":
                 await ShowAsync(chatId, messageId, await TopTracksScreenAsync(parts[1]));
@@ -140,22 +148,15 @@ public sealed partial class PrototypeHandlers : IBotHandlers
     {
         var artist = (MusicArtist)await _music.SearchArtistByMBID(mbid);
         var lastFm = artist[MusicServiceType.LastFm];
-        var html = new StringBuilder();
-        if (artist.ImageUri != null)
-        {
-            html.Append($"<img src=\"{artist.ImageUri}\">");
-        }
-        html.Append($"<h2>{Flag(artist.Country)} {Encode(artist.Name)}</h2>");
-        html.Append($"<p>{Encode(Describe(artist))}</p>");
 
+        // A plain HTML message: the Last.fm page gives the link preview with the artist photo above the text,
+        // which rich messages do not have; the expandable quote works in plain HTML too.
+        var html = new StringBuilder();
+        html.Append($"{Flag(artist.Country)} <b>{Encode(artist.Name)}</b>\n{Encode(Describe(artist))}");
         var biography = CleanBiography(artist.Biography);
         if (biography.Length > 0)
         {
-            html.Append($"<blockquote expandable>{Encode(biography)}</blockquote>");
-        }
-        if (lastFm?.ExternalUrl != null)
-        {
-            html.Append($"<footer>Biography from <a href=\"{lastFm.ExternalUrl}\">Last.fm</a></footer>");
+            html.Append($"\n<blockquote expandable>{Encode(biography)}</blockquote>");
         }
 
         var keyboard = new InlineKeyboardMarkup(new[]
@@ -163,7 +164,7 @@ public sealed partial class PrototypeHandlers : IBotHandlers
             new[] { Styled(Button("📝 Setlists", $"setlists|{mbid}|1"), KeyboardButtonStyle.Primary), Button("🎧 Top tracks", $"top|{mbid}") },
             new[] { Button("🔍 Another artist", "hint") },
         });
-        return new Screen(html.ToString(), true, keyboard);
+        return new Screen(html.ToString(), false, keyboard, lastFm?.ExternalUrl?.ToString());
     }
 
     private async Task<Screen> SetlistsScreenAsync(string mbid, int screen)
@@ -178,7 +179,7 @@ public sealed partial class PrototypeHandlers : IBotHandlers
 
         var screens = (int)Math.Ceiling(setlists.Total / (double)SetlistsPerScreen);
         var rows = setlists.Setlist.Skip(offset).Take(SetlistsPerScreen)
-            .Select(s => new[] { Button($"{(s.IsSetsExist() ? "" : "🔜 ")}{FormatDate(s.EventDate)} · {s.CityName} · {s.VenueName}", $"setlist|{s.Id}|{mbid}|{screen}") })
+            .Select(s => new[] { Button(SetlistLabel(s), $"setlist|{s.Id}|{mbid}|{screen}") })
             .ToList();
 
         // Disabled arrows keep the layout steady on the first and the last page.
@@ -191,13 +192,20 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         rows.Add(new[] { Button("⬅️ Artist", $"artist|{mbid}") });
 
         var artistName = setlists.Setlist[0].ArtistName;
-        return new Screen($"📝 <b>{Encode(artistName)}</b> · {setlists.Total} setlists\n🔜 marks an upcoming concert.", false, new InlineKeyboardMarkup(rows));
+        return new Screen($"📝 <b>{Encode(artistName)}</b> · {setlists.Total} setlists\n🔜 upcoming · 📭 no songs on setlist.fm yet", false, new InlineKeyboardMarkup(rows));
     }
 
-    private async Task<Screen> SetlistScreenAsync(string setlistId, string mbid, int screen, bool listen)
+    private static string SetlistLabel(MusicSetlist setlist)
+    {
+        var mark = setlist.IsFutureEvent() ? "🔜 " : setlist.IsSetsExist() ? "" : "📭 ";
+        return $"{mark}{FormatDate(setlist.EventDate)} · {setlist.CityName} · {setlist.VenueName}";
+    }
+
+    private async Task<Screen> SetlistScreenAsync(string setlistId, string mbid, int screen, bool asTable)
     {
         var setlist = await _music.SearchSetlist(setlistId);
-        var songs = setlist.Sets?.Set?.SelectMany(set => set.Songs ?? new List<MusicSong>()).ToList() ?? new List<MusicSong>();
+        var sets = setlist.Sets?.Set ?? new List<MusicSet>();
+        var songs = sets.SelectMany(set => set.Songs ?? new List<MusicSong>()).ToList();
 
         var html = new StringBuilder();
         html.Append($"<h3>{Encode(setlist.ArtistName)}</h3>");
@@ -209,46 +217,61 @@ public sealed partial class PrototypeHandlers : IBotHandlers
 
         if (songs.Count == 0)
         {
-            html.Append("<p>🔜 Upcoming concert: no setlist yet.</p>");
+            html.Append(setlist.IsFutureEvent() ? "<p>🔜 Upcoming concert: no setlist yet.</p>" : "<p>📭 Nobody has added the songs on setlist.fm yet.</p>");
         }
         else
         {
-            html.Append("<table><tr><th>#</th><th>Song</th><th>Note</th></tr>");
+            html.Append($"<p><i>{Encode(Summary(sets, songs))}</i></p>");
+            var hasNotes = songs.Any(s => Note(s).Length > 0);
+            html.Append(asTable ? "<table>" : "");
             var number = 1;
-            foreach (var set in setlist.Sets!.Set)
+            foreach (var set in sets)
             {
                 var title = set.Encore > 0 ? (set.Encore > 1 ? $"Encore {set.Encore}" : "Encore") : set.Name;
                 if (!string.IsNullOrEmpty(title))
                 {
-                    html.Append($"<tr><td colspan=\"3\"><b>{Encode(title)}</b></td></tr>");
+                    html.Append(asTable ? $"<tr><td colspan=\"{(hasNotes ? 3 : 2)}\"><b>🔁 {Encode(title)}</b></td></tr>" : $"<h4>🔁 {Encode(title)}</h4>");
                 }
                 foreach (var song in set.Songs ?? new List<MusicSong>())
                 {
-                    html.Append($"<tr><td>{number++}</td><td>{Encode(song.Name)}</td><td>{Encode(Note(song))}</td></tr>");
+                    // A callback button styled as a link: the song name itself opens the track.
+                    var name = song.Tape
+                        ? $"<i>{Encode(song.Name)}</i>"
+                        : $"<tg-button type=\"callback_data\" style=\"link\" data=\"{CallbackId($"play|{mbid}|{song.Name}")}\">{Encode(song.Name)}</tg-button>";
+                    var note = Encode(Note(song));
+                    html.Append(asTable
+                        ? $"<tr><td>{number++}</td><td>{name}</td>{(hasNotes ? $"<td>{note}</td>" : "")}</tr>"
+                        : $"<p>{number++}. {name}{(note.Length > 0 ? $" <i>{note}</i>" : "")}</p>");
                 }
             }
-            html.Append("</table>");
+            html.Append(asTable ? "</table>" : "");
         }
-        html.Append($"<footer>Setlist from <a href=\"https://www.setlist.fm/search?query={Uri.EscapeDataString(setlist.ArtistName ?? "")}\">setlist.fm</a></footer>");
+        if (!string.IsNullOrWhiteSpace(setlist.Info))
+        {
+            html.Append($"<blockquote>ℹ️ {Encode(setlist.Info)}</blockquote>");
+        }
+        var url = setlist.Url ?? $"https://www.setlist.fm/search?query={Uri.EscapeDataString(setlist.ArtistName ?? "")}";
+        html.Append($"<footer>Tap a song to listen · Setlist from <a href=\"{url}\">setlist.fm</a></footer>");
 
         var rows = new List<InlineKeyboardButton[]>();
-        if (listen)
+        if (songs.Count > 0)
         {
-            // Compact number grid instead of a button per song.
-            rows.AddRange(songs.Select((song, i) => Button($"{i + 1}", $"play|{mbid}|{song.Name}"))
-                .Chunk(ListenColumns));
-            rows.Add(new[] { Button("✖️ Close player", $"setlist|{setlistId}|{mbid}|{screen}") });
-        }
-        else if (songs.Count > 0)
-        {
-            rows.Add(new[]
-            {
-                Styled(Button("🎧 Listen…", $"listen|{setlistId}|{mbid}|{screen}"), KeyboardButtonStyle.Primary),
-                new InlineKeyboardButton("📋 Copy") { CopyText = new CopyTextButton { Text = CopyTextOf(setlist, songs) } },
-            });
+            rows.Add(new[] { new InlineKeyboardButton("📋 Copy setlist") { CopyText = new CopyTextButton { Text = CopyTextOf(setlist, songs) } } });
         }
         rows.Add(new[] { Button("⬅️ Setlists", $"setlists|{mbid}|{screen}") });
         return new Screen(html.ToString(), true, new InlineKeyboardMarkup(rows));
+    }
+
+    private static string Summary(List<MusicSet> sets, List<MusicSong> songs)
+    {
+        var parts = new List<string> { $"{songs.Count(s => !s.Tape)} songs" };
+        var covers = songs.Count(s => s.CoverName != null);
+        var guests = songs.Count(s => s.WithName != null);
+        var encores = sets.Count(s => s.Encore > 0);
+        if (covers > 0) parts.Add($"{covers} {(covers == 1 ? "cover" : "covers")}");
+        if (guests > 0) parts.Add($"{guests} with guests");
+        if (encores > 0) parts.Add(encores == 1 ? "encore" : $"{encores} encores");
+        return string.Join(" · ", parts);
     }
 
     private async Task<Screen> TopTracksScreenAsync(string mbid)
@@ -277,7 +300,9 @@ public sealed partial class PrototypeHandlers : IBotHandlers
                 Styled(Button("🗑", "close"), KeyboardButtonStyle.Danger),
             },
         });
-        await _bot.SendAudio(chatId, InputFile.FromString(track.DownloadLink), performer: artist.Name, title: song, replyMarkup: keyboard);
+        // Sent by URL, Telegram shows the file name of the link (a hash). Uploaded as a stream, the file gets a readable name.
+        await using var audio = await AudioClient.GetStreamAsync(track.DownloadLink);
+        await _bot.SendAudio(chatId, InputFile.FromStream(audio, $"{artist.Name} - {song}.mp3"), performer: artist.Name, title: song, replyMarkup: keyboard);
         return null;
     }
 
@@ -291,7 +316,7 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         }
 
         var lines = string.Join("<br/>", lyric.LyricText.Trim().Split('\n').Select(line => Encode(line.TrimEnd('\r'))));
-        var html = $"<h4>🎼 {Encode(song)} · {Encode(artist.Name)}</h4><blockquote expandable>{lines}</blockquote>";
+        var html = $"<h4>🎼 {Encode(song)} · {Encode(artist.Name)}</h4><p>{lines}</p>";
         var keyboard = new InlineKeyboardMarkup(new[] { new[] { Styled(Button("🗑 Close", "close"), KeyboardButtonStyle.Danger) } });
         await _bot.SendRichMessage(chatId, new InputRichMessage { Html = html }, replyMarkup: keyboard);
         return null;
@@ -318,14 +343,21 @@ public sealed partial class PrototypeHandlers : IBotHandlers
     {
         return screen.IsRich
             ? _bot.EditMessageText(chatId, messageId, null, replyMarkup: screen.Keyboard, richMessage: new InputRichMessage { Html = screen.Html })
-            : _bot.EditMessageText(chatId, messageId, screen.Html, ParseMode.Html, screen.Keyboard, new LinkPreviewOptions { IsDisabled = true });
+            : _bot.EditMessageText(chatId, messageId, screen.Html, ParseMode.Html, screen.Keyboard, screen.PreviewUrl == null
+                ? new LinkPreviewOptions { IsDisabled = true }
+                : new LinkPreviewOptions { Url = screen.PreviewUrl, ShowAboveText = true, PreferLargeMedia = true });
     }
 
     private InlineKeyboardButton Button(string text, string payload)
     {
+        return InlineKeyboardButton.WithCallbackData(text, CallbackId(payload));
+    }
+
+    private string CallbackId(string payload)
+    {
         var id = _ids.GetOrAdd(payload, _ => $"p{Interlocked.Increment(ref _nextId)}");
         _payloads[id] = payload;
-        return InlineKeyboardButton.WithCallbackData(text, id);
+        return id;
     }
 
     private static InlineKeyboardButton Styled(InlineKeyboardButton button, KeyboardButtonStyle style)
@@ -352,7 +384,13 @@ public sealed partial class PrototypeHandlers : IBotHandlers
 
     private static string Note(MusicSong song)
     {
-        var notes = new[] { song.CoverName == null ? null : $"{song.CoverName} cover", song.WithName == null ? null : $"with {song.WithName}", song.Info };
+        var notes = new[]
+        {
+            song.Tape ? "📼 from tape" : null,
+            song.CoverName == null ? null : $"🎸 {song.CoverName} cover",
+            song.WithName == null ? null : $"👥 with {song.WithName}",
+            string.IsNullOrWhiteSpace(song.Info) ? null : $"ℹ️ {song.Info}",
+        };
         return string.Join("; ", notes.Where(x => !string.IsNullOrWhiteSpace(x)));
     }
 

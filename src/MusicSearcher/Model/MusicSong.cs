@@ -10,6 +10,8 @@ public class MusicSong
 
     public string? Info { get; set; }
 
+    public bool Tape { get; set; }
+
     public override string ToString()
     {
         string result = $"{Name}";

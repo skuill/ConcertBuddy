@@ -25,6 +25,10 @@ public class MusicSetlist
 
     public MusicSets? Sets { get; set; }
 
+    public string? Info { get; set; }
+
+    public string? Url { get; set; }
+
     public bool IsFutureEvent()
     {
         return DateTime.ParseExact(EventDate!, "dd-MM-yyyy", CultureInfo.InvariantCulture).Date >= DateTime.Today;

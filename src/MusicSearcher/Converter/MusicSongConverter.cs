@@ -12,6 +12,7 @@ internal static class MusicSongConverter
             Name = song.Name,
             CoverName = song.Cover?.Name,
             Info = song.Info,
+            Tape = song.Tape,
             WithName = song.With?.Name,
         };
     }
