@@ -12,6 +12,7 @@ using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler;
@@ -67,6 +68,10 @@ public sealed partial class PrototypeHandlers : IBotHandlers
             {
                 await OnCallbackAsync(query);
             }
+            else if (update.InlineQuery is { } inlineQuery)
+            {
+                await OnInlineQueryAsync(inlineQuery);
+            }
         }
         catch (Exception exception)
         {
@@ -117,6 +122,14 @@ public sealed partial class PrototypeHandlers : IBotHandlers
             case "lyrics":
                 await _bot.AnswerCallbackQuery(query.Id, "⏳ Looking for the lyrics…");
                 await SendLyricsAsync(chatId, messageId, parts[1], parts[2]);
+                return;
+            case "rlyrics":
+                await _bot.AnswerCallbackQuery(query.Id, "⏳ Looking for the lyrics…");
+                await ShowTrackLyricsAsync(chatId, messageId, parts[1], parts[2], show: true);
+                return;
+            case "rhide":
+                await _bot.AnswerCallbackQuery(query.Id);
+                await ShowTrackLyricsAsync(chatId, messageId, parts[1], parts[2], show: false);
                 return;
             case "hidelyrics":
                 await _bot.AnswerCallbackQuery(query.Id);
@@ -233,7 +246,7 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         return $"{mark}{FormatDate(setlist.EventDate)} · {setlist.CityName} · {setlist.VenueName}";
     }
 
-    private async Task<Screen> SetlistScreenAsync(string setlistId, string mbid, int screen, bool asTable)
+    private async Task<Screen> SetlistScreenAsync(string setlistId, string mbid, int screen, bool asTable, bool forInline = false)
     {
         var setlist = await _music.SearchSetlist(setlistId);
         var sets = setlist.Sets?.Set ?? new List<MusicSet>();
@@ -269,6 +282,8 @@ public sealed partial class PrototypeHandlers : IBotHandlers
                     // A callback button styled as a link: the song name itself opens the track.
                     var name = song.Tape
                         ? $"<i>{Encode(song.Name)}</i>"
+                        : forInline
+                        ? Encode(song.Name)
                         : $"<tg-button type=\"callback_data\" style=\"link\" data=\"{CallbackId($"play|{mbid}|{song.Name}")}\">{Encode(song.Name)}</tg-button>";
                     var note = Encode(Note(song));
                     html.Append(asTable
@@ -283,7 +298,7 @@ public sealed partial class PrototypeHandlers : IBotHandlers
             html.Append($"<blockquote>ℹ️ {Encode(setlist.Info)}</blockquote>");
         }
         var url = setlist.Url ?? $"https://www.setlist.fm/search?query={Uri.EscapeDataString(setlist.ArtistName ?? "")}";
-        html.Append($"<footer>Tap a song to listen · Setlist from <a href=\"{url}\">setlist.fm</a></footer>");
+        html.Append($"<footer>{(forInline ? "" : "Tap a song to listen · ")}Setlist from <a href=\"{url}\">setlist.fm</a></footer>");
 
         var rows = new List<InlineKeyboardButton[]>();
         if (songs.Count > 0)
@@ -291,7 +306,11 @@ public sealed partial class PrototypeHandlers : IBotHandlers
             rows.Add(new[]
             {
                 new InlineKeyboardButton("📋 Copy setlist") { CopyText = new CopyTextButton { Text = CopyTextOf(setlist, songs) } },
-                InlineKeyboardButton.WithUrl("↗️ Share", await ShareUrlAsync(setlist)),
+                InlineKeyboardButton.WithSwitchInlineQuery("↗️ Send to a chat", $"s_{setlist.Id}"),
+            });
+            rows.Add(new[]
+            {
+                InlineKeyboardButton.WithUrl("🔗 Share link", await ShareUrlAsync(setlist)),
             });
         }
         rows.Add(new[] { Button("⬅️ Setlists", $"setlists|{mbid}|{screen}") });
@@ -327,6 +346,11 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         return new Screen("🎧 <b>Top tracks</b> on Last.fm", false, new InlineKeyboardMarkup(rows));
     }
 
+    private sealed record TrackMessage(string FileId, string ArtistName);
+
+    // Prototype memory: the uploaded audio of each track message, to keep it when the message is edited.
+    private readonly ConcurrentDictionary<int, TrackMessage> _tracks = new();
+
     private async Task SendTrackAsync(long chatId, string mbid, string song)
     {
         await _bot.SendChatAction(chatId, ChatAction.UploadDocument);
@@ -339,10 +363,94 @@ public sealed partial class PrototypeHandlers : IBotHandlers
             return;
         }
 
-        // Sent by URL, Telegram shows the file name of the link (a hash). Uploaded as a stream, the file gets a readable name.
-        await using var audio = await AudioClient.GetStreamAsync(track.DownloadLink);
-        await _bot.SendAudio(chatId, InputFile.FromStream(audio, $"{artist.Name} - {song}.mp3"), performer: artist.Name, title: song,
-            replyMarkup: AudioKeyboard(mbid, song, artist.Name!, lyricsMessageId: null));
+        try
+        {
+            // One rich message: the player, and later the lyrics below it, edited in place.
+            await using var audio = await AudioClient.GetStreamAsync(track.DownloadLink);
+            var media = new InputMediaAudio(InputFile.FromStream(audio, $"{artist.Name} - {song}.mp3")) { Title = song, Performer = artist.Name };
+            var sent = await _bot.SendRichMessage(chatId, TrackRichMessage(media, song, artist.Name!, lyricsHtml: null), replyMarkup: TrackKeyboard(mbid, song, artist.Name!, lyricsShown: false));
+            var fileId = sent.RichMessage?.Blocks?.OfType<RichBlockAudio>().FirstOrDefault()?.Audio.FileId;
+            if (fileId != null)
+            {
+                _tracks[sent.MessageId] = new TrackMessage(fileId, artist.Name!);
+            }
+            else
+            {
+                _logger.LogWarning("Rich track message has no audio block in the answer: lyrics cannot be added in place");
+            }
+        }
+        catch (ApiRequestException exception)
+        {
+            _logger.LogWarning("Rich message with audio rejected: {Reason}. Sending a plain audio message", exception.Message);
+            await using var audio = await AudioClient.GetStreamAsync(track.DownloadLink);
+            await _bot.SendAudio(chatId, InputFile.FromStream(audio, $"{artist.Name} - {song}.mp3"), performer: artist.Name, title: song,
+                replyMarkup: AudioKeyboard(mbid, song, artist.Name!, lyricsMessageId: null));
+        }
+    }
+
+    private static InputRichMessage TrackRichMessage(InputMediaAudio media, string song, string artistName, string? lyricsHtml)
+    {
+        var html = $"<figure><audio src=\"tg://audio?id=track\"></audio><figcaption>{Encode(artistName)} – {Encode(song)}</figcaption></figure>{lyricsHtml}";
+        return new InputRichMessage { Html = html, Media = new[] { new InputRichMessageMedia { Id = "track", Media = media } } };
+    }
+
+    private InlineKeyboardMarkup TrackKeyboard(string mbid, string song, string artistName, bool lyricsShown)
+    {
+        return new InlineKeyboardMarkup(new[]
+        {
+            new[]
+            {
+                lyricsShown ? Button("🎼 Hide lyrics", $"rhide|{mbid}|{song}") : Button("🎼 Lyrics", $"rlyrics|{mbid}|{song}"),
+                new InlineKeyboardButton("📋 Copy name") { CopyText = new CopyTextButton { Text = $"{artistName} – {song}" } },
+                Styled(Button("🗑", "close"), KeyboardButtonStyle.Danger),
+            },
+        });
+    }
+
+    private async Task ShowTrackLyricsAsync(long chatId, int messageId, string mbid, string song, bool show)
+    {
+        if (!_tracks.TryGetValue(messageId, out var trackMessage))
+        {
+            await _bot.SendMessage(chatId, "This track message is from an older prototype run. Play the song again.");
+            return;
+        }
+
+        string? lyricsHtml = null;
+        if (show)
+        {
+            var lyric = await _music.SearchLyric(trackMessage.ArtistName, song);
+            lyricsHtml = !lyric.IsSuccessSearchResult || string.IsNullOrWhiteSpace(lyric.LyricText)
+                ? (lyric.Instrumental ? "<p>🎼 Instrumental, no lyrics.</p>" : "<p>🎼 No lyrics found.</p>")
+                : "<hr/><p>" + string.Join("<br/>", lyric.LyricText.Trim().Split('\n').Select(line => Encode(line.TrimEnd('\r')))) + "</p>";
+        }
+
+        var media = new InputMediaAudio(InputFile.FromFileId(trackMessage.FileId)) { Title = song, Performer = trackMessage.ArtistName };
+        await _bot.EditMessageText(chatId, messageId, null,
+            replyMarkup: TrackKeyboard(mbid, song, trackMessage.ArtistName, lyricsShown: show),
+            richMessage: TrackRichMessage(media, song, trackMessage.ArtistName, lyricsHtml));
+    }
+
+    private async Task OnInlineQueryAsync(InlineQuery inlineQuery)
+    {
+        if (!inlineQuery.Query.StartsWith("s_", StringComparison.Ordinal))
+        {
+            await _bot.AnswerInlineQuery(inlineQuery.Id, Array.Empty<InlineQueryResult>(), cacheTime: 0);
+            return;
+        }
+
+        // The whole setlist card goes into the chosen chat, with a button that opens it in the bot.
+        var setlistId = inlineQuery.Query["s_".Length..];
+        var setlist = await _music.SearchSetlist(setlistId);
+        var card = await SetlistScreenAsync(setlistId, setlist.ArtistMBID!, 1, asTable: true, forInline: true);
+        _botUsername ??= (await _bot.GetMe()).Username;
+        var open = InlineKeyboardButton.WithUrl("🎸 Open in ConcertBuddy", $"https://t.me/{_botUsername}?start=s_{setlistId}");
+        var result = new InlineQueryResultArticle(setlistId, $"{setlist.ArtistName} · {FormatDate(setlist.EventDate)}",
+            new InputRichMessageContent(new InputRichMessage { Html = card.Html }))
+        {
+            Description = $"{setlist.VenueName}, {setlist.CityName}",
+            ReplyMarkup = new InlineKeyboardMarkup(new[] { new[] { open } }),
+        };
+        await _bot.AnswerInlineQuery(inlineQuery.Id, new InlineQueryResult[] { result }, cacheTime: 0, isPersonal: true);
     }
 
     private InlineKeyboardMarkup AudioKeyboard(string mbid, string song, string artistName, int? lyricsMessageId)
