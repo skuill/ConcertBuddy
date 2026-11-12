@@ -2,9 +2,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MusicSearcher;
+using System.Collections.Concurrent;
 using System.Reflection;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
+using Telegram.Bot.Types;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 
@@ -20,11 +22,17 @@ public sealed class BotPollingService : BackgroundService
     private const int TooManyRequestsErrorCode = 429;
     private const int FirstServerErrorCode = 500;
 
+    // Several updates at once: a slow command (a track download, a lyrics search) must not hold the other users.
+    internal const int MaxParallelUpdates = 8;
+
     private readonly ITelegramBotClient _botClient;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHostEnvironment _environment;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<BotPollingService> _logger;
+
+    private readonly SemaphoreSlim _slots = new(MaxParallelUpdates);
+    private readonly ConcurrentDictionary<Task, byte> _running = new();
 
     private int _failedAttempts;
 
@@ -50,6 +58,19 @@ public sealed class BotPollingService : BackgroundService
         // Created now and not with the first message: the Yandex Music client signs in when it is created.
         scope.ServiceProvider.GetRequiredService<IMusicSearcherClient>();
 
+        try
+        {
+            await PollAsync(botHandlers, stoppingToken);
+        }
+        finally
+        {
+            // The scope and its clients stay alive until the updates in progress are handled.
+            await Task.WhenAll(_running.Keys);
+        }
+    }
+
+    private async Task PollAsync(IBotHandlers botHandlers, CancellationToken stoppingToken)
+    {
         var isStarted = false;
         int? offset = null;
         while (!stoppingToken.IsCancellationRequested)
@@ -68,7 +89,8 @@ public sealed class BotPollingService : BackgroundService
                 foreach (var update in updates)
                 {
                     offset = update.Id + 1;
-                    await botHandlers.HandleUpdateAsync(update, stoppingToken);
+                    await _slots.WaitAsync(stoppingToken);
+                    Start(HandleAsync(botHandlers, update, stoppingToken));
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -79,6 +101,26 @@ public sealed class BotPollingService : BackgroundService
             {
                 await Task.Delay(OnPollingFailed(exception), _timeProvider, stoppingToken);
             }
+        }
+    }
+
+    private void Start(Task task)
+    {
+        _running.TryAdd(task, 0);
+        task.ContinueWith(finished => _running.TryRemove(finished, out _), TaskScheduler.Default);
+    }
+
+    private async Task HandleAsync(IBotHandlers botHandlers, Update update, CancellationToken stoppingToken)
+    {
+        try
+        {
+            // Off the polling loop at once: the loop asks Telegram for the next updates while this one is handled.
+            await Task.Yield();
+            await botHandlers.HandleUpdateAsync(update, stoppingToken);
+        }
+        finally
+        {
+            _slots.Release();
         }
     }
 

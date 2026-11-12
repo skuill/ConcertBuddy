@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MusicSearcher.Http;
 using Polly.Timeout;
 using Shouldly;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Threading.RateLimiting;
 
@@ -29,6 +30,23 @@ public class MusicServiceHttpClientsTest
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         handler.Calls.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task MusicBrainz_AlwaysBusy_WaitsTwoFourAndEightSeconds()
+    {
+        // Arrange: the default delays; the fake clock records them and lets them pass at once.
+        var time = new RecordingTimeProvider();
+        var handler = new FakeHttpMessageHandler(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+        var client = CreateClient(MusicServiceHttpClients.MusicBrainzClientName, handler, defaultRetries: true, time: time);
+
+        // Act
+        var response = await client.GetAsync(Url, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
+        handler.Calls.ShouldBe(4);
+        time.Delays.ShouldBe(new[] { TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8) });
     }
 
     [Fact]
@@ -178,13 +196,18 @@ public class MusicServiceHttpClientsTest
         handler.Calls.ShouldBe(1 + Retries);
     }
 
-    internal static HttpClient CreateClient(string name, HttpMessageHandler handler, RateLimiter? musicBrainzLimiter = null, TimeSpan? attemptTimeout = null)
+    internal static HttpClient CreateClient(string name, HttpMessageHandler handler, RateLimiter? musicBrainzLimiter = null, TimeSpan? attemptTimeout = null, bool defaultRetries = false, TimeProvider? time = null)
     {
         var services = new ServiceCollection();
+        var defaults = new MusicServiceHttpOptions();
+        if (time != null)
+        {
+            services.AddSingleton(time);
+        }
         services.AddMusicServiceHttpClients(new MusicServiceHttpOptions
         {
-            MaxRetryAttempts = Retries,
-            RetryDelay = TimeSpan.Zero,
+            MaxRetryAttempts = defaultRetries ? defaults.MaxRetryAttempts : Retries,
+            RetryDelay = defaultRetries ? defaults.RetryDelay : TimeSpan.Zero,
             AttemptTimeout = attemptTimeout ?? TimeSpan.FromSeconds(15),
             MusicBrainzRateLimiter = musicBrainzLimiter ?? CreateOpenLimiter(),
             SetlistFmRateLimiter = CreateOpenLimiter(),
@@ -204,6 +227,27 @@ public class MusicServiceHttpClientsTest
             Interlocked.Increment(ref _calls);
             await Task.Delay(Timeout.Infinite, cancellationToken);
             throw new InvalidOperationException("Not reachable");
+        }
+    }
+
+    /// <summary>
+    /// Records the retry delays and lets them pass at once. The attempt timeout keeps its real timer, so it never fires in a test.
+    /// </summary>
+    private sealed class RecordingTimeProvider : TimeProvider
+    {
+        private static readonly TimeSpan AttemptTimeout = new MusicServiceHttpOptions().AttemptTimeout;
+
+        public ConcurrentQueue<TimeSpan> Delays { get; } = new();
+
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+        {
+            // Infinite timers (-1 ms) belong to the resilience handler itself and never fire.
+            if (dueTime == AttemptTimeout || dueTime < TimeSpan.Zero)
+            {
+                return System.CreateTimer(callback, state, dueTime, period);
+            }
+            Delays.Enqueue(dueTime);
+            return System.CreateTimer(callback, state, TimeSpan.Zero, period);
         }
     }
 

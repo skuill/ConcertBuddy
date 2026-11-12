@@ -77,6 +77,46 @@ public class BotHostTest
     }
 
     [Fact]
+    public async Task Update_SlowCommand_DoesNotHoldTheNextUpdate()
+    {
+        // Arrange: the answer to the first update waits until the test opens the gate.
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var telegram = new FakeTelegram(CreateStartUpdate(1), CreateStartUpdate(2)) { BeforeAnswer = number => number == 1 ? gate.Task : Task.CompletedTask };
+        using var host = CreateHost(telegram);
+
+        // Act
+        await host.StartAsync(Token);
+
+        // Assert: the second update is handled while the first one still waits.
+        await WaitUntil(() => HandledLines().Count == 1, () => $"handled while the first update waits: {HandledLines().Count}");
+        telegram.Answers.Count.ShouldBe(1);
+        gate.SetResult();
+        await WaitUntil(() => HandledLines().Count == 2);
+        await host.StopAsync(Token);
+    }
+
+    [Fact]
+    public async Task Stop_UpdateInProgress_WaitsForIt()
+    {
+        // Arrange
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var telegram = new FakeTelegram(CreateStartUpdate(1)) { BeforeAnswer = _ => gate.Task };
+        using var host = CreateHost(telegram);
+        await host.StartAsync(Token);
+        await WaitUntil(() => telegram.AnswersStarted == 1);
+
+        // Act
+        var stop = host.StopAsync(Token);
+        await Task.Delay(TimeSpan.FromMilliseconds(100), Token);
+
+        // Assert
+        stop.IsCompleted.ShouldBeFalse();
+        gate.SetResult();
+        await stop.WaitAsync(SafetyTimeout, Token);
+        HandledLines().Single().ShouldContain(": Found in ");
+    }
+
+    [Fact]
     public async Task Update_CommandFails_LogsItTellsTheUserAndHandlesNextUpdate()
     {
         // Arrange
@@ -89,12 +129,13 @@ public class BotHostTest
         await host.StopAsync(Token);
 
         // Assert
+        // Updates run in parallel: the order of the answers and lines is not fixed.
         telegram.Answers.Count.ShouldBe(3);
-        telegram.Answers.ElementAt(1).ShouldContain("Something goes wrong");
-        telegram.Answers.ElementAt(2).ShouldContain("Hi, Tester!");
-        _logs.Entries.ShouldContain(x => x.Level == LogLevel.Error && x.Message.StartsWith("Failed to handle update 1 of type Message, command /start"));
-        HandledLines()[0].ShouldContain(": Error in ");
-        HandledLines()[1].ShouldContain(": Found in ");
+        telegram.Answers.Count(x => x.Contains("Something goes wrong")).ShouldBe(1);
+        telegram.Answers.Count(x => x.Contains("Hi, Tester!")).ShouldBe(2);
+        _logs.Entries.ShouldContain(x => x.Level == LogLevel.Error && x.Message.StartsWith("Failed to handle update ") && x.Message.EndsWith(" of type Message, command /start"));
+        HandledLines().Count(x => x.Contains(": Error in ")).ShouldBe(1);
+        HandledLines().Count(x => x.Contains(": Found in ")).ShouldBe(1);
     }
 
     [Fact]
@@ -298,6 +339,7 @@ public class BotHostTest
         private readonly ConcurrentQueue<string> _updates;
         private readonly ConcurrentQueue<string> _answers = new();
         private int _failedAnswers;
+        private int _answersStarted;
         private int _pollCalls;
 
         public FakeTelegram(params string[] updates)
@@ -306,6 +348,10 @@ public class BotHostTest
         }
 
         public int FailedAnswers { init => _failedAnswers = value; }
+
+        public Func<int, Task> BeforeAnswer { get; init; } = _ => Task.CompletedTask;
+
+        public int AnswersStarted => Volatile.Read(ref _answersStarted);
 
         public Func<HttpResponseMessage> GetMeResponse { get; init; } = () => Ok("""{"id":123456,"is_bot":true,"first_name":"TestBot","username":"test_bot"}""");
 
@@ -367,7 +413,9 @@ public class BotHostTest
 
         private async Task<HttpResponseMessage> SendMessage(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            _answers.Enqueue(await request.Content!.ReadAsStringAsync(cancellationToken));
+            var content = await request.Content!.ReadAsStringAsync(cancellationToken);
+            await BeforeAnswer(Interlocked.Increment(ref _answersStarted));
+            _answers.Enqueue(content);
             if (Interlocked.Decrement(ref _failedAnswers) >= 0)
             {
                 return Json(HttpStatusCode.BadRequest, """{"ok":false,"error_code":400,"description":"Bad Request: test failure"}""");
