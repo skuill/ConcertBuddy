@@ -52,7 +52,9 @@ public static class MusicServiceHttpClients
                 MaxRetryAttempts = options.MaxRetryAttempts,
                 Delay = options.RetryDelay,
                 BackoffType = DelayBackoffType.Exponential,
-                UseJitter = true,
+                // No jitter: with it the first retry came after 0.07 s, and a busy MusicBrainz answered 503 to all of them.
+                // One bot instance does not need jitter to spread its retries.
+                UseJitter = false,
             })
             .AddRateLimiter(rateLimiter)
             .AddTimeout(options.AttemptTimeout);
