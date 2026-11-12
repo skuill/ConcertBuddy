@@ -180,10 +180,10 @@ public sealed partial class PrototypeHandlers : IBotHandlers
             + "🎼 <b>Lyrics:</b> under every track.\n"
             + "↗️ <b>Share:</b> \"Send to a chat\" under a setlist, or type <code>@test_concert_buddy_bot</code> in any chat.\n\n"
             + "In groups the list of artists is shown only to the one who asked; the result is for everyone.";
-        return new Screen(html, false, new InlineKeyboardMarkup(new[] { new[] { Button("ℹ️ About", "about") } }));
+        return new Screen(html, false, new InlineKeyboardMarkup(new[] { new[] { Button("🏠 Menu", "home"), Button("ℹ️ About", "about") } }));
     }
 
-    private static Screen AboutScreen()
+    private Screen AboutScreen()
     {
         var version = typeof(PrototypeHandlers).Assembly.GetName().Version?.ToString(3);
         var html = $"ℹ️ <b>ConcertBuddy</b> {version}\n\n"
@@ -199,6 +199,8 @@ public sealed partial class PrototypeHandlers : IBotHandlers
                 InlineKeyboardButton.WithUrl("💳 PayPal", "https://paypal.me/VitalyKvashin"),
             },
             new[] { InlineKeyboardButton.WithUrl("🪙 Crypto", "https://github.com/skuill/ConcertBuddy#support") },
+            // Every info screen leads back to the start menu.
+            new[] { Button("🏠 Menu", "home"), Button("❓ Help", "help") },
         };
         return new Screen(html, false, new InlineKeyboardMarkup(rows));
     }
@@ -297,6 +299,9 @@ public sealed partial class PrototypeHandlers : IBotHandlers
                 break;
             case "about":
                 await ShowAsync(chatId, messageId, AboutScreen());
+                break;
+            case "home":
+                await ShowAsync(chatId, messageId, StartScreen(query.From.FirstName));
                 break;
             case "bio":
                 await ShowAsync(chatId, messageId, await BiographyScreenAsync(parts[1]));
