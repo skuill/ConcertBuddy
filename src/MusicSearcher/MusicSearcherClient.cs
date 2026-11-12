@@ -113,6 +113,7 @@ public class MusicSearcherClient : IMusicSearcherClient
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Can't find artists by name [{Name}]", name);
+            throw;
         }
         return result;
     }

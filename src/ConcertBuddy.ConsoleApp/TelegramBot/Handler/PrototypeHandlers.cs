@@ -60,9 +60,9 @@ public sealed partial class PrototypeHandlers : IBotHandlers
     {
         try
         {
-            if (update.Message is { Text: { } text } message)
+            if (update.Message is { Text: not null } message)
             {
-                await OnTextAsync(message.Chat.Id, text.Trim());
+                await OnMessageAsync(message);
             }
             else if (update.CallbackQuery is { } query)
             {
@@ -79,26 +79,153 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         }
     }
 
-    private async Task OnTextAsync(long chatId, string text)
+    private static readonly string[] Examples = { "Metallica", "Parkway Drive", "IDLES" };
+
+    private async Task OnMessageAsync(Message message)
     {
+        await EnsureCommandMenuAsync();
+        var chatId = message.Chat.Id;
+        var text = message.Text!.Trim();
+        var isGroup = message.Chat.Type is ChatType.Group or ChatType.Supergroup;
+
+        // Commands may come as "/search@bot name" in groups.
+        var command = text.StartsWith('/') ? text.Split(' ', 2)[0].Split('@')[0].ToLowerInvariant() : null;
+        var argument = text.Contains(' ') ? text.Split(' ', 2)[1].Trim() : "";
+
         // Deep link from a shared setlist: t.me/<bot>?start=s_<setlist id>
-        if (text.StartsWith("/start s_", StringComparison.Ordinal))
+        if (command == "/start" && argument.StartsWith("s_", StringComparison.Ordinal))
         {
-            var setlistId = text["/start s_".Length..];
+            var setlistId = argument["s_".Length..];
             var loading = await _bot.SendMessage(chatId, "📝 Opening the shared setlist…");
             var shared = await _music.SearchSetlist(setlistId);
             await ShowAsync(chatId, loading.MessageId, await SetlistScreenAsync(setlistId, shared.ArtistMBID!, 1, asTable: true));
             return;
         }
 
-        if (text.StartsWith('/'))
+        switch (command)
         {
-            await _bot.SendMessage(chatId, "🎸 <b>Prototype of the new screens</b>\nSend an artist or band name.", ParseMode.Html);
+            case "/start":
+                await SendScreenAsync(chatId, StartScreen(message.From?.FirstName));
+                return;
+            case "/help":
+                await SendScreenAsync(chatId, HelpScreen(isGroup));
+                return;
+            case "/about":
+                await SendScreenAsync(chatId, AboutScreen());
+                return;
+            case "/search" when argument.Length == 0:
+                await _bot.SendMessage(chatId, "Add a name: <code>/search Metallica</code>", ParseMode.Html);
+                return;
+            case "/search":
+                text = argument;
+                break;
+            case not null:
+                return;
+        }
+
+        if (isGroup)
+        {
+            await GroupSearchAsync(message, text);
             return;
         }
 
-        var message = await _bot.SendMessage(chatId, "🔍 Searching…");
-        await ShowAsync(chatId, message.MessageId, await SearchScreenAsync(text));
+        var searching = await _bot.SendMessage(chatId, "🔍 Searching…");
+        await ShowAsync(chatId, searching.MessageId, await SearchScreenAsync(text));
+    }
+
+    private bool _commandMenuSet;
+
+    private async Task EnsureCommandMenuAsync()
+    {
+        if (_commandMenuSet)
+        {
+            return;
+        }
+        _commandMenuSet = true;
+        var commands = new[]
+        {
+            new BotCommand { Command = "search", Description = "Find an artist: /search Metallica" },
+            new BotCommand { Command = "help", Description = "How to use the bot" },
+            new BotCommand { Command = "about", Description = "Sources, code and support" },
+        };
+        await _bot.SetMyCommands(commands);
+        await _bot.SetMyCommands(commands, new BotCommandScopeAllGroupChats());
+    }
+
+    private async Task SendScreenAsync(long chatId, Screen screen)
+    {
+        await _bot.SendMessage(chatId, screen.Html, ParseMode.Html, replyMarkup: screen.Keyboard, linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true });
+    }
+
+    private Screen StartScreen(string? firstName)
+    {
+        var html = $"👋 Hi{(firstName == null ? "" : $", {Encode(firstName)}")}!\n\n"
+            + "🎸 <b>ConcertBuddy</b> finds what bands play live: setlists of past and upcoming concerts, tracks and lyrics.\n\n"
+            + "Send an artist or band name, or try one of these:";
+        var rows = new List<InlineKeyboardButton[]>
+        {
+            Examples.Select(name => Button(name, $"search|{name}")).ToArray(),
+            new[] { Button("❓ Help", "help"), Button("ℹ️ About", "about") },
+        };
+        return new Screen(html, false, new InlineKeyboardMarkup(rows));
+    }
+
+    private Screen HelpScreen(bool isGroup)
+    {
+        var html = "❓ <b>How to use ConcertBuddy</b>\n\n"
+            + "🔍 <b>Search:</b> send an artist name" + (isGroup ? " as <code>/search Metallica</code> (in groups the bot sees only commands)" : "") + ".\n"
+            + "📝 <b>Setlists:</b> open the artist, then Setlists. Tap a song to listen.\n"
+            + "📅 <b>Upcoming:</b> concerts that fans already added on setlist.fm.\n"
+            + "🎼 <b>Lyrics:</b> under every track.\n"
+            + "↗️ <b>Share:</b> \"Send to a chat\" under a setlist, or type <code>@test_concert_buddy_bot</code> in any chat.\n\n"
+            + "In groups the list of artists is shown only to the one who asked; the result is for everyone.";
+        return new Screen(html, false, new InlineKeyboardMarkup(new[] { new[] { Button("ℹ️ About", "about") } }));
+    }
+
+    private static Screen AboutScreen()
+    {
+        var version = typeof(PrototypeHandlers).Assembly.GetName().Version?.ToString(3);
+        var html = $"ℹ️ <b>ConcertBuddy</b> {version}\n\n"
+            + "Data: <a href=\"https://musicbrainz.org\">MusicBrainz</a>, <a href=\"https://www.setlist.fm\">setlist.fm</a>, "
+            + "<a href=\"https://www.last.fm\">Last.fm</a>, Yandex Music, lyrics via <a href=\"https://github.com/skuill/LyricsScraperNET\">LyricsScraperNET</a>.\n"
+            + "Open source: <a href=\"https://github.com/skuill/ConcertBuddy\">github.com/skuill/ConcertBuddy</a>\n\n"
+            + "💛 The bot is free. If it helps you, you can support it:";
+        var rows = new[]
+        {
+            new[]
+            {
+                InlineKeyboardButton.WithUrl("☕ Buy me a coffee", "https://www.buymeacoffee.com/skuill"),
+                InlineKeyboardButton.WithUrl("💳 PayPal", "https://paypal.me/VitalyKvashin"),
+            },
+            new[] { InlineKeyboardButton.WithUrl("🪙 Crypto", "https://github.com/skuill/ConcertBuddy#support") },
+        };
+        return new Screen(html, false, new InlineKeyboardMarkup(rows));
+    }
+
+    private async Task GroupSearchAsync(Message message, string text)
+    {
+        var chatId = message.Chat.Id;
+        Screen screen;
+        try
+        {
+            screen = await SearchListScreenAsync(text, pickPayload: "gpick");
+        }
+        catch (Exception)
+        {
+            screen = UnavailableScreen(text);
+        }
+
+        try
+        {
+            // The choice is visible only to the one who asked (ephemeral message); the chosen artist is posted for everyone.
+            await _bot.SendMessage(chatId, screen.Html, ParseMode.Html, replyMarkup: screen.Keyboard,
+                ephemeralMessageParameters: new EphemeralMessageParameters { ReceiverUserId = message.From!.Id });
+        }
+        catch (ApiRequestException exception)
+        {
+            _logger.LogWarning("Ephemeral message rejected: {Reason}. Showing the list to everyone", exception.Message);
+            await SendScreenAsync(chatId, screen);
+        }
     }
 
     private async Task OnCallbackAsync(CallbackQuery query)
@@ -112,6 +239,16 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         }
 
         var parts = payload.Split('|');
+        if (parts[0] == "gpick" && query.Message.EphemeralMessageId is int ephemeralId)
+        {
+            await _bot.AnswerCallbackQuery(query.Id);
+            await _bot.DeleteEphemeralMessage(chatId, query.From.Id, ephemeralId);
+            var card = await ArtistScreenAsync(parts[1]);
+            await _bot.SendMessage(chatId, $"{card.Html}\n\n<i>Asked by {Encode(query.From.FirstName)}</i>", ParseMode.Html, replyMarkup: card.Keyboard,
+                linkPreviewOptions: card.PreviewUrl == null ? new LinkPreviewOptions { IsDisabled = true } : new LinkPreviewOptions { Url = card.PreviewUrl, ShowAboveText = true, PreferLargeMedia = true });
+            return;
+        }
+
         switch (parts[0])
         {
             case "play":
@@ -141,7 +278,24 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         switch (parts[0])
         {
             case "artist":
+            case "gpick":
                 await ShowAsync(chatId, messageId, await ArtistScreenAsync(parts[1]));
+                break;
+            case "search":
+                await ShowAsync(chatId, messageId, new Screen("🔍 Searching…", false, new InlineKeyboardMarkup()));
+                await ShowAsync(chatId, messageId, await SearchScreenAsync(parts[1]));
+                break;
+            case "list":
+                await ShowAsync(chatId, messageId, await SearchListScreenSafeAsync(parts[1]));
+                break;
+            case "upcoming":
+                await ShowAsync(chatId, messageId, await UpcomingScreenAsync(parts[1]));
+                break;
+            case "help":
+                await ShowAsync(chatId, messageId, HelpScreen(query.Message.Chat.Type is ChatType.Group or ChatType.Supergroup));
+                break;
+            case "about":
+                await ShowAsync(chatId, messageId, AboutScreen());
                 break;
             case "bio":
                 await ShowAsync(chatId, messageId, await BiographyScreenAsync(parts[1]));
@@ -179,17 +333,113 @@ public sealed partial class PrototypeHandlers : IBotHandlers
 
     private async Task<Screen> SearchScreenAsync(string text)
     {
-        var artists = (await _music.SearchArtistsByName(text)).ToList();
-        if (artists.Count == 0)
+        List<MusicArtistBase> artists;
+        try
         {
-            return new Screen($"🤷 Nothing found for <b>{Encode(text)}</b>.\nCheck the spelling or try another name.", false, new InlineKeyboardMarkup());
+            artists = (await _music.SearchArtistsByName(text)).ToList();
+        }
+        catch (Exception)
+        {
+            return UnavailableScreen(text);
         }
 
-        var rows = artists.Select(a => new[] { Button($"{Flag(a.Country)} {a.Name} · {Describe(a)}", $"artist|{a.MBID}") });
+        if (artists.Count == 0)
+        {
+            return await NothingFoundScreenAsync(text);
+        }
+
+        // Confident match: the name is exactly what the user typed and no other result has the same name.
+        var exact = artists.Where(a => string.Equals(a.Name?.Trim(), text.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+        if (exact.Count == 1)
+        {
+            return await ArtistScreenAsync(exact[0].MBID!, searchText: text);
+        }
+        return ListScreen(text, artists, "artist");
+    }
+
+    private async Task<Screen> SearchListScreenSafeAsync(string text)
+    {
+        try
+        {
+            return await SearchListScreenAsync(text, "artist");
+        }
+        catch (Exception)
+        {
+            return UnavailableScreen(text);
+        }
+    }
+
+    private async Task<Screen> SearchListScreenAsync(string text, string pickPayload)
+    {
+        var artists = (await _music.SearchArtistsByName(text)).ToList();
+        return artists.Count == 0 ? await NothingFoundScreenAsync(text) : ListScreen(text, artists, pickPayload);
+    }
+
+    private Screen ListScreen(string text, List<MusicArtistBase> artists, string pickPayload)
+    {
+        var rows = artists.Select(a => new[] { Button($"{Flag(a.Country)} {a.Name} · {Describe(a)}", $"{pickPayload}|{a.MBID}") });
         return new Screen($"Choose the artist for <b>{Encode(text)}</b>:", false, new InlineKeyboardMarkup(rows));
     }
 
-    private async Task<Screen> ArtistScreenAsync(string mbid)
+    private async Task<Screen> NothingFoundScreenAsync(string text)
+    {
+        // A text typed with the wrong keyboard layout ("ьуефддшсф" for "metallica") is the most common miss after typos.
+        var swapped = SwapLayout(text);
+        if (swapped != text)
+        {
+            var found = (await _music.SearchArtistsByName(swapped)).ToList();
+            if (found.Count > 0)
+            {
+                var rows = found.Select(a => new[] { Button($"{Flag(a.Country)} {a.Name} · {Describe(a)}", $"artist|{a.MBID}") });
+                return new Screen($"🤔 Nothing for <b>{Encode(text)}</b>. Did you mean <b>{Encode(swapped)}</b>?", false, new InlineKeyboardMarkup(rows));
+            }
+        }
+
+        return new Screen(
+            $"🤷 Nothing found for <b>{Encode(text)}</b>.\n\n"
+            + "• Check the spelling\n• Send the band name, not a song\n• Try the original spelling (Кино, not Kino)",
+            false,
+            new InlineKeyboardMarkup(new[] { Examples.Select(name => Button(name, $"search|{name}")).ToArray() }));
+    }
+
+    private Screen UnavailableScreen(string text)
+    {
+        return new Screen(
+            "⚠️ MusicBrainz, the artist database, is busy right now. It is not your query: try again in a minute.",
+            false,
+            new InlineKeyboardMarkup(new[] { new[] { Styled(Button("🔄 Try again", $"search|{text}"), KeyboardButtonStyle.Primary) } }));
+    }
+
+    private static string SwapLayout(string text)
+    {
+        const string ru = "йцукенгшщзхъфывапролджэячсмитьбю";
+        const string en = "qwertyuiop[]asdfghjkl;'zxcvbnm,.";
+        var lower = text.ToLowerInvariant();
+        if (lower.Any(c => ru.Contains(c)))
+        {
+            return string.Concat(lower.Select(c => ru.IndexOf(c) is var i and >= 0 ? en[i] : c));
+        }
+        if (lower.Any(c => c is >= 'a' and <= 'z'))
+        {
+            return string.Concat(lower.Select(c => en.IndexOf(c) is var i and >= 0 ? ru[i] : c));
+        }
+        return text;
+    }
+
+    private async Task<Screen> UpcomingScreenAsync(string mbid)
+    {
+        var setlists = await _music.SearchArtistSetlists(mbid, 1);
+        var upcoming = setlists?.Setlist?.Where(s => s.IsFutureEvent()).Reverse().ToList() ?? new List<MusicSetlist>();
+        var name = setlists?.Setlist?.FirstOrDefault()?.ArtistName ?? "";
+        var rows = upcoming.Select(s => new[] { Button($"🔜 {FormatDate(s.EventDate)} · {s.CityName} · {s.VenueName}", $"setlist|{s.Id}|{mbid}|1") }).ToList();
+        rows.Add(new[] { Button("⬅️ Artist", $"artist|{mbid}") });
+        var html = upcoming.Count == 0
+            ? $"📅 <b>{Encode(name)}</b>\nNo upcoming concerts on setlist.fm yet."
+            : $"📅 <b>{Encode(name)}</b> · {upcoming.Count} upcoming\n<i>Added by fans on setlist.fm, tickets are not sold here.</i>";
+        return new Screen(html, false, new InlineKeyboardMarkup(rows));
+    }
+
+    private async Task<Screen> ArtistScreenAsync(string mbid, string? searchText = null)
     {
         var artist = (MusicArtist)await _music.SearchArtistByMBID(mbid);
         var lastFm = artist[MusicServiceType.LastFm];
@@ -207,7 +457,8 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         var keyboard = new InlineKeyboardMarkup(new[]
         {
             new[] { Styled(Button("📝 Setlists", $"setlists|{mbid}|1"), KeyboardButtonStyle.Primary), Button("🎧 Top tracks", $"top|{mbid}") },
-            new[] { Button("📖 Full biography", $"bio|{mbid}"), Button("🔍 Another artist", "hint") },
+            new[] { Button("📅 Upcoming", $"upcoming|{mbid}"), Button("📖 Full biography", $"bio|{mbid}") },
+            searchText == null ? new[] { Button("🔍 Another artist", "hint") } : new[] { Button("🔄 Not this artist?", $"list|{searchText}"), Button("🔍 Another artist", "hint") },
         });
         return new Screen(html.ToString(), false, keyboard, lastFm?.ExternalUrl?.ToString());
     }
