@@ -9,7 +9,7 @@ public sealed class MusicServiceHttpOptions
 {
     public int MaxRetryAttempts { get; init; } = 3;
 
-    public TimeSpan RetryDelay { get; init; } = TimeSpan.FromSeconds(1);
+    public TimeSpan RetryDelay { get; init; } = TimeSpan.FromSeconds(2);
 
     public TimeSpan AttemptTimeout { get; init; } = TimeSpan.FromSeconds(15);
 

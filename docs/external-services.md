@@ -10,7 +10,7 @@ How the bot calls the music services. Settings: `src/MusicSearcher/Http/`.
 
 ## Retries
 
-For MusicBrainz and Setlist.fm: up to 3 retries with a growing delay and jitter (from 1 second), after `408`, `429`, `5xx`, network errors and a timeout of 15 seconds per attempt. A `Retry-After` header is respected.
+For MusicBrainz and Setlist.fm: up to 3 retries after 2, 4 and 8 seconds, after `408`, `429`, `5xx`, network errors and a timeout of 15 seconds per attempt. A `Retry-After` header is respected.
 
 Requests over the limit wait in a queue of up to 20 requests; when the queue is full, the request fails.
 
