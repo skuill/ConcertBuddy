@@ -79,7 +79,7 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         }
     }
 
-    private static readonly string[] Examples = { "Metallica", "Parkway Drive", "IDLES" };
+    private static readonly string[] Examples = { "Metallica", "Linkin Park", "Foo Fighters", "Ed Sheeran" };
 
     private async Task OnMessageAsync(Message message)
     {
@@ -164,7 +164,8 @@ public sealed partial class PrototypeHandlers : IBotHandlers
             + "Send an artist or band name, or try one of these:";
         var rows = new List<InlineKeyboardButton[]>
         {
-            Examples.Select(name => Button(name, $"search|{name}")).ToArray(),
+            Examples.Take(2).Select(name => Button(name, $"search|{name}")).ToArray(),
+            Examples.Skip(2).Select(name => Button(name, $"search|{name}")).ToArray(),
             new[] { Button("❓ Help", "help"), Button("ℹ️ About", "about") },
         };
         return new Screen(html, false, new InlineKeyboardMarkup(rows));
