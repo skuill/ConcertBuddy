@@ -388,7 +388,15 @@ public sealed partial class PrototypeHandlers : IBotHandlers
         var swapped = SwapLayout(text);
         if (swapped != text)
         {
-            var found = (await _music.SearchArtistsByName(swapped)).ToList();
+            List<MusicArtistBase> found;
+            try
+            {
+                found = (await _music.SearchArtistsByName(swapped)).ToList();
+            }
+            catch (Exception)
+            {
+                return UnavailableScreen(text);
+            }
             if (found.Count > 0)
             {
                 var rows = found.Select(a => new[] { Button($"{Flag(a.Country)} {a.Name} · {Describe(a)}", $"artist|{a.MBID}") });
