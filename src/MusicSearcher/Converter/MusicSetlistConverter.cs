@@ -18,7 +18,9 @@ internal static class MusicSetlistConverter
             EventDate = setlist.EventDate.ToString("dd-MM-yyyy"),
             TourName = setlist.Tour?.Name,
             VenueName = setlist.Venue?.Name,
-            Sets = setlist.Sets?.ToInternal()
+            Sets = setlist.Sets?.ToInternal(),
+            Info = setlist.Info,
+            Url = setlist.Url,
         };
     }
 }

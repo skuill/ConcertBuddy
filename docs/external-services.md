@@ -18,4 +18,4 @@ Requests over the limit wait in a queue of up to 20 requests; when the queue is 
 
 When MusicBrainz does not answer after the retries, `MusicSearcherClient` throws `MusicServiceUnavailableException` for the artist search and the artist by MBID, and the bot shows "busy, try again" instead of "nothing found". A `400` or `404` for an MBID means "no such artist" (an empty artist).
 
-SetlistNet does not check the status code, so `EnsureSuccessHandler` turns an error answer into an exception. `SetlistFmServiceClient` logs it and returns no data: a `404` at the Information level, anything else as an error.
+SetlistNet does not check the status code, so `EnsureSuccessHandler` turns an error answer into an exception. `SetlistFmServiceClient` returns no data for a `404` (setlist.fm has nothing, logged at the Information level) and throws `MusicServiceUnavailableException` for anything else (a `Warning`), so the bot shows "busy, try again".

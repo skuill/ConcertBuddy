@@ -1,66 +1,30 @@
-﻿using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
-using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
-using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
-using Microsoft.Extensions.Logging;
+using ConcertBuddy.ConsoleApp.TelegramBot.Callback;
+using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
+using ConcertBuddy.ConsoleApp.TelegramBot.Screens;
 using MusicSearcher;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Command;
 
-public class BiographyCommand : AbstractCommand<Message?, CallbackQuery>
+/// <summary>
+/// The full biography in place of the artist card.
+/// </summary>
+public class BiographyCommand : ScreenCallbackCommand
 {
-    private const string CurrentCommand = CommandList.COMMAND_BIOGRAPHY;
+    private readonly ArtistScreens _screens;
 
-    private readonly ILogger<BiographyCommand> _logger;
-
-    public BiographyCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ILogger<BiographyCommand> logger, CallbackQuery data)
-        : base(musicSearcherClient, telegramBotClient, data)
+    public BiographyCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ScreenSender sender, ArtistScreens screens, CallbackQuery data, CallbackPayload payload)
+        : base(musicSearcherClient, telegramBotClient, sender, data, payload)
     {
-        _logger = logger;
+        _screens = screens;
     }
 
-    public override async Task<Message?> ExecuteAsync()
+    protected override int ArgumentCount => 1;
+
+    protected override Func<Task<ScreenResult>>? Prepare(string[] arguments)
     {
-        _logger?.LogDebug("Handle [{CurrentCommand}] command: [{CallbackData}]", CurrentCommand, Data.Data);
-
-        if (Data == null)
-        {
-            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.", CurrentCommand);
-            return null;
-        }
-        if (Data!.Message == null)
-        {
-            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.", CurrentCommand);
-        }
-
-        var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
-        if (!isValidQuery)
-        {
-            _logger?.LogError("Command: [{CurrentCommand}]. Error: {ErrorMessage}", CurrentCommand, errorMessage);
-            Result = CommandResult.Error;
-            await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
-            return null;
-        }
-
-        string replyText = "Sorry, but the biography of the artist was not found 😕";
-
-        var artistMBID = Data.GetParameterFromMessageText(CurrentCommand);
-
-        var artist = await MusicSearcherClient.SearchArtistByMBID(artistMBID);
-        if (artist != null && !string.IsNullOrWhiteSpace(artist.Biography))
-        {
-            replyText = artist.Biography;
-        }
-
-        InlineKeyboardMarkup inlineKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton();
-
-        return await TelegramBotClient.SendMessage(
-            chatId: Data.Message!.Chat.Id,
-            text: replyText,
-            replyMarkup: inlineKeyboard,
-            parseMode: ParseMode.Html);
+        var mbid = arguments[0];
+        return Guid.TryParse(mbid, out _) ? () => _screens.BiographyAsync(mbid) : null;
     }
 }

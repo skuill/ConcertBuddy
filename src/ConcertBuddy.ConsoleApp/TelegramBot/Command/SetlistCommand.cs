@@ -1,101 +1,38 @@
-﻿using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
-using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
-using ConcertBuddy.ConsoleApp.TelegramBot.Validation;
-using Microsoft.Extensions.Logging;
+using ConcertBuddy.ConsoleApp.TelegramBot.Callback;
+using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
+using ConcertBuddy.ConsoleApp.TelegramBot.Screens;
 using MusicSearcher;
+using System.Globalization;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Command;
 
-public class SetlistCommand : AbstractCommand<Message?, CallbackQuery>
+/// <summary>
+/// One setlist as a rich message in place of the setlists.
+/// </summary>
+public class SetlistCommand : ScreenCallbackCommand
 {
-    private const string CurrentCommand = CommandList.COMMAND_SETLIST;
+    private readonly SetlistScreens _screens;
 
-    private readonly ILogger<SetlistCommand> _logger;
-
-    public SetlistCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ILogger<SetlistCommand> logger, CallbackQuery data)
-        : base(musicSearcherClient, telegramBotClient, data)
+    public SetlistCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, ScreenSender sender, SetlistScreens screens, CallbackQuery data, CallbackPayload payload)
+        : base(musicSearcherClient, telegramBotClient, sender, data, payload)
     {
-        _logger = logger;
+        _screens = screens;
     }
 
-    public override async Task<Message?> ExecuteAsync()
+    protected override int ArgumentCount => 3;
+
+    protected override Func<Task<ScreenResult>>? Prepare(string[] arguments)
     {
-        _logger?.LogDebug("Handle [{CurrentCommand}] command: [{CallbackData}]", CurrentCommand, Data.Data);
-
-        if (Data == null)
+        var setlistId = arguments[0];
+        var mbid = arguments[1];
+        if (setlistId.Length == 0 || !Guid.TryParse(mbid, out _)
+            || !int.TryParse(arguments[2], NumberStyles.None, CultureInfo.InvariantCulture, out var screen) || screen < 1)
         {
-            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data] field is null.", CurrentCommand);
-            return null;
-        }
-        if (Data!.Message == null)
-        {
-            _logger?.LogError("Command: [{CurrentCommand}]. Unexpected case. [Data.Message] field is null.", CurrentCommand);
-        }
-
-        var isValidQuery = CallbackQueryValidation.Validate(TelegramBotClient, Data, CurrentCommand, out string errorMessage);
-        if (!isValidQuery)
-        {
-            _logger?.LogError(errorMessage);
-            Result = CommandResult.Error;
-            await MessageHelper.SendAsync(TelegramBotClient, Data, errorMessage);
             return null;
         }
 
-        var replyText = string.Empty;
-
-        var parameters = Data.GetParametersFromMessageText(CurrentCommand);
-        var artistMBID = parameters[0];
-        var setlistId = parameters[1];
-
-        var setlist = await MusicSearcherClient.SearchSetlist(setlistId);
-
-        if (setlist == null)
-        {
-            _logger?.LogInformation("Command: [{CurrentCommand}]. Can't find setlist by Id: [{SetlistId}], mbid: [{ArtistMBID}]", CurrentCommand, setlistId, artistMBID);
-            return await SendNotFoundAsync(Data.Message!.Chat.Id);
-        }
-
-        if (!setlist.IsSetsExist())
-        {
-            _logger?.LogInformation("Command: [{CurrentCommand}]. Can't find sets in setlist with Id: [{SetlistId}], mbid: [{ArtistMBID}]", CurrentCommand, setlistId, artistMBID);
-
-            string reasonMessage = setlist.IsFutureEvent()
-                ? "ℹ️ There are no songs in this setlist because the concert hasn't started yet. Please try again later.."
-                : "ℹ️ Sorry, there are no information about songs in this setlist yet..";
-
-            return await MessageHelper.SendTextMessageAsync(TelegramBotClient, Data.Message!.Chat.Id, reasonMessage);
-        }
-
-        // Save message ids for delete command 
-        var messageIds = new List<int>();
-
-        replyText = setlist.ToString();
-
-        messageIds.Add((await TelegramBotClient.SendMessage(
-            chatId: Data.Message!.Chat.Id,
-            text: replyText,
-            replyMarkup: new ReplyKeyboardRemove())).MessageId);
-
-        var sendTextMessageTasks = new List<Task<Message>>();
-        foreach (var set in setlist.Sets!.Set)
-        {
-            replyText = $"{set.ToString()}";
-            InlineKeyboardMarkup inlineKeyboard = InlineKeyboardHelper.GetTracksInlineKeyboardMenu(set, artistMBID);
-            sendTextMessageTasks.Add(TelegramBotClient.SendMessage(
-                chatId: Data.Message.Chat.Id,
-                text: replyText,
-                replyMarkup: inlineKeyboard));
-        }
-
-        messageIds.AddRange(Task.WhenAll(sendTextMessageTasks).Result.Select(x => x.MessageId).ToList());
-
-        InlineKeyboardMarkup deleteKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton(messageIds.ToArray());
-        return await TelegramBotClient.SendMessage(
-            chatId: Data.Message.Chat.Id,
-            text: "Delete",
-            replyMarkup: deleteKeyboard);
+        return () => _screens.SetlistAsync(setlistId, mbid, screen);
     }
 }

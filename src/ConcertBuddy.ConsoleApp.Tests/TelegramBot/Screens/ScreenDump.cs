@@ -4,8 +4,8 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace ConcertBuddy.ConsoleApp.Tests.TelegramBot.Screens;
 
 /// <summary>
-/// A screen as readable text, so a test compares the whole screen at once: the text, every button with its data
-/// and style, the preview.
+/// A screen as readable text, so a test compares the whole screen at once: the text, every button with its data,
+/// style and state, the preview.
 /// </summary>
 internal static class ScreenDump
 {
@@ -17,6 +17,15 @@ internal static class ScreenDump
 
     private static string Button(InlineKeyboardButton button)
     {
-        return button.Style == null ? $"{button.Text} → {button.CallbackData}" : $"{button.Text} → {button.CallbackData} [{button.Style}]";
+        var text = button.CallbackData == null ? button.Text : $"{button.Text} → {button.CallbackData}";
+        if (button.Style != null)
+        {
+            text += $" [{button.Style}]";
+        }
+        if (button.Disabled != null)
+        {
+            text += " [disabled]";
+        }
+        return text;
     }
 }

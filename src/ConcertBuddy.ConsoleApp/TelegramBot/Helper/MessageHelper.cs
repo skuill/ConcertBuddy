@@ -17,16 +17,6 @@ public static class MessageHelper
             text: text);
     }
 
-    public static async Task<Message> SendTextMessageAsync(ITelegramBotClient botClient, long chatId, string message = "")
-    {
-        InlineKeyboardMarkup inlineKeyboard = InlineKeyboardMarkup.Empty().WithDeleteButton();
-
-        return await botClient.SendMessage(
-            chatId: chatId,
-            text: message,
-            replyMarkup: inlineKeyboard);
-    }
-
     public static async Task<Message> SendUnexpectedErrorAsync(ITelegramBotClient botClient, long chatId, string message = "")
     {
         string replyText = "Something goes wrong 😕! Please try another option or try again later.. " + message;

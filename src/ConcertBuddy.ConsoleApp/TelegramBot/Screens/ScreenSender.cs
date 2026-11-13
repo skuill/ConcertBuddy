@@ -19,6 +19,7 @@ public sealed class ScreenSender
 
     public Task<Message> SendAsync(long chatId, Screen screen)
     {
+        // Rich screens only replace a message so far; sending one new comes with the track screen.
         return _botClient.SendMessage(chatId, screen.Html, ParseMode.Html, replyMarkup: screen.Keyboard, linkPreviewOptions: Preview(screen));
     }
 
@@ -26,7 +27,10 @@ public sealed class ScreenSender
     {
         try
         {
-            await _botClient.EditMessageText(chatId, messageId, screen.Html, ParseMode.Html, screen.Keyboard, Preview(screen));
+            // A plain message can become a rich one and back: the artist card and its setlists share one message.
+            await (screen.IsRich
+                ? _botClient.EditMessageText(chatId, messageId, null!, replyMarkup: screen.Keyboard, richMessage: new InputRichMessage { Html = screen.Html })
+                : _botClient.EditMessageText(chatId, messageId, screen.Html, ParseMode.Html, screen.Keyboard, Preview(screen)));
         }
         catch (ApiRequestException exception) when (exception.Message.Contains("message is not modified"))
         {

@@ -150,7 +150,7 @@ public class BotHostTest : BotHostTestBase
     public async Task Update_OldCommandWithoutParameters_ResultIsErrorAndTheButtonIsAnswered()
     {
         // Arrange
-        var telegram = new FakeTelegram(CreateCallbackUpdate(1, "/biography"));
+        var telegram = new FakeTelegram(CreateCallbackUpdate(1, "/top"));
         using var host = CreateHost(telegram);
 
         // Act
@@ -159,7 +159,7 @@ public class BotHostTest : BotHostTestBase
         await host.StopAsync(Token);
 
         // Assert
-        HandledLines().Single().ShouldStartWith("Handled update: CallbackQuery /biography in Private chat from user -: Error in ");
+        HandledLines().Single().ShouldStartWith("Handled update: CallbackQuery /top in Private chat from user -: Error in ");
         telegram.Answers.Single().ShouldContain("Please pass any parameters");
         telegram.RequestsOf("answerCallbackQuery").ShouldNotBeEmpty();
     }

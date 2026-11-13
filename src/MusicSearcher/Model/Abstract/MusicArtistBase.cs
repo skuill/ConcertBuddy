@@ -13,6 +13,11 @@ public abstract class MusicArtistBase : IMusicArtist
     public abstract int? Score { get; }
     public abstract Uri? ImageUri { get; }
     public abstract string? Biography { get; }
+
+    /// <summary>
+    /// The whole biography; only Last.fm has it, <see cref="Biography"/> is its summary.
+    /// </summary>
+    public virtual string? FullBiography => null;
     /// <summary>
     /// Areas are geographic regions or settlements.
     /// </summary>

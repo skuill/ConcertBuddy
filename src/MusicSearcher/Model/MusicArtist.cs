@@ -38,6 +38,8 @@ public class MusicArtist : MusicArtistBase, IEnumerable<MusicArtistBase>
 
     public override string? Biography => GetFirstNonDefaultValue(x => x.Biography);
 
+    public override string? FullBiography => GetFirstNonDefaultValue(x => x.FullBiography);
+
     public override string? Area => GetFirstNonDefaultValue(x => x.Area);
 
     public override string? ActiveYears => GetFirstNonDefaultValue(x => x.ActiveYears);

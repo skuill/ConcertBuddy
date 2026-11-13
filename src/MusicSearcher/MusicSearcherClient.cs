@@ -297,12 +297,12 @@ public class MusicSearcherClient : IMusicSearcherClient
         return lyric;
     }
 
-    public async Task<MusicSetlists> SearchArtistSetlists(string artistMBID, int page = 1)
+    public async Task<MusicSetlists?> SearchArtistSetlists(string artistMBID, int page = 1)
     {
         return await _setlistFmClient.SearchArtistSetlists(artistMBID, page: page);
     }
 
-    public async Task<MusicSetlist> SearchSetlist(string setlistId)
+    public async Task<MusicSetlist?> SearchSetlist(string setlistId)
     {
         return await _setlistFmClient.SearchSetlist(setlistId);
     }

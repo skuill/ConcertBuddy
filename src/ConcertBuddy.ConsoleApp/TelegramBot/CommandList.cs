@@ -15,26 +15,6 @@ public class CommandList
 
     // WARNING: callback_data - Data to be sent in a callback query to the bot when button is pressed, 1-64 bytes
 
-    // Command with mbid. Example: /biography b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d
-    public const string CALLBACK_DATA_FORMAT_BIOGRAPHY = $"{COMMAND_BIOGRAPHY} {{0}}";
-
-    /// <summary>
-    /// Search setlists by artist mbid on page. Example: /setlists 1 b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d
-    /// Args:
-    /// 0 - search page (navigation). Above 1.
-    /// 1 - previous search page (navigation). Value 1 here and 1 in [search page] argument means that it's a newly sent message.
-    /// 2 - artist mbid
-    /// </summary>
-    public const string CALLBACK_DATA_FORMAT_SETLISTS = $"{COMMAND_SETLISTS} {{0}} {{1}} {{2}}";
-
-    /// <summary>
-    /// Search setlists by artist mbid and setlistId. Example: /setlist 8bfac288-ccc5-448d-9573-c33ea2aa5c30 1b983930
-    /// Args:
-    /// 0 - artist MBID
-    /// 1 - setlistId (from setlist.fm)
-    /// </summary>
-    public const string CALLBACK_DATA_FORMAT_SETLIST = $"{COMMAND_SETLIST} {{0}} {{1}}";
-
     /// <summary>
     /// Search track by artist mbid and name. Example: /track b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d Some track name
     /// Args:

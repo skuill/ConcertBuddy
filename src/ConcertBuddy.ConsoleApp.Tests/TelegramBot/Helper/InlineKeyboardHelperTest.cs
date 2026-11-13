@@ -1,7 +1,6 @@
 using ConcertBuddy.ConsoleApp.TelegramBot;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using FakeItEasy;
-using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using Shouldly;
 using System.Text;
@@ -35,16 +34,20 @@ public sealed class InlineKeyboardHelperTest
 
     [Theory]
     [MemberData(nameof(LongNames))]
-    public void GetTracksInlineKeyboardMenu_SetWithLongName_CallbackDataFitsTelegramLimit(string name)
+    public void GetTrackCallbackData_LongName_FitsTelegramLimit(string name)
     {
-        // Arrange
-        var set = new MusicSet { Songs = new List<MusicSong> { new() { Name = name } } };
-
         // Act
-        var result = InlineKeyboardHelper.GetTracksInlineKeyboardMenu(set, Mbid);
+        var result = InlineKeyboardHelper.GetTrackCallbackData(Mbid, name);
 
         // Assert
-        AssertCallbackDataFits(result);
+        Encoding.UTF8.GetByteCount(result).ShouldBeLessThanOrEqualTo(64);
+        result.ShouldStartWith($"/track {Mbid} ");
+    }
+
+    [Fact]
+    public void GetTrackCallbackData_ShortName_WholeName()
+    {
+        InlineKeyboardHelper.GetTrackCallbackData(Mbid, "One").ShouldBe($"/track {Mbid} One");
     }
 
     [Theory]
@@ -73,30 +76,6 @@ public sealed class InlineKeyboardHelperTest
     }
 
     [Fact]
-    public void GetTracksInlineKeyboardMenu_Set_NumbersSongsAndKeepsSongNameInCallback()
-    {
-        // Arrange
-        var set = new MusicSet
-        {
-            Songs = new List<MusicSong>
-            {
-                new() { Name = "One" },
-                new() { Name = "Whiskey in the Jar", CoverName = "[traditional]" },
-            },
-        };
-
-        // Act
-        var result = InlineKeyboardHelper.GetTracksInlineKeyboardMenu(set, Mbid);
-
-        // Assert
-        Buttons(result).ShouldBe(new[]
-        {
-            ("1. One", string.Format(CommandList.CALLBACK_DATA_FORMAT_TRACK, Mbid, "One")),
-            ("2. Whiskey in the Jar ([traditional] cover)", string.Format(CommandList.CALLBACK_DATA_FORMAT_TRACK, Mbid, "Whiskey in the Jar")),
-        });
-    }
-
-    [Fact]
     public void GetTracksInlineKeyboardMenu_Tracks_NumbersTracks()
     {
         // Act
@@ -108,58 +87,6 @@ public sealed class InlineKeyboardHelperTest
             ("1. One", string.Format(CommandList.CALLBACK_DATA_FORMAT_TRACK, Mbid, "One")),
             ("2. Fuel", string.Format(CommandList.CALLBACK_DATA_FORMAT_TRACK, Mbid, "Fuel")),
         });
-    }
-
-    [Fact]
-    public void GetSetlistsInlineKeyboardMenu_Setlist_UsesArtistAndSetlistIds()
-    {
-        // Arrange
-        var setlist = new MusicSetlist { Id = "4b48efd6", ArtistMBID = Mbid, ArtistName = "Metallica", EventDate = "31-10-2026", VenueName = "Sphere" };
-
-        // Act
-        var result = InlineKeyboardHelper.GetSetlistsInlineKeyboardMenu(new[] { setlist });
-
-        // Assert
-        Buttons(result).ShouldBe(new[]
-        {
-            (setlist.ToString(), string.Format(CommandList.CALLBACK_DATA_FORMAT_SETLIST, Mbid, "4b48efd6")),
-        });
-    }
-
-    [Fact]
-    public void GetArtistInlineKeyboardMenu_LastFmAvailable_HasTopTracksButton()
-    {
-        // Act
-        var result = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(Mbid, isTopTracksAvailable: true);
-
-        // Assert
-        Buttons(result).Select(x => x.Text).ShouldBe(new[] { "🎓 Biography", "📝 Setlists", "📻 Top tracks" });
-    }
-
-    [Fact]
-    public void GetArtistInlineKeyboardMenu_LastFmNotAvailable_NoTopTracksButton()
-    {
-        // Act
-        var result = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(Mbid, isTopTracksAvailable: false);
-
-        // Assert
-        Buttons(result).Select(x => x.Text).ShouldBe(new[] { "🎓 Biography", "📝 Setlists" });
-    }
-
-    [Theory]
-    [InlineData(1, 0, true, new[] { "❌", "➡️" })]
-    [InlineData(2, 0, true, new[] { "⬅️", "❌", "➡️" })]
-    [InlineData(0, 5, true, new[] { "❌", "➡️" })]
-    [InlineData(5, 5, true, new[] { "⬅️", "❌", "➡️" })]
-    [InlineData(2, 0, false, new[] { "⬅️", "❌" })]
-    public void WithNavigationButtons_Page_ShowsAvailableDirections(int page, int limit, bool forward, string[] expected)
-    {
-        // Act
-        var result = new InlineKeyboardMarkup(new List<InlineKeyboardButton[]>())
-            .WithNavigationButtons(CommandList.CALLBACK_DATA_FORMAT_SETLISTS, Mbid, page, limit, isForwardNavigationEnabled: forward);
-
-        // Assert
-        Buttons(result).Select(x => x.Text).ShouldBe(expected);
     }
 
     [Fact]

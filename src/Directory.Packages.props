@@ -24,7 +24,7 @@
     <PackageVersion Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="SetlistNet" Version="2.1.0" />
-    <PackageVersion Include="Telegram.Bot" Version="22.10.3.3" />
+    <PackageVersion Include="Telegram.Bot" Version="22.10.3.4" />
   </ItemGroup>
 
   <ItemGroup Label="Tests">

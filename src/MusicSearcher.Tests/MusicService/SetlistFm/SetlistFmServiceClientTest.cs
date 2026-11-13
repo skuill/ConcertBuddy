@@ -28,6 +28,7 @@ public class SetlistFmServiceClientTest
         var result = await client.SearchArtistSetlists(Mbid, 2);
 
         // Assert
+        result.ShouldNotBeNull();
         result.Total.ShouldBe(851);
         result.Page.ShouldBe(2);
         result.ItemsPerPage.ShouldBe(20);
@@ -53,17 +54,18 @@ public class SetlistFmServiceClientTest
     }
 
     [Fact]
-    public async Task SearchArtistSetlists_ServiceFails_ReturnsNullAndLogsError()
+    public async Task SearchArtistSetlists_ServiceFails_UnavailableAndWarning()
     {
         // Arrange
         var client = CreateClient(() => new HttpResponseMessage(HttpStatusCode.InternalServerError));
 
         // Act
-        var result = await client.SearchArtistSetlists(Mbid);
+        var exception = await Should.ThrowAsync<MusicServiceUnavailableException>(() => client.SearchArtistSetlists(Mbid));
 
         // Assert
-        result.ShouldBeNull();
-        AssertLogged(LogLevel.Error, times: 1);
+        exception.Service.ShouldBe("setlist.fm");
+        AssertLogged(LogLevel.Warning, times: 1);
+        AssertLogged(LogLevel.Error, times: 0);
     }
 
     [Fact]
@@ -76,22 +78,38 @@ public class SetlistFmServiceClientTest
         var result = await client.SearchSetlist("4b48efd6");
 
         // Assert
+        result.ShouldNotBeNull();
         result.Id.ShouldBe("4b48efd6");
         result.VenueName.ShouldBe("Sphere");
     }
 
     [Fact]
-    public async Task SearchSetlist_ErrorAnswer_ReturnsNullInsteadOfEmptySetlist()
+    public async Task SearchSetlist_ErrorAnswer_UnavailableInsteadOfEmptySetlist()
     {
         // Arrange
         var client = CreateClient(() => new HttpResponseMessage(HttpStatusCode.TooManyRequests) { Content = new StringContent("""{"code":429,"status":"Too Many Requests"}""") });
+
+        // Act
+        var exception = await Should.ThrowAsync<MusicServiceUnavailableException>(() => client.SearchSetlist("4b48efd6"));
+
+        // Assert
+        exception.InnerException.ShouldBeOfType<HttpRequestException>();
+        AssertLogged(LogLevel.Warning, times: 1);
+    }
+
+    [Fact]
+    public async Task SearchSetlist_NotFound_NullWithoutWarning()
+    {
+        // Arrange
+        var client = CreateClient(() => new HttpResponseMessage(HttpStatusCode.NotFound));
 
         // Act
         var result = await client.SearchSetlist("4b48efd6");
 
         // Assert
         result.ShouldBeNull();
-        AssertLogged(LogLevel.Error, times: 1);
+        AssertLogged(LogLevel.Warning, times: 0);
+        AssertLogged(LogLevel.Error, times: 0);
     }
 
     private SetlistFmServiceClient CreateClient(Func<HttpResponseMessage> response)
