@@ -4,7 +4,7 @@ xunit.v3 on Microsoft Testing Platform (`global.json`), FakeItEasy for fakes, Sh
 
 | Project | What | Network and keys | In CI |
 |---|---|---|---|
-| `src/ConcertBuddy.ConsoleApp.Tests` | Telegram helpers | none | yes |
+| `src/ConcertBuddy.ConsoleApp.Tests` | Telegram helpers, screens, the host and user scenarios with a fake Telegram | none | yes |
 | `src/MusicSearcher.Tests` | clients and converters, with fakes | none | yes |
 | `src/MusicSearcher.ContractTests` | real MusicBrainz and Last.fm | network, Last.fm keys | no |
 
@@ -35,6 +35,12 @@ dotnet user-secrets set LastFmApiSecret "<secret>" --project src/MusicSearcher.C
 or as the environment variables `CONCERTBUDDY_LastFmApiKey` and `CONCERTBUDDY_LastFmApiSecret`.
 
 MusicBrainz allows about 1 request per second and may answer `503` when it is busy, so a single failed test can be a temporary problem of the service.
+
+## Scenario tests
+
+`src/ConcertBuddy.ConsoleApp.Tests/Scenarios/` runs the real host (`Host/BotHostTestBase.cs`) against `Host/FakeTelegram.cs`, which gives updates to the poller and records every Bot API request with its JSON body, and fake music services registered over the real ones. A test sends a message or presses a button (`CreateTextUpdate`, `CreateCallbackUpdate`, `FakeTelegram.AddUpdate` for the next step) and checks the requests: what was sent, which message was edited, that every button press was answered.
+
+Screens are checked whole with `TelegramBot/Screens/ScreenDump.cs`: the text, every button with its data and style, the preview.
 
 ## Rules for new tests
 

@@ -15,6 +15,8 @@ public abstract class AbstractCommand<TResult, TData> : ICommand<TResult>, IExec
 
     public CommandResult Result { get; protected set; } = CommandResult.Found;
 
+    public bool AnsweredCallback { get; protected set; }
+
     public AbstractCommand(IMusicSearcherClient musicSearcherClient, ITelegramBotClient telegramBotClient, TData data)
     {
         MusicSearcherClient = musicSearcherClient;

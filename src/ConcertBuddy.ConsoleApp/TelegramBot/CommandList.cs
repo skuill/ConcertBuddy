@@ -15,18 +15,6 @@ public class CommandList
 
     // WARNING: callback_data - Data to be sent in a callback query to the bot when button is pressed, 1-64 bytes
 
-    /// <summary>
-    /// Search artist by name command format. Example: /search 0 1 The Beatles
-    /// Args: 
-    /// 0 - search page (navigation). Above 0.
-    /// 1 - search limit (navigation). Above 0. 
-    /// 2 - artist name
-    /// </summary>
-    public const string CALLBACK_DATA_FORMAT_SEARCH = $"{COMMAND_SEARCH} {{0}} {{1}} {{2}}";
-
-    // Command with mbid. Example: /artist b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d
-    public const string CALLBACK_DATA_FORMAT_ARTIST = $"{COMMAND_ARTIST} {{0}}";
-
     // Command with mbid. Example: /biography b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d
     public const string CALLBACK_DATA_FORMAT_BIOGRAPHY = $"{COMMAND_BIOGRAPHY} {{0}}";
 

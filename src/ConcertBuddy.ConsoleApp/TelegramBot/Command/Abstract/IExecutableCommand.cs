@@ -7,5 +7,10 @@ public interface IExecutableCommand
 {
     CommandResult Result { get; }
 
+    /// <summary>
+    /// True when the command answered the callback query itself; otherwise the update handler answers it.
+    /// </summary>
+    bool AnsweredCallback { get; }
+
     Task RunAsync();
 }

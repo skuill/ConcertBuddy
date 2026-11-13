@@ -68,18 +68,6 @@ public static class InlineKeyboardHelper
         return new InlineKeyboardMarkup(inlineKeyboardButtons);
     }
 
-    public static InlineKeyboardMarkup GetArtistsInlineKeyboard(IEnumerable<MusicArtistBase> artists, int counter = 1)
-    {
-        List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
-        foreach (var artist in artists)
-        {
-            string callbackText = $"{counter++}. {artist.Name} ({artist.ActiveYears}) [{artist.Area}]";
-            string callbackData = string.Format(CommandList.CALLBACK_DATA_FORMAT_ARTIST, artist.MBID);
-            inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
-        }
-        return new InlineKeyboardMarkup(inlineKeyboardButtons);
-    }
-
     public static InlineKeyboardMarkup GetArtistInlineKeyboardMenu(string mbid, bool isTopTracksAvailable)
     {
         List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();

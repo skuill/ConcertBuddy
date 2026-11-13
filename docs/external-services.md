@@ -10,10 +10,12 @@ How the bot calls the music services. Settings: `src/MusicSearcher/Http/`.
 
 ## Retries
 
-For MusicBrainz and Setlist.fm: up to 3 retries after 2, 4 and 8 seconds, after `408`, `429`, `5xx`, network errors and a timeout of 15 seconds per attempt. A `Retry-After` header is respected.
+For MusicBrainz and Setlist.fm: up to 3 retries after 2, 4 and 8 seconds, after `408`, `429`, `5xx`, network errors and a timeout of 15 seconds per attempt. The delays are always ours: a busy MusicBrainz sends `Retry-After: 0` or `1`, and following it made all retries come at once and fail too.
 
 Requests over the limit wait in a queue of up to 20 requests; when the queue is full, the request fails.
 
 ## Errors
+
+When MusicBrainz does not answer after the retries, `MusicSearcherClient` throws `MusicServiceUnavailableException` for the artist search and the artist by MBID, and the bot shows "busy, try again" instead of "nothing found". A `400` or `404` for an MBID means "no such artist" (an empty artist).
 
 SetlistNet does not check the status code, so `EnsureSuccessHandler` turns an error answer into an exception. `SetlistFmServiceClient` logs it and returns no data: a `404` at the Information level, anything else as an error.

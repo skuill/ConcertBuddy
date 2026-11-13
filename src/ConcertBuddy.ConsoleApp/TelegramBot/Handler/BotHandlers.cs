@@ -1,4 +1,5 @@
-﻿using ConcertBuddy.ConsoleApp.TelegramBot.Command;
+﻿using ConcertBuddy.ConsoleApp.TelegramBot.Callback;
+using ConcertBuddy.ConsoleApp.TelegramBot.Command;
 using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,21 +13,23 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 public class BotHandlers : IBotHandlers
 {
     private const string NoCommand = "none";
-    private const string UnknownCommand = "unknown";
+    private const string OutdatedCommandName = "outdated";
 
     private readonly ILogger<IBotHandlers> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly ITelegramBotClient _botClient;
     private readonly TimeProvider _timeProvider;
     private readonly UserKeys _userKeys;
+    private readonly CallbackCodec _callbackCodec;
 
-    public BotHandlers(ILogger<IBotHandlers> logger, IServiceProvider serviceProvider, ITelegramBotClient botClient, TimeProvider timeProvider, UserKeys userKeys)
+    public BotHandlers(ILogger<IBotHandlers> logger, IServiceProvider serviceProvider, ITelegramBotClient botClient, TimeProvider timeProvider, UserKeys userKeys, CallbackCodec callbackCodec)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
         _botClient = botClient;
         _timeProvider = timeProvider;
         _userKeys = userKeys;
+        _callbackCodec = callbackCodec;
     }
 
     public async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
@@ -34,12 +37,13 @@ public class BotHandlers : IBotHandlers
         var startTimestamp = _timeProvider.GetTimestamp();
         var (commandName, createCommand) = FindCommand(update);
         var result = CommandResult.Found;
+        IExecutableCommand? command = null;
 
         try
         {
             if (createCommand != null)
             {
-                var command = createCommand();
+                command = createCommand();
                 await command.RunAsync();
                 result = command.Result;
             }
@@ -49,6 +53,12 @@ public class BotHandlers : IBotHandlers
             result = CommandResult.Error;
             _logger.LogError(exception, "Failed to handle update {UpdateId} of type {UpdateType}, command {Command:l}", update.Id, update.Type, commandName);
             await TrySendErrorAsync(update);
+        }
+
+        // Every button press gets an answer, otherwise it keeps spinning in the app.
+        if (update.CallbackQuery != null && command?.AnsweredCallback != true)
+        {
+            await TryAnswerCallbackAsync(update.CallbackQuery);
         }
 
         // Only names and numbers here: this line is written for every update, so it must not hold what the user typed.
@@ -87,13 +97,36 @@ public class BotHandlers : IBotHandlers
         };
     }
 
-    // Process Inline Keyboard callback data
     private (string Name, Func<IExecutableCommand>? Create) FindCallbackCommand(CallbackQuery callbackQuery)
+    {
+        if (string.IsNullOrEmpty(callbackQuery.Data))
+        {
+            return Route<OutdatedCommand>(OutdatedCommandName, callbackQuery);
+        }
+
+        // The old commands, until they become screens too (#48). Their "/search" and "/artist" buttons are outdated.
+        if (callbackQuery.Data.StartsWith('/'))
+        {
+            return FindOldCallbackCommand(callbackQuery);
+        }
+
+        if (!_callbackCodec.TryDecode(callbackQuery.Data, out var payload))
+        {
+            return Route<OutdatedCommand>(OutdatedCommandName, callbackQuery);
+        }
+
+        return payload.Action switch
+        {
+            CallbackActions.Search or CallbackActions.NewSearch => Route<SearchCallbackCommand>(CommandList.COMMAND_SEARCH, callbackQuery, payload),
+            CallbackActions.Artist => Route<ArtistCommand>(CommandList.COMMAND_ARTIST, callbackQuery, payload),
+            _ => Route<OutdatedCommand>(OutdatedCommandName, callbackQuery),
+        };
+    }
+
+    private (string Name, Func<IExecutableCommand>? Create) FindOldCallbackCommand(CallbackQuery callbackQuery)
     {
         return callbackQuery.GetSplitMessageText()[0] switch
         {
-            CommandList.COMMAND_ARTIST => Route<ArtistCommand>(CommandList.COMMAND_ARTIST, callbackQuery),
-            CommandList.COMMAND_SEARCH => Route<SearchCallbackCommand>(CommandList.COMMAND_SEARCH, callbackQuery),
             CommandList.COMMAND_BIOGRAPHY => Route<BiographyCommand>(CommandList.COMMAND_BIOGRAPHY, callbackQuery),
             CommandList.COMMAND_SETLISTS => Route<SetlistsCommand>(CommandList.COMMAND_SETLISTS, callbackQuery),
             CommandList.COMMAND_SETLIST => Route<SetlistCommand>(CommandList.COMMAND_SETLIST, callbackQuery),
@@ -101,13 +134,26 @@ public class BotHandlers : IBotHandlers
             CommandList.COMMAND_LYRIC => Route<LyricCommand>(CommandList.COMMAND_LYRIC, callbackQuery),
             CommandList.COMMAND_DELETE => Route<DeleteCommand>(CommandList.COMMAND_DELETE, callbackQuery),
             CommandList.COMMAND_TOP => Route<TopCommand>(CommandList.COMMAND_TOP, callbackQuery),
-            _ => Route<UsageCommand>(UnknownCommand, callbackQuery.Message!),
+            _ => Route<OutdatedCommand>(OutdatedCommandName, callbackQuery),
         };
     }
 
-    private (string Name, Func<IExecutableCommand>? Create) Route<TCommand>(string name, object data) where TCommand : class, IExecutableCommand
+    private (string Name, Func<IExecutableCommand>? Create) Route<TCommand>(string name, params object[] data) where TCommand : class, IExecutableCommand
     {
         return (name, () => ActivatorUtilities.CreateInstance<TCommand>(_serviceProvider, data));
+    }
+
+    private async Task TryAnswerCallbackAsync(CallbackQuery callbackQuery)
+    {
+        try
+        {
+            await _botClient.AnswerCallbackQuery(callbackQuery.Id);
+        }
+        catch (Exception exception)
+        {
+            // An old command answered it already, or it is too old: the user sees nothing of this.
+            _logger.LogDebug(exception, "Can't answer the callback query {CallbackQueryId}", callbackQuery.Id);
+        }
     }
 
     private async Task TrySendErrorAsync(Update update)

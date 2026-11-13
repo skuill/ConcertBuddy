@@ -127,26 +127,6 @@ public sealed class InlineKeyboardHelperTest
     }
 
     [Fact]
-    public void GetArtistsInlineKeyboard_CounterGiven_NumbersFromCounter()
-    {
-        // Arrange
-        var artist = A.Fake<MusicArtistBase>();
-        A.CallTo(() => artist.Name).Returns("Metallica");
-        A.CallTo(() => artist.ActiveYears).Returns("1981 - ");
-        A.CallTo(() => artist.Area).Returns("United States");
-        A.CallTo(() => artist.MBID).Returns(Mbid);
-
-        // Act
-        var result = InlineKeyboardHelper.GetArtistsInlineKeyboard(new[] { artist }, counter: 6);
-
-        // Assert
-        Buttons(result).ShouldBe(new[]
-        {
-            ("6. Metallica (1981 - ) [United States]", string.Format(CommandList.CALLBACK_DATA_FORMAT_ARTIST, Mbid)),
-        });
-    }
-
-    [Fact]
     public void GetArtistInlineKeyboardMenu_LastFmAvailable_HasTopTracksButton()
     {
         // Act
