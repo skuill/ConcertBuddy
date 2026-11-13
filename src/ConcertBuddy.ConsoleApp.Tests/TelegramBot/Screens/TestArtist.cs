@@ -30,6 +30,10 @@ internal sealed class TestArtist : MusicArtistBase
 
     public override string? Biography => BiographyValue;
 
+    public string? FullBiographyValue { get; init; }
+
+    public override string? FullBiography => FullBiographyValue;
+
     public string? AreaValue { get; init; }
 
     public override string? Area => AreaValue;

@@ -10,6 +10,11 @@ public class MusicSong
 
     public string? Info { get; set; }
 
+    /// <summary>
+    /// Played from a tape (an intro, an outro), not live.
+    /// </summary>
+    public bool Tape { get; set; }
+
     public override string ToString()
     {
         string result = $"{Name}";

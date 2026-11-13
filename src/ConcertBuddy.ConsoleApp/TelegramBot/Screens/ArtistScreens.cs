@@ -1,3 +1,4 @@
+using ConcertBuddy.ConsoleApp.Model;
 using ConcertBuddy.ConsoleApp.TelegramBot.Callback;
 using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
@@ -6,6 +7,7 @@ using MusicSearcher;
 using MusicSearcher.Model;
 using MusicSearcher.MusicService;
 using System.Globalization;
+using System.Text;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Screens;
@@ -73,10 +75,55 @@ public sealed class ArtistScreens
             html += $"\n<blockquote expandable>{ScreenText.Html(ScreenText.Shorten(biography, MaxBiographyLength))}</blockquote>";
         }
 
-        // The buttons of the old commands still send new messages; they become screens in the next steps of #48.
-        var keyboard = InlineKeyboardHelper.GetArtistInlineKeyboardMenu(mbid, _configuration.IsLastFmAvailable()).InlineKeyboard
-            .Append(LastRow(searchOffset, searchText));
-        return new Screen(html, new InlineKeyboardMarkup(keyboard), artist[MusicServiceType.LastFm]?.ExternalUrl?.ToString());
+        var setlists = InlineKeyboardButton.WithCallbackData("📝 Setlists", _codec.Encode(CallbackActions.Setlists, mbid, "1"));
+        setlists.Style = KeyboardButtonStyle.Primary;
+        var rows = new List<InlineKeyboardButton[]>
+        {
+            new[] { setlists, InlineKeyboardButton.WithCallbackData("📖 Full biography", _codec.Encode(CallbackActions.Biography, mbid)) },
+        };
+        if (_configuration.IsLastFmAvailable())
+        {
+            // The old command, it sends a new message; top tracks become a screen in the next step of #48.
+            rows.Add(new[] { InlineKeyboardButton.WithCallbackData("📻 Top tracks", string.Format(CommandList.CALLBACK_DATA_FORMAT_TOP, SearchType.Track.ConvertToString(), mbid)) });
+        }
+        rows.Add(LastRow(searchOffset, searchText));
+        return new Screen(html, new InlineKeyboardMarkup(rows), artist[MusicServiceType.LastFm]?.ExternalUrl?.ToString());
+    }
+
+    /// <summary>
+    /// The whole Last.fm biography as a rich message, credited to Last.fm as its license asks.
+    /// </summary>
+    public async Task<ScreenResult> BiographyAsync(string mbid)
+    {
+        MusicArtist artist;
+        try
+        {
+            artist = (MusicArtist)await _musicSearcher.SearchArtistByMBID(mbid);
+        }
+        catch (MusicServiceUnavailableException exception)
+        {
+            return CommonScreens.Unavailable(exception.Service, _codec.Encode(CallbackActions.Biography, mbid));
+        }
+
+        var back = new[] { new[] { InlineKeyboardButton.WithCallbackData("⬅️ Artist", _codec.Encode(CallbackActions.Artist, mbid, "0", string.Empty)) } };
+        var biography = ScreenText.Biography(artist.FullBiography ?? artist.Biography);
+        if (biography.Length == 0)
+        {
+            var html = $"📖 Last.fm has no biography of <b>{ScreenText.Html(artist.Name)}</b> yet.";
+            return new ScreenResult(new Screen(html, new InlineKeyboardMarkup(back)), CommandResult.NotFound);
+        }
+
+        var rich = new StringBuilder($"<h3>📖 {ScreenText.Html(artist.Name)}</h3>");
+        foreach (var paragraph in biography.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            rich.Append($"<p>{ScreenText.Html(paragraph)}</p>");
+        }
+        var lastFmUrl = artist[MusicServiceType.LastFm]?.ExternalUrl;
+        if (lastFmUrl != null)
+        {
+            rich.Append($"<footer>Biography from <a href=\"{ScreenText.Html(lastFmUrl.ToString())}\">Last.fm</a>, user-contributed text under CC BY-SA</footer>");
+        }
+        return new ScreenResult(new Screen(rich.ToString(), new InlineKeyboardMarkup(back), IsRich: true), CommandResult.Found);
     }
 
     private InlineKeyboardButton[] LastRow(int searchOffset, string searchText)

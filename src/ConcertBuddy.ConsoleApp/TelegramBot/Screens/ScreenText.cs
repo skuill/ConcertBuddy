@@ -1,4 +1,5 @@
 using MusicSearcher.Model.Abstract;
+using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
 
@@ -55,8 +56,10 @@ public static partial class ScreenText
         return string.Join(" · ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
     }
 
+    private const string LastFmReadMore = "Read more on Last.fm";
+
     /// <summary>
-    /// The Last.fm biography as plain text: no tags, no "Read more on Last.fm" link.
+    /// The Last.fm biography as plain text: no tags, no "Read more on Last.fm" link and license after it.
     /// </summary>
     public static string Biography(string? biography)
     {
@@ -65,9 +68,23 @@ public static partial class ScreenText
             return string.Empty;
         }
 
+        // Last.fm ends the text with "Read more on Last.fm" and, in the full biography, its license; the screens credit Last.fm themselves.
         var text = WebUtility.HtmlDecode(HtmlTag().Replace(biography, string.Empty));
-        return text.Replace("Read more on Last.fm", string.Empty).Trim();
+        var end = text.IndexOf(LastFmReadMore, StringComparison.Ordinal);
+        return (end >= 0 ? text[..end] : text).Trim();
     }
+
+    /// <summary>
+    /// "31 Oct 2026" from the setlist.fm date "31-10-2026"; any other text stays as it is.
+    /// </summary>
+    public static string Date(string? date)
+    {
+        return DateTime.TryParseExact(date, "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
+            ? parsed.ToString("d MMM yyyy", English)
+            : date ?? string.Empty;
+    }
+
+    private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-US");
 
     [GeneratedRegex("<.*?>", RegexOptions.Singleline)]
     private static partial Regex HtmlTag();

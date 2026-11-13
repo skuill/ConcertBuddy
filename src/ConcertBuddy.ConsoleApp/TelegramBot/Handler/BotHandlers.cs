@@ -104,7 +104,7 @@ public class BotHandlers : IBotHandlers
             return Route<OutdatedCommand>(OutdatedCommandName, callbackQuery);
         }
 
-        // The old commands, until they become screens too (#48). Their "/search" and "/artist" buttons are outdated.
+        // The old commands, until they become screens too (#48). Buttons of the commands that are screens now are outdated.
         if (callbackQuery.Data.StartsWith('/'))
         {
             return FindOldCallbackCommand(callbackQuery);
@@ -119,6 +119,9 @@ public class BotHandlers : IBotHandlers
         {
             CallbackActions.Search or CallbackActions.NewSearch => Route<SearchCallbackCommand>(CommandList.COMMAND_SEARCH, callbackQuery, payload),
             CallbackActions.Artist => Route<ArtistCommand>(CommandList.COMMAND_ARTIST, callbackQuery, payload),
+            CallbackActions.Biography => Route<BiographyCommand>(CommandList.COMMAND_BIOGRAPHY, callbackQuery, payload),
+            CallbackActions.Setlists => Route<SetlistsCommand>(CommandList.COMMAND_SETLISTS, callbackQuery, payload),
+            CallbackActions.Setlist => Route<SetlistCommand>(CommandList.COMMAND_SETLIST, callbackQuery, payload),
             _ => Route<OutdatedCommand>(OutdatedCommandName, callbackQuery),
         };
     }
@@ -127,9 +130,6 @@ public class BotHandlers : IBotHandlers
     {
         return callbackQuery.GetSplitMessageText()[0] switch
         {
-            CommandList.COMMAND_BIOGRAPHY => Route<BiographyCommand>(CommandList.COMMAND_BIOGRAPHY, callbackQuery),
-            CommandList.COMMAND_SETLISTS => Route<SetlistsCommand>(CommandList.COMMAND_SETLISTS, callbackQuery),
-            CommandList.COMMAND_SETLIST => Route<SetlistCommand>(CommandList.COMMAND_SETLIST, callbackQuery),
             CommandList.COMMAND_TRACK => Route<TrackCommand>(CommandList.COMMAND_TRACK, callbackQuery),
             CommandList.COMMAND_LYRIC => Route<LyricCommand>(CommandList.COMMAND_LYRIC, callbackQuery),
             CommandList.COMMAND_DELETE => Route<DeleteCommand>(CommandList.COMMAND_DELETE, callbackQuery),

@@ -40,7 +40,7 @@ public class ArtistScreensTest
             Group · United States · 1981 -
             <blockquote expandable>Metallica {new string('a', ArtistScreens.MaxBiographyLength - 10)}…</blockquote>
             ---
-            🎓 Biography → /biography {Mbid} | 📝 Setlists → /setlists 1 1 {Mbid}
+            📝 Setlists → l|{Mbid}|1 [Primary] | 📖 Full biography → b|{Mbid}
             📻 Top tracks → /top track {Mbid}
             ⬅️ Results → s|5|metallica | ❌ → /delete
             preview: https://www.last.fm/music/Metallica
@@ -61,7 +61,7 @@ public class ArtistScreensTest
             🇺🇸 <b>Metallica</b>
             Group · United States · 1981 -
             ---
-            🎓 Biography → /biography {Mbid} | 📝 Setlists → /setlists 1 1 {Mbid}
+            📝 Setlists → l|{Mbid}|1 [Primary] | 📖 Full biography → b|{Mbid}
             ❌ → /delete
             preview: none
             """.ReplaceLineEndings("\n"));
@@ -116,6 +116,75 @@ public class ArtistScreensTest
             🔄 Try again → a|{Mbid}|5|metallica [Primary] | ❌ → /delete
             preview: none
             """.ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
+    public async Task BiographyAsync_FullBiography_RichParagraphsAndLastFmCredit()
+    {
+        // Arrange
+        var lastFm = new TestArtist
+        {
+            Service = MusicServiceType.LastFm,
+            BiographyValue = "Short summary.",
+            FullBiographyValue = "Metallica is a <b>band</b> &amp; more.\n\nFormed in 1981.  \n<a href=\"https://www.last.fm/music/Metallica\">Read more on Last.fm</a>. User-contributed text is available under the Creative Commons By-SA License; additional terms may apply.",
+            ExternalUrlValue = new Uri("https://www.last.fm/music/Metallica"),
+        };
+        Returns(new MusicArtist(new List<MusicSearcher.Model.Abstract.MusicArtistBase> { TestArtist.Metallica(), lastFm }));
+
+        // Act
+        var result = await CreateScreens(lastFmAvailable: true).BiographyAsync(Mbid);
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.Found);
+        result.Screen.IsRich.ShouldBeTrue();
+        ScreenDump.Of(result.Screen).ShouldBe($"""
+            <h3>📖 Metallica</h3><p>Metallica is a band &amp; more.</p><p>Formed in 1981.</p><footer>Biography from <a href="https://www.last.fm/music/Metallica">Last.fm</a>, user-contributed text under CC BY-SA</footer>
+            ---
+            ⬅️ Artist → a|{Mbid}|0|
+            preview: none
+            """.ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
+    public async Task BiographyAsync_OnlySummary_SummaryWithoutCredit()
+    {
+        // Arrange: no Last.fm page, the summary comes from another service.
+        Returns(new MusicArtist(new TestArtist { NameValue = "Metallica", BiographyValue = "Short summary." }));
+
+        // Act
+        var result = await CreateScreens(lastFmAvailable: false).BiographyAsync(Mbid);
+
+        // Assert
+        result.Screen.Html.ShouldBe("<h3>📖 Metallica</h3><p>Short summary.</p>");
+    }
+
+    [Fact]
+    public async Task BiographyAsync_NoBiography_NotFoundPlainScreen()
+    {
+        // Arrange
+        Returns(new MusicArtist(TestArtist.Metallica()));
+
+        // Act
+        var result = await CreateScreens(lastFmAvailable: false).BiographyAsync(Mbid);
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.NotFound);
+        result.Screen.IsRich.ShouldBeFalse();
+        result.Screen.Html.ShouldBe("📖 Last.fm has no biography of <b>Metallica</b> yet.");
+    }
+
+    [Fact]
+    public async Task BiographyAsync_MusicBrainzDown_TryAgainTheBiography()
+    {
+        // Arrange
+        A.CallTo(() => _music.SearchArtistByMBID(Mbid)).ThrowsAsync(new MusicServiceUnavailableException("MusicBrainz", new TimeoutException()));
+
+        // Act
+        var result = await CreateScreens(lastFmAvailable: false).BiographyAsync(Mbid);
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.Unavailable);
+        result.Screen.Keyboard.InlineKeyboard.First().First().CallbackData.ShouldBe($"b|{Mbid}");
     }
 
     private void Returns(MusicArtist artist)

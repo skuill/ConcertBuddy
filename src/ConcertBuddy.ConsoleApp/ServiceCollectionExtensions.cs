@@ -51,6 +51,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ScreenSender>();
         services.AddScoped<SearchScreens>();
         services.AddScoped<ArtistScreens>();
+        services.AddScoped<SetlistScreens>();
 
         services.AddHttpClient(TelegramClientName)
                 .RemoveAllLoggers()

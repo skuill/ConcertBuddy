@@ -20,4 +20,19 @@ public static class CallbackActions
     /// Artist card: mbid|offset|text, the offset and text of the search lead back to its results (empty without a search).
     /// </summary>
     public const string Artist = "a";
+
+    /// <summary>
+    /// The full biography of an artist: mbid.
+    /// </summary>
+    public const string Biography = "b";
+
+    /// <summary>
+    /// The setlists of an artist, ten per screen: mbid|screen (from 1).
+    /// </summary>
+    public const string Setlists = "l";
+
+    /// <summary>
+    /// One setlist: setlist id|mbid|screen of the setlists to go back to.
+    /// </summary>
+    public const string Setlist = "t";
 }

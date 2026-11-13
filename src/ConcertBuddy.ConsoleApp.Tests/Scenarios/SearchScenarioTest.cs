@@ -215,6 +215,9 @@ public class SearchScenarioTest : BotHostTestBase
     [InlineData("~12345")]
     [InlineData($"/artist {Mbid}")]
     [InlineData("/search 5 5 Metallica")]
+    [InlineData($"/biography {Mbid}")]
+    [InlineData($"/setlists 1 1 {Mbid}")]
+    [InlineData($"/setlist {Mbid} 4b48efd6")]
     [InlineData("x|whatever")]
     [InlineData("s|not-a-number|Metallica")]
     [InlineData("s|-5|Metallica")]
@@ -276,8 +279,8 @@ public class SearchScenarioTest : BotHostTestBase
     public async Task Button_OldCommandFails_TheHandlerAnswersTheButton()
     {
         // Arrange
-        A.CallTo(() => _music.SearchArtistSetlists(Mbid, A<int>._)).ThrowsAsync(new InvalidOperationException("bug"));
-        var telegram = new FakeTelegram(CreateCallbackUpdate(1, $"/setlists 1 1 {Mbid}"));
+        A.CallTo(() => _music.SearchTopTracks(Mbid)).ThrowsAsync(new InvalidOperationException("bug"));
+        var telegram = new FakeTelegram(CreateCallbackUpdate(1, $"/top track {Mbid}"));
 
         // Act
         await RunUntilHandled(telegram, 1);

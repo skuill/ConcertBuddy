@@ -17,7 +17,7 @@ public sealed class SetlistFmServiceClient : ISetlistFmServiceClient
         _logger = logger;
     }
 
-    public async Task<MusicSetlists> SearchArtistSetlists(string artistMBID, int page = 1)
+    public async Task<MusicSetlists?> SearchArtistSetlists(string artistMBID, int page = 1)
     {
         try
         {
@@ -26,18 +26,22 @@ public sealed class SetlistFmServiceClient : ISetlistFmServiceClient
             if (result == null || result.Setlist == null || result.Setlist.Count == 0)
             {
                 _logger?.LogInformation("Can't find setlists for artist with mbid [{ArtistMBID}]", artistMBID);
-                return null!;
+                return null;
             }
             return result.ToInternal();
         }
+        catch (Exception ex) when (IsNotFound(ex))
+        {
+            _logger?.LogInformation("setlist.fm has no setlists of artist [{ArtistMBID}]", artistMBID);
+            return null;
+        }
         catch (Exception ex)
         {
-            LogFailure(ex, "setlists of artist", artistMBID);
-            return null!;
+            throw Unavailable(ex, "setlists of artist", artistMBID);
         }
     }
 
-    public async Task<MusicSetlist> SearchSetlist(string setlistId)
+    public async Task<MusicSetlist?> SearchSetlist(string setlistId)
     {
         try
         {
@@ -45,21 +49,31 @@ public sealed class SetlistFmServiceClient : ISetlistFmServiceClient
             if (result == null)
             {
                 _logger?.LogInformation("Can't find setlist by Id: [{SetlistId}]", setlistId);
-                return null!;
+                return null;
             }
             return result.ToInternal();
         }
+        catch (Exception ex) when (IsNotFound(ex))
+        {
+            _logger?.LogInformation("setlist.fm has no setlist [{SetlistId}]", setlistId);
+            return null;
+        }
         catch (Exception ex)
         {
-            LogFailure(ex, "setlist", setlistId);
-            return null!;
+            throw Unavailable(ex, "setlist", setlistId);
         }
     }
 
-    private void LogFailure(Exception ex, string target, string id)
+    // Setlist.fm answers 404 when there is no data: it is a normal result, not a failure of the service.
+    private static bool IsNotFound(Exception ex)
     {
-        // Setlist.fm answers 404 when there is no data: it is a normal result, not a failure of the service.
-        var level = ex is HttpRequestException { StatusCode: HttpStatusCode.NotFound } ? LogLevel.Information : LogLevel.Error;
-        _logger?.Log(level, ex, "Can't get {Target} [{Id}]", target, id);
+        return ex is HttpRequestException { StatusCode: HttpStatusCode.NotFound };
+    }
+
+    private MusicServiceUnavailableException Unavailable(Exception ex, string target, string id)
+    {
+        // Warning, not Error: the user gets "Try again", the bot itself is fine.
+        _logger?.LogWarning(ex, "setlist.fm did not answer the {Target} [{Id}]", target, id);
+        return new MusicServiceUnavailableException("setlist.fm", ex);
     }
 }

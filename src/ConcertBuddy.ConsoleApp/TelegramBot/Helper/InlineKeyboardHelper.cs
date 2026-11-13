@@ -1,6 +1,3 @@
-﻿using ConcertBuddy.ConsoleApp.Model;
-using ConcertBuddy.ConsoleApp.Search;
-using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -19,19 +16,6 @@ public static class InlineKeyboardHelper
         return new InlineKeyboardMarkup(inlineKeyboardButtons).WithDeleteButton();
     }
 
-    public static InlineKeyboardMarkup GetTracksInlineKeyboardMenu(MusicSet set, string mbid)
-    {
-        List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
-        int counter = 1;
-        foreach (var song in set.Songs)
-        {
-            string callbackText = $"{counter++}. {song.ToString()}";
-            string callbackData = GetCallbackDataWithName(CommandList.CALLBACK_DATA_FORMAT_TRACK, mbid, song.Name!);
-            inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
-        }
-        return new InlineKeyboardMarkup(inlineKeyboardButtons);
-    }
-
     public static InlineKeyboardMarkup GetTracksInlineKeyboardMenu(MusicTrackBase[] tracks, string mbid)
     {
         List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
@@ -45,6 +29,14 @@ public static class InlineKeyboardHelper
         return new InlineKeyboardMarkup(inlineKeyboardButtons);
     }
 
+    /// <summary>
+    /// The old "/track" command for a song; the track becomes a screen in the next step of #48.
+    /// </summary>
+    public static string GetTrackCallbackData(string mbid, string songName)
+    {
+        return GetCallbackDataWithName(CommandList.CALLBACK_DATA_FORMAT_TRACK, mbid, songName);
+    }
+
     private static string GetCallbackDataWithName(string format, string mbid, string name)
     {
         // Substring because:
@@ -54,70 +46,6 @@ public static class InlineKeyboardHelper
         // https://core.telegram.org/bots/api#making-requests . All queries must be made using UTF-8.
         string callbackData = string.Format(format, mbid, name);
         return StringHelper.SubstringByByteLength(callbackData, CALLBACK_DATA_MAX_BYTES);
-    }
-
-    public static InlineKeyboardMarkup GetSetlistsInlineKeyboardMenu(IEnumerable<MusicSetlist> setlists)
-    {
-        List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
-        foreach (var setlist in setlists)
-        {
-            string callbackText = $"{setlist.ToString()}";
-            string callbackData = string.Format(CommandList.CALLBACK_DATA_FORMAT_SETLIST, setlist.ArtistMBID, setlist.Id);
-            inlineKeyboardButtons.Add(new[] { InlineKeyboardButton.WithCallbackData(callbackText, callbackData) });
-        }
-        return new InlineKeyboardMarkup(inlineKeyboardButtons);
-    }
-
-    public static InlineKeyboardMarkup GetArtistInlineKeyboardMenu(string mbid, bool isTopTracksAvailable)
-    {
-        List<InlineKeyboardButton[]> inlineKeyboardButtons = new List<InlineKeyboardButton[]>();
-        inlineKeyboardButtons.Add(new[] {
-            InlineKeyboardButton.WithCallbackData(
-                "🎓 Biography",
-                string.Format(
-                    CommandList.CALLBACK_DATA_FORMAT_BIOGRAPHY,
-                    mbid)),
-            InlineKeyboardButton.WithCallbackData(
-                "📝 Setlists",
-                string.Format(
-                    CommandList.CALLBACK_DATA_FORMAT_SETLISTS,
-                    SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT,
-                    SearchConstants.SEARCH_SETLISTS_PAGE_DEFAULT, // two default values mean that it is newly created message
-                    mbid)),
-        });
-
-        if (isTopTracksAvailable)
-            inlineKeyboardButtons.Add(new[] {
-                InlineKeyboardButton.WithCallbackData("📻 Top tracks", string.Format(CommandList.CALLBACK_DATA_FORMAT_TOP, SearchType.Track.ConvertToString(), mbid))
-            });
-        return new InlineKeyboardMarkup(inlineKeyboardButtons);
-    }
-
-    public static InlineKeyboardMarkup WithNavigationButtons(
-        this InlineKeyboardMarkup inlineKeyboardMarkup,
-        string commandFormat,
-        string data,
-        int currentPage,
-        int limit = 0,
-        bool isPreviousPageUsed = false,
-        bool isForwardNavigationEnabled = true)
-    {
-        var inlineKeyboard = inlineKeyboardMarkup.InlineKeyboard;
-        var navigationButtons = new List<InlineKeyboardButton>();
-        int shift = limit == 0 ? 1 : limit;
-
-        if (currentPage - shift >= 0 && !(limit == 0 && currentPage == 1))
-            navigationButtons.Add(
-                InlineKeyboardButton.WithCallbackData("⬅️", string.Format(commandFormat, currentPage - shift, isPreviousPageUsed ? currentPage : limit, data))
-                );
-        navigationButtons.Add(GetDeleteButton());
-        if (isForwardNavigationEnabled)
-            navigationButtons.Add(
-                InlineKeyboardButton.WithCallbackData("➡️", string.Format(commandFormat, currentPage + shift, isPreviousPageUsed ? currentPage : limit, data))
-                );
-
-        inlineKeyboard = inlineKeyboard.Append(navigationButtons);
-        return new InlineKeyboardMarkup(inlineKeyboard);
     }
 
     public static InlineKeyboardMarkup WithDeleteButton(this InlineKeyboardMarkup inlineKeyboardMarkup, params int[] messageIds)

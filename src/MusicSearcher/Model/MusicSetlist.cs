@@ -25,6 +25,16 @@ public class MusicSetlist
 
     public MusicSets? Sets { get; set; }
 
+    /// <summary>
+    /// A note about the concert by the fans, for example "The show was cut short by rain".
+    /// </summary>
+    public string? Info { get; set; }
+
+    /// <summary>
+    /// The page of the setlist on setlist.fm; its terms ask to link it wherever the data is shown.
+    /// </summary>
+    public string? Url { get; set; }
+
     public bool IsFutureEvent()
     {
         return DateTime.ParseExact(EventDate!, "dd-MM-yyyy", CultureInfo.InvariantCulture).Date >= DateTime.Today;
