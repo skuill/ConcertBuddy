@@ -1,4 +1,6 @@
+﻿using ConcertBuddy.ConsoleApp.TelegramBot.Callback;
 using ConcertBuddy.ConsoleApp.TelegramBot.Handler;
+using ConcertBuddy.ConsoleApp.TelegramBot.Screens;
 using LyricsScraperNET.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +45,12 @@ public static class ServiceCollectionExtensions
 
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<UserKeys>();
+
+        // Screens (#48): the codec keeps the long button data of all chats, so it lives as long as the bot.
+        services.AddSingleton<CallbackCodec>();
+        services.AddTransient<ScreenSender>();
+        services.AddScoped<SearchScreens>();
+        services.AddScoped<ArtistScreens>();
 
         services.AddHttpClient(TelegramClientName)
                 .RemoveAllLoggers()

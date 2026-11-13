@@ -11,6 +11,7 @@ using MusicSearcher.Model.MusicBrainz;
 using MusicSearcher.MusicBrainz;
 using MusicSearcher.MusicService.Abstract;
 using MusicSearcher.MusicService.SetlistFm;
+using System.Net;
 using System.Reflection;
 
 namespace MusicSearcher;
@@ -85,9 +86,15 @@ public class MusicSearcherClient : IMusicSearcherClient
     }
 
     // TODO: Add additional check for aliases in case of abbreviations. For example: RHCP
+    /// <inheritdoc />
     public async Task<IEnumerable<MusicArtistBase>> SearchArtistsByName(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5, int offset = 0)
     {
         IEnumerable<MusicArtist> result = new List<MusicArtist>();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return result;
+        }
+
         try
         {
             // By default, search results will be ordered by score, so to get the
@@ -112,9 +119,10 @@ public class MusicSearcherClient : IMusicSearcherClient
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, "Can't find artists by name [{Name}]", name);
+            // Warning, not Error: the user gets "Try again", the bot itself is fine.
+            _logger?.LogWarning(ex, "MusicBrainz did not answer the artist search [{Name}]", name);
+            throw new MusicServiceUnavailableException("MusicBrainz", ex);
         }
-        return result;
     }
 
     public async Task<MusicArtistBase> SearchArtistByMBID(string artistMBID)
@@ -149,10 +157,16 @@ public class MusicSearcherClient : IMusicSearcherClient
                 }
             }
         }
+        catch (WebServiceException ex) when (ex.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.NotFound)
+        {
+            _logger?.LogInformation("MusicBrainz has no artist with mbid [{ArtistMBID}]: {StatusCode}", artistMBID, ex.StatusCode);
+            return new MusicArtist();
+        }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, "Can't get artist by mbid [{ArtistMBID}].", artistMBID);
-            return new MusicArtist();
+            // The other services are asked one by one and skipped on errors, so this is MusicBrainz.
+            _logger?.LogWarning(ex, "MusicBrainz did not answer the artist [{ArtistMBID}]", artistMBID);
+            throw new MusicServiceUnavailableException("MusicBrainz", ex);
         }
 
         if (IsMemoryCacheEnabled)

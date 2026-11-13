@@ -1,4 +1,4 @@
-using FakeItEasy;
+﻿using FakeItEasy;
 using Hqub.MusicBrainz;
 using LyricsScraperNET;
 using LyricsScraperNET.Models.Requests;
@@ -9,7 +9,9 @@ using MusicSearcher.Model.Abstract;
 using MusicSearcher.MusicService;
 using MusicSearcher.MusicService.Abstract;
 using MusicSearcher.MusicService.SetlistFm;
+using MusicSearcher.Tests.Http;
 using Shouldly;
+using System.Net;
 
 namespace MusicSearcher.Tests;
 
@@ -141,10 +143,93 @@ public class MusicSearcherClientTest
         A.CallTo(() => _setlistClient.SearchSetlist("4b48efd6")).MustHaveHappenedOnceExactly();
     }
 
+    [Theory]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    [InlineData(HttpStatusCode.InternalServerError)]
+    public async Task SearchArtistsByName_MusicBrainzFails_Unavailable(HttpStatusCode status)
+    {
+        // Arrange: a unique name, so the file cache of MusicBrainz responses has nothing for it.
+        var handler = new FakeHttpMessageHandler(() => new HttpResponseMessage(status));
+        var client = CreateClient(handler);
+
+        // Act
+        var exception = await Should.ThrowAsync<MusicServiceUnavailableException>(() => client.SearchArtistsByName(UniqueName()));
+
+        // Assert
+        exception.Service.ShouldBe("MusicBrainz");
+        handler.Calls.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task SearchArtistsByName_NetworkError_Unavailable()
+    {
+        // Arrange
+        var client = CreateClient(new FakeHttpMessageHandler(() => throw new HttpRequestException("Connection reset")));
+
+        // Act
+        var exception = await Should.ThrowAsync<MusicServiceUnavailableException>(() => client.SearchArtistsByName(UniqueName()));
+
+        // Assert
+        exception.InnerException.ShouldBeOfType<HttpRequestException>();
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task SearchArtistsByName_EmptyName_EmptyWithoutRequest(string name)
+    {
+        // Arrange
+        var handler = new FakeHttpMessageHandler(() => throw new InvalidOperationException("No request expected"));
+        var client = CreateClient(handler);
+
+        // Act
+        var result = await client.SearchArtistsByName(name);
+
+        // Assert
+        result.ShouldBeEmpty();
+        handler.Calls.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.NotFound)]
+    [InlineData(HttpStatusCode.BadRequest)]
+    public async Task SearchArtistByMBID_MusicBrainzHasNoSuchArtist_EmptyArtist(HttpStatusCode status)
+    {
+        // Arrange
+        var client = CreateClient(new FakeHttpMessageHandler(() => new HttpResponseMessage(status)));
+
+        // Act
+        var result = await client.SearchArtistByMBID(Guid.NewGuid().ToString());
+
+        // Assert
+        result.Name.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task SearchArtistByMBID_MusicBrainzFails_Unavailable()
+    {
+        // Arrange
+        var client = CreateClient(new FakeHttpMessageHandler(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)));
+
+        // Act
+        var exception = await Should.ThrowAsync<MusicServiceUnavailableException>(() => client.SearchArtistByMBID(Guid.NewGuid().ToString()));
+
+        // Assert
+        exception.Service.ShouldBe("MusicBrainz");
+    }
+
     private MusicSearcherClient CreateClient(params IMusicServiceClient[] services)
     {
         return new MusicSearcherClient(_lyricsClient, _setlistClient, services, new MusicBrainzClient(), A.Fake<ILogger<MusicSearcherClient>>());
     }
+
+    private MusicSearcherClient CreateClient(HttpMessageHandler musicBrainz)
+    {
+        var httpClient = new HttpClient(musicBrainz) { BaseAddress = new Uri(MusicBrainzClient.ServiceBaseAddress) };
+        return new MusicSearcherClient(_lyricsClient, _setlistClient, Array.Empty<IMusicServiceClient>(), new MusicBrainzClient(httpClient), A.Fake<ILogger<MusicSearcherClient>>());
+    }
+
+    private static string UniqueName() => $"test-{Guid.NewGuid():N}";
 
     private static IMusicServiceClient CreateService(MusicTrackBase track)
     {
