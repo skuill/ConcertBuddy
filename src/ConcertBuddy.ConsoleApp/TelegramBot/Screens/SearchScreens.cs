@@ -53,7 +53,7 @@ public sealed class SearchScreens
         }
         catch (MusicServiceUnavailableException exception)
         {
-            return CommonScreens.Unavailable(exception.Service, SearchData(text, offset));
+            return CommonScreens.Unavailable(exception.Service, _codec.Encode(CallbackActions.NewSearch, Number(offset), text));
         }
 
         if (artists.Count > 0)
@@ -90,7 +90,7 @@ public sealed class SearchScreens
             + "• Try the original spelling (Кино, not Kino)\n\n"
             + "Or try one of these:";
         var examples = Examples
-            .Select(name => InlineKeyboardButton.WithCallbackData(name, SearchData(name, 0)))
+            .Select(name => InlineKeyboardButton.WithCallbackData(name, NewSearchData(name)))
             .Chunk(2)
             .Append(new[] { CommonScreens.DeleteButton() });
         return new Screen(html, new InlineKeyboardMarkup(examples));
@@ -122,6 +122,11 @@ public sealed class SearchScreens
     public string SearchData(string text, int offset)
     {
         return _codec.Encode(CallbackActions.Search, Number(offset), text);
+    }
+
+    private string NewSearchData(string text)
+    {
+        return _codec.Encode(CallbackActions.NewSearch, Number(0), text);
     }
 
     private static string Number(int value)

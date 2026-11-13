@@ -25,8 +25,9 @@ public class SearchCallbackCommand : ScreenCallbackCommand
 
     protected override int ArgumentCount => 2;
 
-    // A new search (an example, "Try again") shows that it is working; a page turn just changes the list.
-    protected override Screen? Waiting => _offset == 0 ? SearchScreens.Searching(_text) : null;
+    // A new search (an example, "Try again") shows that it is working; a page turn just replaces the list,
+    // "Searching…" in between would make the message blink.
+    protected override Screen? Waiting => Payload.Action == CallbackActions.NewSearch ? SearchScreens.Searching(_text) : null;
 
     protected override Func<Task<ScreenResult>>? Prepare(string[] arguments)
     {

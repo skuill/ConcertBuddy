@@ -117,7 +117,7 @@ public class BotHandlers : IBotHandlers
 
         return payload.Action switch
         {
-            CallbackActions.Search => Route<SearchCallbackCommand>(CommandList.COMMAND_SEARCH, callbackQuery, payload),
+            CallbackActions.Search or CallbackActions.NewSearch => Route<SearchCallbackCommand>(CommandList.COMMAND_SEARCH, callbackQuery, payload),
             CallbackActions.Artist => Route<ArtistCommand>(CommandList.COMMAND_ARTIST, callbackQuery, payload),
             _ => Route<OutdatedCommand>(OutdatedCommandName, callbackQuery),
         };

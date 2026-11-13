@@ -84,8 +84,8 @@ public class SearchScreensTest
 
             Or try one of these:
             ---
-            Metallica → s|0|Metallica | Linkin Park → s|0|Linkin Park
-            Foo Fighters → s|0|Foo Fighters | Ed Sheeran → s|0|Ed Sheeran
+            Metallica → n|0|Metallica | Linkin Park → n|0|Linkin Park
+            Foo Fighters → n|0|Foo Fighters | Ed Sheeran → n|0|Ed Sheeran
             ❌ → /delete
             preview: none
             """.ReplaceLineEndings("\n"));
@@ -125,7 +125,7 @@ public class SearchScreensTest
         ScreenDump.Of(result.Screen).ShouldBe("""
             ⚠️ MusicBrainz is busy or down right now. It is not your query: try again in a minute.
             ---
-            🔄 Try again → s|5|Metallica [Primary] | ❌ → /delete
+            🔄 Try again → n|5|Metallica [Primary] | ❌ → /delete
             preview: none
             """.ReplaceLineEndings("\n"));
     }

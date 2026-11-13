@@ -121,6 +121,38 @@ public class SearchScenarioTest : BotHostTestBase
         HandledLines()[1].ShouldStartWith("Handled update: CallbackQuery /artist in Private chat from user -: Found in ");
     }
 
+    [Theory]
+    [InlineData("s|0|Metallica")]
+    [InlineData("s|5|Metallica")]
+    public async Task Search_PageTurn_ListReplacedAtOnceWithoutSearching(string data)
+    {
+        // Arrange: "Searching…" between two lists made the message blink (found on the dev bot).
+        A.CallTo(() => _music.SearchArtistsByName("Metallica", A<ScoreType>._, 5, A<int>._)).Returns(new MusicArtistBase[] { TestArtist.Metallica() });
+        var telegram = new FakeTelegram(CreateCallbackUpdate(1, data));
+
+        // Act
+        await RunUntilHandled(telegram, 1);
+
+        // Assert
+        telegram.Requests.Select(x => x.Method).ShouldBe(new[] { "answerCallbackQuery", "editMessageText" });
+        telegram.RequestsOf("editMessageText").Single()["text"]!.GetValue<string>().ShouldStartWith("Choose the artist for <b>Metallica</b>");
+    }
+
+    [Fact]
+    public async Task Search_ExampleButton_SearchingThenTheList()
+    {
+        // Arrange
+        ArtistsFor("Metallica", TestArtist.Metallica());
+        var telegram = new FakeTelegram(CreateCallbackUpdate(1, "n|0|Metallica"));
+
+        // Act
+        await RunUntilHandled(telegram, 1);
+
+        // Assert
+        telegram.RequestsOf("editMessageText").Select(x => x["text"]!.GetValue<string>())
+            .ShouldBe(new[] { "🔍 Searching for <b>Metallica</b>…", "Choose the artist for <b>Metallica</b>:" });
+    }
+
     [Fact]
     public async Task Search_TextLongerThanAButtonHolds_ButtonsStillWork()
     {
