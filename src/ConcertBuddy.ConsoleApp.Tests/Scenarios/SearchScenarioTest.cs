@@ -1,3 +1,4 @@
+using ConcertBuddy.ConsoleApp.TelegramBot.Screens;
 using ConcertBuddy.ConsoleApp.Tests.Host;
 using ConcertBuddy.ConsoleApp.Tests.TelegramBot.Screens;
 using FakeItEasy;
@@ -7,6 +8,7 @@ using MusicSearcher;
 using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.MusicBrainz;
+using MusicSearcher.MusicService;
 using Shouldly;
 using System.Net;
 using System.Text.Json.Nodes;
@@ -154,6 +156,38 @@ public class SearchScenarioTest : BotHostTestBase
     }
 
     [Fact]
+    public async Task Search_VeryLongText_ShortenedBeforeTheSearch()
+    {
+        // Arrange
+        var shortened = new string('x', SearchScreens.MaxSearchTextLength) + "…";
+        ArtistsFor(shortened);
+        var telegram = new FakeTelegram(CreateTextUpdate(1, new string('x', 500)));
+
+        // Act
+        await RunUntilHandled(telegram, 1);
+
+        // Assert
+        telegram.RequestsOf("sendMessage").Single()["text"]!.GetValue<string>().ShouldBe($"🔍 Searching for <b>{shortened}</b>…");
+        A.CallTo(() => _music.SearchArtistsByName(shortened, A<ScoreType>._, 5, 0)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task Artist_WithLastFmPage_PhotoPreviewAboveTheText()
+    {
+        // Arrange
+        var lastFm = new TestArtist { Service = MusicServiceType.LastFm, NameValue = "Metallica", ExternalUrlValue = new Uri("https://www.last.fm/music/Metallica") };
+        A.CallTo(() => _music.SearchArtistByMBID(Mbid)).Returns(new MusicArtist(new List<MusicArtistBase> { TestArtist.Metallica(), lastFm }));
+        var telegram = new FakeTelegram(CreateCallbackUpdate(1, $"a|{Mbid}|0|"));
+
+        // Act
+        await RunUntilHandled(telegram, 1);
+
+        // Assert
+        var preview = telegram.RequestsOf("editMessageText").Single()["link_preview_options"]!;
+        preview.ToJsonString().ShouldBe("""{"url":"https://www.last.fm/music/Metallica","prefer_large_media":true,"show_above_text":true}""");
+    }
+
+    [Fact]
     public async Task Search_TextLongerThanAButtonHolds_ButtonsStillWork()
     {
         // Arrange
@@ -183,6 +217,7 @@ public class SearchScenarioTest : BotHostTestBase
     [InlineData("/search 5 5 Metallica")]
     [InlineData("x|whatever")]
     [InlineData("s|not-a-number|Metallica")]
+    [InlineData("s|-5|Metallica")]
     [InlineData("a|not-a-guid|0|Metallica")]
     [InlineData("a|only-mbid")]
     [InlineData(null)]
