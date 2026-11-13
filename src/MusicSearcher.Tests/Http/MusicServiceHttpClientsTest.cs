@@ -49,6 +49,29 @@ public class MusicServiceHttpClientsTest
         time.Delays.ShouldBe(new[] { TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8) });
     }
 
+    [Theory]
+    [InlineData("0")]
+    [InlineData("1")]
+    public async Task MusicBrainz_BusyWithRetryAfter_StillWaitsTwoFourAndEightSeconds(string retryAfter)
+    {
+        // Arrange: a busy MusicBrainz sends Retry-After; following it made the retries come at once (seen on the dev bot).
+        var time = new RecordingTimeProvider();
+        var handler = new FakeHttpMessageHandler(() =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+            response.Headers.TryAddWithoutValidation("Retry-After", retryAfter);
+            return response;
+        });
+        var client = CreateClient(MusicServiceHttpClients.MusicBrainzClientName, handler, defaultRetries: true, time: time);
+
+        // Act
+        await client.GetAsync(Url, TestContext.Current.CancellationToken);
+
+        // Assert
+        handler.Calls.ShouldBe(4);
+        time.Delays.ShouldBe(new[] { TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8) });
+    }
+
     [Fact]
     public async Task MusicBrainz_ConnectionReset_RetriesAndSucceeds()
     {

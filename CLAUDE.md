@@ -8,6 +8,7 @@ Notes for AI coding agents working in this repository. Personal or machine-speci
 
 ## Layout
 - Bot commands: `src/ConcertBuddy.ConsoleApp/TelegramBot/Command/`; routing `TelegramBot/Handler/BotHandlers.cs`.
+- Screens edited in place and the button data: `TelegramBot/Screens/`, `TelegramBot/Callback/`, rules in `docs/screens.md`.
 - External music services: `src/MusicSearcher/` (MusicBrainz, Last.fm, Setlist.fm, Yandex Music, LyricsScraperNET).
 - Startup: `Program.cs` (Generic Host), registrations in `ServiceCollectionExtensions.cs`, polling in `TelegramBot/Handler/BotPollingService.cs`.
 - Config keys: `Configuration.cs`, template `appsettings.template.json`. Real keys live only on the server (edited by hand): the repo `appsettings.json` keeps empty values, never put real keys in it.

@@ -10,7 +10,7 @@ At the `Information` level every update gets one line:
 Handled update: Message /search in Private chat from user 3f9a1c0b7d2e4a51: Found in 812 ms
 ```
 
-It holds the update type, the command, the chat type, a pseudonymous user key, the result (`Found`, `NotFound`, `Error`) and the duration.
+It holds the update type, the command, the chat type, a pseudonymous user key, the result (`Found`, `NotFound`, `Error`, `Unavailable` when a music service did not answer, `Outdated` for a button the bot does not know) and the duration.
 
 - What the user typed is not in this line. Search texts, artist names and song names are written at the `Debug` level only.
 - The Telegram user id is never logged. The user key is the start of HMAC-SHA256 of the id with the secret `Configuration:UserKeySecret`: the same user always gets the same key, and without the secret the key cannot be traced back to the id. Without the secret the line shows `-`.
