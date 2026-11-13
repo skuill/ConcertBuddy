@@ -189,18 +189,20 @@ public class SetlistScreensTest
     [Fact]
     public async Task SetlistAsync_LongSetlist_CopyTextFitsTheButtonInBytesWithWholeLines()
     {
-        // Arrange: 30 songs with "·" in the first line are far over 256 bytes.
+        // Arrange: 30 Cyrillic names take two bytes per letter, far over 256 bytes, and less than 256 characters at 13 songs.
         var setlist = Setlist(SetlistId, "31-10-2001", withSongs: false);
-        setlist.Sets = new MusicSets { Set = new List<MusicSet> { new() { Songs = Enumerable.Range(1, 30).Select(n => new MusicSong { Name = $"Song number {n}" }).ToList() } } };
+        setlist.Sets = new MusicSets { Set = new List<MusicSet> { new() { Songs = Enumerable.Range(1, 30).Select(n => new MusicSong { Name = $"Песня {n}" }).ToList() } } };
         A.CallTo(() => _music.SearchSetlist(SetlistId)).Returns(setlist);
 
         // Act
         var copy = (await _screens.SetlistAsync(SetlistId, Mbid, 1)).Screen.Keyboard.InlineKeyboard.First().Single().CopyText!.Text;
 
-        // Assert
+        // Assert: within the limit, whole song lines, and the next song would not fit any more.
         Encoding.UTF8.GetByteCount(copy).ShouldBeLessThanOrEqualTo(SetlistScreens.MaxCopyTextBytes);
-        Encoding.UTF8.GetByteCount(copy).ShouldBeGreaterThan(SetlistScreens.MaxCopyTextBytes - 20);
-        copy.ShouldEndWith("\n12. Song number 12\n…");
+        copy.ShouldEndWith("\n…");
+        var lines = copy.Split('\n')[1..^1];
+        lines.ShouldBe(Enumerable.Range(1, lines.Length).Select(n => $"{n}. Песня {n}"));
+        Encoding.UTF8.GetByteCount(copy + $"\n{lines.Length + 1}. Песня {lines.Length + 1}").ShouldBeGreaterThan(SetlistScreens.MaxCopyTextBytes);
     }
 
     [Theory]

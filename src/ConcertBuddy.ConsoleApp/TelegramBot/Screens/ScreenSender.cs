@@ -19,9 +19,8 @@ public sealed class ScreenSender
 
     public Task<Message> SendAsync(long chatId, Screen screen)
     {
-        return screen.IsRich
-            ? _botClient.SendRichMessage(chatId, new InputRichMessage { Html = screen.Html }, replyMarkup: screen.Keyboard)
-            : _botClient.SendMessage(chatId, screen.Html, ParseMode.Html, replyMarkup: screen.Keyboard, linkPreviewOptions: Preview(screen));
+        // Rich screens only replace a message so far; sending one new comes with the track screen.
+        return _botClient.SendMessage(chatId, screen.Html, ParseMode.Html, replyMarkup: screen.Keyboard, linkPreviewOptions: Preview(screen));
     }
 
     public async Task EditAsync(long chatId, int messageId, Screen screen)
