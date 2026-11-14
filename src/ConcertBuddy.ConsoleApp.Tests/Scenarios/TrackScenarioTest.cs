@@ -122,6 +122,23 @@ public class TrackScenarioTest : BotHostTestBase
     }
 
     [Fact]
+    public async Task Play_ArtistGoneFromMusicBrainz_SaysSoWithoutSearchingTheTrack()
+    {
+        // Arrange
+        A.CallTo(() => _music.SearchArtistByMBID(Mbid)).Returns(new MusicArtist());
+        var telegram = new FakeTelegram(CreateCallbackUpdate(1, $"p|{Mbid}|One"));
+
+        // Act
+        await RunUntilHandled(telegram, 1);
+
+        // Assert
+        telegram.RequestsOf("sendMessage").Single()["text"]!.GetValue<string>().ShouldBe("🤷 MusicBrainz does not have this artist any more.");
+        telegram.RequestsOf("sendRichMessage").ShouldBeEmpty();
+        A.CallTo(() => _music.SearchTrack(A<string>._, A<string>._)).MustNotHaveHappened();
+        HandledLines().Single().ShouldContain(": NotFound in ");
+    }
+
+    [Fact]
     public async Task ShowLyrics_MessageWithAudio_SameMessageKeepsTheAudioAndAddsTheLyrics()
     {
         // Arrange: the artist name comes from the audio of the message, MusicBrainz is not asked for it.

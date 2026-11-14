@@ -215,7 +215,14 @@ public class MusicSearcherClient : IMusicSearcherClient
         {
             try
             {
-                result.Add(await musicServiceClient.SearchTrack(artistName, trackName));
+                var track = await musicServiceClient.SearchTrack(artistName, trackName);
+                if (track == null)
+                {
+                    // A stage solo or a jam is no track of a music service: Information, not an error.
+                    _logger?.LogInformation("Music service [{Client}] has no track [{ArtistName} - {TrackName}]", musicServiceClient.GetType().Name, artistName, trackName);
+                    continue;
+                }
+                result.Add(track);
             }
             catch (NotImplementedException)
             {

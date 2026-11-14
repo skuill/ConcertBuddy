@@ -117,7 +117,7 @@ public sealed class LastFmServiceClient : IMusicServiceClient
         }
     }
 
-    public Task<MusicTrackBase> SearchTrack(string artistName, string trackName)
+    public Task<MusicTrackBase?> SearchTrack(string artistName, string trackName)
     {
         throw new NotImplementedException();
     }

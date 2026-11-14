@@ -23,6 +23,7 @@ public class MusicSearcherClientTest
 
     private readonly ILyricsScraperClient _lyricsClient = A.Fake<ILyricsScraperClient>();
     private readonly ISetlistFmServiceClient _setlistClient = A.Fake<ISetlistFmServiceClient>();
+    private readonly ILogger<MusicSearcherClient> _logger = A.Fake<ILogger<MusicSearcherClient>>();
 
     [Fact]
     public async Task SearchTrack_TwoServices_CombinesTheirResults()
@@ -45,6 +46,24 @@ public class MusicSearcherClientTest
     }
 
     [Fact]
+    public async Task SearchTrack_ServiceHasNoTrack_EmptyAndInformationNotError()
+    {
+        // Arrange: a stage solo like "Joe Hahn Solo" is no track of a music service.
+        var service = A.Fake<IMusicServiceClient>();
+        A.CallTo(() => service.SearchTrack(A<string>._, A<string>._)).Returns((MusicTrackBase?)null);
+        var client = CreateClient(service);
+
+        // Act
+        var result = (MusicTrack)await client.SearchTrack("Linkin Park", "Joe Hahn Solo");
+
+        // Assert
+        result.ShouldBeEmpty();
+        result.DownloadLink.ShouldBeNull();
+        AssertLogged(LogLevel.Information, 1, "Music service [");
+        AssertLogged(LogLevel.Error, 0);
+    }
+
+    [Fact]
     public async Task SearchTrack_ServiceFails_UsesOtherServices()
     {
         // Arrange
@@ -61,6 +80,7 @@ public class MusicSearcherClientTest
         // Assert
         result.Count().ShouldBe(1);
         result.TrackName.ShouldBe("One");
+        AssertLogged(LogLevel.Error, 1, "Can't get track from music service");
     }
 
     [Fact]
@@ -218,9 +238,20 @@ public class MusicSearcherClientTest
         exception.Service.ShouldBe("MusicBrainz");
     }
 
+    private void AssertLogged(LogLevel level, int times, string messageStart = "")
+    {
+        A.CallTo(_logger)
+            .Where(call => call.Method.Name == nameof(ILogger.Log)
+                && call.GetArgument<LogLevel>(0) == level
+                && Message(call.GetArgument<object>(2)).StartsWith(messageStart, StringComparison.Ordinal))
+            .MustHaveHappened(times, Times.Exactly);
+    }
+
+    private static string Message(object? state) => state?.ToString() ?? string.Empty;
+
     private MusicSearcherClient CreateClient(params IMusicServiceClient[] services)
     {
-        return new MusicSearcherClient(_lyricsClient, _setlistClient, services, new MusicBrainzClient(), A.Fake<ILogger<MusicSearcherClient>>());
+        return new MusicSearcherClient(_lyricsClient, _setlistClient, services, new MusicBrainzClient(), _logger);
     }
 
     private MusicSearcherClient CreateClient(HttpMessageHandler musicBrainz)

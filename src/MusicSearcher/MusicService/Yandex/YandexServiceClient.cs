@@ -34,7 +34,7 @@ public class YandexServiceClient : IMusicServiceClient
         throw new NotImplementedException();
     }
 
-    public async Task<MusicTrackBase> SearchTrack(string artistName, string trackName)
+    public async Task<MusicTrackBase?> SearchTrack(string artistName, string trackName)
     {
         // Known search problems with external library:
         // https://github.com/K1llMan/Yandex.Music.Api/issues/6
@@ -43,12 +43,13 @@ public class YandexServiceClient : IMusicServiceClient
             || searchResult.Tracks == null
             || searchResult.Tracks.Total == 0)
         {
-            throw new Exception($"Can't search track [{trackName}] for artist [{artistName}] from Yandex.");
+            return null;
         }
         var searchTrackResult = searchResult.Tracks.Results.FirstOrDefault(t => t.Artists != null && t.Artists.Any(a => string.Equals(a.Name, artistName, StringComparison.OrdinalIgnoreCase)));
         if (searchTrackResult == null)
         {
-            throw new Exception($"Can't get track [{trackName}] for artist [{artistName}] from Yandex.");
+            // Found, but by another artist (a cover, a namesake): not this track.
+            return null;
         }
         return new YandexMusicTrack(_yandexClient.GetTrack(searchTrackResult.Id));
     }
