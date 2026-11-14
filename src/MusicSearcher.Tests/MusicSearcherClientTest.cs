@@ -64,6 +64,23 @@ public class MusicSearcherClientTest
     }
 
     [Fact]
+    public async Task SearchTrack_FirstServiceHasNoTrack_AsksTheNextOne()
+    {
+        // Arrange
+        var empty = A.Fake<IMusicServiceClient>();
+        A.CallTo(() => empty.SearchTrack(A<string>._, A<string>._)).Returns((MusicTrackBase?)null);
+        var working = CreateService(CreateTrack(MusicServiceType.Yandex, "One", downloadLink: "https://audio"));
+        var client = CreateClient(empty, working);
+
+        // Act
+        var result = (MusicTrack)await client.SearchTrack(Artist, Song);
+
+        // Assert
+        result.Count().ShouldBe(1);
+        result.DownloadLink.ShouldBe("https://audio");
+    }
+
+    [Fact]
     public async Task SearchTrack_ServiceFails_UsesOtherServices()
     {
         // Arrange
