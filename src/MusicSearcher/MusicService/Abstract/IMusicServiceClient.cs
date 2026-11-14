@@ -11,7 +11,10 @@ public interface IMusicServiceClient
 
     public Task<MusicArtistBase> SearchArtistByName(string name);
 
-    public Task<MusicTrackBase> SearchTrack(string artistName, string trackName);
+    /// <summary>
+    /// Null when the service has no such track: a normal result, not a failure.
+    /// </summary>
+    public Task<MusicTrackBase?> SearchTrack(string artistName, string trackName);
 
     public Task<List<MusicTrackBase>> SearchTopTracks(MusicArtistBase artist);
 

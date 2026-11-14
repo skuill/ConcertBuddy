@@ -41,7 +41,7 @@ public class ArtistScreensTest
             <blockquote expandable>Metallica {new string('a', ArtistScreens.MaxBiographyLength - 10)}…</blockquote>
             ---
             📝 Setlists → l|{Mbid}|1 [Primary] | 📖 Full biography → b|{Mbid}
-            📻 Top tracks → /top track {Mbid}
+            📻 Top tracks → o|{Mbid}
             ⬅️ Results → s|5|metallica | ❌ → /delete
             preview: https://www.last.fm/music/Metallica
             """.ReplaceLineEndings("\n"));

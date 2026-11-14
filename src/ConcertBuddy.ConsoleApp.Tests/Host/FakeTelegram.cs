@@ -85,19 +85,63 @@ internal sealed class FakeTelegram : HttpMessageHandler
                 return await GetUpdates(cancellationToken);
         }
 
-        var content = request.Content == null ? "{}" : await request.Content.ReadAsStringAsync(cancellationToken);
-        _requests.Enqueue((method, JsonNode.Parse(content)!));
+        var body = await ReadBodyAsync(request.Content, cancellationToken);
+        _requests.Enqueue((method, body));
         switch (method)
         {
             case "sendMessage":
-                return await SendMessage(content);
+                return await SendMessage(body.ToJsonString());
+            case "sendRichMessage":
+                return SendRichResponse();
             case "editMessageText":
                 return EditResponse();
+            case "deleteMessage":
+                return DeleteResponse();
             case "answerCallbackQuery":
+            case "sendChatAction":
                 return Ok("true");
             default:
                 throw new InvalidOperationException($"Unexpected Telegram method {method}");
         }
+    }
+
+    public Func<HttpResponseMessage> SendRichResponse { get; set; } = () => Ok(Message);
+
+    public Func<HttpResponseMessage> DeleteResponse { get; set; } = () => Ok("true");
+
+    /// <summary>
+    /// A JSON request as it is; an upload (multipart form) as an object of its fields, a file as its name and size.
+    /// </summary>
+    private static async Task<JsonNode> ReadBodyAsync(HttpContent? content, CancellationToken cancellationToken)
+    {
+        if (content is not MultipartFormDataContent form)
+        {
+            return JsonNode.Parse(content == null ? "{}" : await content.ReadAsStringAsync(cancellationToken))!;
+        }
+
+        var fields = new JsonObject();
+        foreach (var part in form)
+        {
+            var name = part.Headers.ContentDisposition?.Name?.Trim('"') ?? string.Empty;
+            var fileName = part.Headers.ContentDisposition?.FileName?.Trim('"') ?? part.Headers.ContentDisposition?.FileNameStar;
+            if (fileName != null)
+            {
+                var bytes = await part.ReadAsByteArrayAsync(cancellationToken);
+                fields[name] = new JsonObject { ["file_name"] = fileName, ["size"] = bytes.Length };
+                continue;
+            }
+
+            var value = await part.ReadAsStringAsync(cancellationToken);
+            try
+            {
+                fields[name] = JsonNode.Parse(value);
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                fields[name] = value;
+            }
+        }
+        return fields;
     }
 
     private async Task<HttpResponseMessage> GetUpdates(CancellationToken cancellationToken)

@@ -152,10 +152,10 @@ public class SetlistScreensTest
             + "<p><i>3 songs · 1 cover · 1 with guests · encore</i></p>"
             + "<table bordered striped><tr><th>#</th><th>Song</th><th>Note</th></tr>"
             + "<tr><td></td><td><i>The Ecstasy of Gold</i></td><td>📼 from tape</td></tr>"
-            + $"<tr><td>1</td><td><tg-button type=\"callback_data\" style=\"link\" data=\"/track {Mbid} Creeping Death\">Creeping Death</tg-button></td><td></td></tr>"
-            + $"<tr><td>2</td><td><tg-button type=\"callback_data\" style=\"link\" data=\"/track {Mbid} Whiskey in the Jar\">Whiskey in the Jar</tg-button></td><td>🎸 Thin Lizzy cover</td></tr>"
+            + $"<tr><td>1</td><td><tg-button type=\"callback_data\" style=\"link\" data=\"p|{Mbid}|Creeping Death\">Creeping Death</tg-button></td><td></td></tr>"
+            + $"<tr><td>2</td><td><tg-button type=\"callback_data\" style=\"link\" data=\"p|{Mbid}|Whiskey in the Jar\">Whiskey in the Jar</tg-button></td><td>🎸 Thin Lizzy cover</td></tr>"
             + "<tr><td colspan=\"3\"><b>🔁 Encore</b></td></tr>"
-            + $"<tr><td>3</td><td><tg-button type=\"callback_data\" style=\"link\" data=\"/track {Mbid} Seek &amp; Destroy\">Seek &amp; Destroy</tg-button></td><td>👥 with Jason; ℹ️ Extended</td></tr>"
+            + $"<tr><td>3</td><td><tg-button type=\"callback_data\" style=\"link\" data=\"p|{Mbid}|Seek &amp; Destroy\">Seek &amp; Destroy</tg-button></td><td>👥 with Jason; ℹ️ Extended</td></tr>"
             + "</table>"
             + "<blockquote>ℹ️ Rain &amp; thunder</blockquote>"
             + "<footer>Tap a song to listen · Setlist from <a href=\"https://www.setlist.fm/setlist/metallica/2001/x.html\">setlist.fm</a></footer>");

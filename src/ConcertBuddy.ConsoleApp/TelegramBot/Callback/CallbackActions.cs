@@ -35,4 +35,29 @@ public static class CallbackActions
     /// One setlist: setlist id|mbid|screen of the setlists to go back to.
     /// </summary>
     public const string Setlist = "t";
+
+    /// <summary>
+    /// Top tracks of an artist on Last.fm: mbid.
+    /// </summary>
+    public const string TopTracks = "o";
+
+    /// <summary>
+    /// Play a song, a new track message: mbid|song.
+    /// </summary>
+    public const string Play = "p";
+
+    /// <summary>
+    /// Play again from the "busy" message, which is deleted when the track is sent: mbid|song.
+    /// </summary>
+    public const string PlayAgain = "q";
+
+    /// <summary>
+    /// Show the lyrics in the track message: mbid|song.
+    /// </summary>
+    public const string ShowLyrics = "y";
+
+    /// <summary>
+    /// Hide the lyrics of the track message: mbid|song.
+    /// </summary>
+    public const string HideLyrics = "h";
 }

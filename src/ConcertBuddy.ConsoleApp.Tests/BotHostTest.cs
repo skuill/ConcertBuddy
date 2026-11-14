@@ -147,24 +147,6 @@ public class BotHostTest : BotHostTestBase
     }
 
     [Fact]
-    public async Task Update_OldCommandWithoutParameters_ResultIsErrorAndTheButtonIsAnswered()
-    {
-        // Arrange
-        var telegram = new FakeTelegram(CreateCallbackUpdate(1, "/top"));
-        using var host = CreateHost(telegram);
-
-        // Act
-        await host.StartAsync(Token);
-        await WaitUntil(() => HandledLines().Count == 1);
-        await host.StopAsync(Token);
-
-        // Assert
-        HandledLines().Single().ShouldStartWith("Handled update: CallbackQuery /top in Private chat from user -: Error in ");
-        telegram.Answers.Single().ShouldContain("Please pass any parameters");
-        telegram.RequestsOf("answerCallbackQuery").ShouldNotBeEmpty();
-    }
-
-    [Fact]
     public async Task Polling_TooManyRequests_WaitsRetryAfter()
     {
         // Arrange: more than RetryThreshold of the client, otherwise the client waits by itself.
