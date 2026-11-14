@@ -26,6 +26,7 @@ public sealed class BotPollingService : BackgroundService
     internal const int MaxParallelUpdates = 8;
 
     private readonly ITelegramBotClient _botClient;
+    private readonly BotProfile _botProfile;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHostEnvironment _environment;
     private readonly TimeProvider _timeProvider;
@@ -38,12 +39,14 @@ public sealed class BotPollingService : BackgroundService
 
     public BotPollingService(
         ITelegramBotClient botClient,
+        BotProfile botProfile,
         IServiceScopeFactory scopeFactory,
         IHostEnvironment environment,
         TimeProvider timeProvider,
         ILogger<BotPollingService> logger)
     {
         _botClient = botClient;
+        _botProfile = botProfile;
         _scopeFactory = scopeFactory;
         _environment = environment;
         _timeProvider = timeProvider;
@@ -81,6 +84,7 @@ public sealed class BotPollingService : BackgroundService
                 {
                     await LogStartAsync(stoppingToken);
                     isStarted = true;
+                    await _botProfile.SetUpAsync(stoppingToken);
                 }
 
                 var updates = await _botClient.GetUpdates(offset, timeout: PollingTimeoutSeconds, cancellationToken: stoppingToken);

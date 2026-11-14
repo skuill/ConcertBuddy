@@ -3,6 +3,8 @@
 public class CommandList
 {
     public const string COMMAND_START = "/start";
+    public const string COMMAND_HELP = "/help";
+    public const string COMMAND_ABOUT = "/about";
     public const string COMMAND_SEARCH = "/search";
     public const string COMMAND_ARTIST = "/artist";
     public const string COMMAND_BIOGRAPHY = "/biography";

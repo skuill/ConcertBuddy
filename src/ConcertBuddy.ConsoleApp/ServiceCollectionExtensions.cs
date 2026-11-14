@@ -58,6 +58,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ArtistScreens>();
         services.AddScoped<SetlistScreens>();
         services.AddScoped<TrackScreens>();
+        services.AddSingleton<InfoScreens>();
+        services.AddTransient<BotProfile>();
         services.AddHttpClient(AudioClientName, client => client.Timeout = TimeSpan.FromSeconds(60)).RemoveAllLoggers();
 
         services.AddHttpClient(TelegramClientName)
