@@ -16,8 +16,11 @@ A flow keeps one message and replaces what it shows: a `Screen` is the HTML text
 | Full biography | the card | rich, paragraphs and the Last.fm credit (CC BY-SA), Artist |
 | Setlists | the card, Setlists of a setlist | ten per screen (setlist.fm gives twenty per request), 🔜 upcoming, 📭 no songs yet, disabled arrows and the page counter, Artist |
 | Setlist | the setlists | rich: a table of songs with notes, sets and encores, a summary, the info of the fans and the setlist.fm link (its terms ask for it); Copy setlist, Setlists |
+| Top tracks | the card | edited in place, the Last.fm top tracks as buttons, Artist |
+| Track | a song of a setlist or of the top tracks | a **new** rich message, so the setlist stays: the audio player, Lyrics, Copy name, ❌ |
+| Track lyrics | Lyrics, Hide lyrics of the track | the same message: the lyrics under the player, or without them |
 
-The song names in a setlist and Top tracks are still the old `/track` and `/top` commands that send new messages; they become screens next (#48).
+A track message holds the audio itself: the bot downloads it and uploads it as "Artist - Song.mp3" (a link given to Telegram would keep the file name of the service). Lyrics and Hide lyrics rebuild the message with the file id and the performer of the audio block that comes with the button press, so they work after a restart without any memory. Without audio the message says "No audio" and still has the lyrics. When MusicBrainz is busy, Play sends a busy message with Try again, and the busy message is deleted when the track is sent.
 
 Limits found on the dev bot: the text of a copy button is at most 256 UTF-8 bytes, not characters (`BUTTON_DATA_INVALID` otherwise), so the setlist copy keeps whole lines and ends with "…".
 
@@ -37,12 +40,16 @@ Telegram allows 64 bytes of callback data. `CallbackCodec` writes `action|arg|ar
 | `b` | MBID | `BiographyCommand` |
 | `l` | MBID, screen from 1 | `SetlistsCommand` |
 | `t` | setlist id, MBID, screen of the setlists to go back to | `SetlistCommand` |
+| `o` | MBID | `TopTracksCommand` |
+| `p` | MBID, song | `PlayCommand`, a new track message |
+| `q` | MBID, song | `PlayCommand` from the busy message, which it deletes |
+| `y`, `h` | MBID, song | `LyricsCommand`, show or hide the lyrics |
 
-Data that starts with `/` belongs to the old commands (`/top`, `/track`, `/lyric`, `/delete`). A button the bot does not know (an old `/search`, `/artist`, `/biography`, `/setlists` or `/setlist`, a stored id that is gone, wrong arguments) answers "This button is outdated" as an alert.
+Data that starts with `/` belongs to the old commands; only `/delete` is left (the ❌ button). A button the bot does not know (any other old command, a stored id that is gone, wrong arguments) answers "This button is outdated" as an alert.
 
 ## Answering buttons
 
-Every button press is answered, otherwise the button keeps spinning. Screen commands answer at once, before the music services are asked, and set `AnsweredCallback`; for the other commands `BotHandlers` answers after the command, also when it failed.
+Every button press is answered, otherwise the button keeps spinning. Screen commands answer at once, before the music services are asked, and set `AnsweredCallback`; slow ones (a track, the lyrics) answer with a toast ("⏳ Loading One…") and the track also sends the "sending a file" chat action; for the other commands `BotHandlers` answers after the command, also when it failed.
 
 ## Results
 
