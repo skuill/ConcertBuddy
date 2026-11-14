@@ -8,7 +8,10 @@ A flow keeps one message and replaces what it shows: a `Screen` is the HTML text
 
 | Screen | Opens from | What happens to the message |
 |---|---|---|
-| Searching | a text message, an example, Try again | a text message sends it, a button edits it |
+| Start | `/start`, Menu | a new message on `/start`, edited from Menu: greeting, example artists, Help, About |
+| Help | `/help`, an unknown command, Start, About | what the bot can do, Menu, About |
+| About | `/about`, Start, Help | version, data sources, code, support links, Menu, Help |
+| Searching | a text message, `/search <name>`, an example, Try again | a text message sends it, a button edits it |
 | Artist list | the search, ⬅️ ➡️, Results of the card | edited in place, page turns without "Searching…" |
 | Nothing found | the search | tips and example artists |
 | Service unavailable | the search, the artist card | "busy, try again", Try again repeats the same button |
@@ -44,8 +47,15 @@ Telegram allows 64 bytes of callback data. `CallbackCodec` writes `action|arg|ar
 | `p` | MBID, song | `PlayCommand`, a new track message |
 | `q` | MBID, song | `PlayCommand` from the busy message, which it deletes |
 | `y`, `h` | MBID, song | `LyricsCommand`, show or hide the lyrics |
+| `m`, `w`, `i` | none | `InfoCallbackCommand`: Start (menu), Help, About |
 
 Data that starts with `/` belongs to the old commands; only `/delete` is left (the ❌ button). A button the bot does not know (any other old command, a stored id that is gone, wrong arguments) answers "This button is outdated" as an alert.
+
+## Commands and the bot profile
+
+A message that starts with `/` is a command: `/start`, `/help`, `/about`, `/search <name>` (also as `/search@bot` in groups); `/search` without a name gets a hint, any other command the help. Any other text is an artist search.
+
+On every start `BotProfile` sets the command menu (for private chats and for all groups) and the descriptions ("What can this bot do?" and the short one of the profile) from code, so they always match what the bot can do. What is set in BotFather by hand is overwritten; BotFather keeps the name, the photo and inline mode. If Telegram rejects them, one Warning is logged and the bot works on.
 
 ## Answering buttons
 
