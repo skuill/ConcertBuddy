@@ -16,33 +16,13 @@ public static class Extensions
         return message.Text!.Trim();
     }
 
-    public static string GetParameterFromMessageText(this Message message, string command)
-    {
-        return message.Text!.Trim().Replace(command, "").Trim();
-    }
-
-    public static string[] GetParametersFromMessageText(this Message message, string command)
-    {
-        return message.Text!.Trim().Replace(command, "").Trim().Split(MESSAGE_TEXT_DELIMETER).Select(x => x.Trim()).ToArray();
-    }
-
     public static string[] GetSplitMessageText(this CallbackQuery callbackQuery)
     {
         return callbackQuery.Data!.Trim().Split(MESSAGE_TEXT_DELIMETER);
     }
 
-    public static string GetParameterFromMessageText(this CallbackQuery callbackQuery, string command)
-    {
-        return callbackQuery.Data!.Trim().Replace(command, "").Trim();
-    }
-
     public static string[] GetParametersFromMessageText(this CallbackQuery callbackQuery, string command)
     {
         return callbackQuery.Data!.Trim().Replace(command, "").Trim().Split(MESSAGE_TEXT_DELIMETER);
-    }
-
-    public static String ConvertToString(this Enum obj)
-    {
-        return Enum.GetName(obj.GetType(), obj)!.ToLowerInvariant();
     }
 }

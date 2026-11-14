@@ -1,7 +1,5 @@
-using ConcertBuddy.ConsoleApp.Model;
 using ConcertBuddy.ConsoleApp.TelegramBot.Callback;
 using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
-using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using Microsoft.Extensions.Options;
 using MusicSearcher;
 using MusicSearcher.Model;
@@ -83,8 +81,7 @@ public sealed class ArtistScreens
         };
         if (_configuration.IsLastFmAvailable())
         {
-            // The old command, it sends a new message; top tracks become a screen in the next step of #48.
-            rows.Add(new[] { InlineKeyboardButton.WithCallbackData("📻 Top tracks", string.Format(CommandList.CALLBACK_DATA_FORMAT_TOP, SearchType.Track.ConvertToString(), mbid)) });
+            rows.Add(new[] { InlineKeyboardButton.WithCallbackData("📻 Top tracks", _codec.Encode(CallbackActions.TopTracks, mbid)) });
         }
         rows.Add(LastRow(searchOffset, searchText));
         return new Screen(html, new InlineKeyboardMarkup(rows), artist[MusicServiceType.LastFm]?.ExternalUrl?.ToString());

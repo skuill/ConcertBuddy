@@ -34,6 +34,11 @@ public abstract class ScreenCallbackCommand : AbstractCommand<Message?, Callback
     /// </summary>
     protected virtual Screen? Waiting => null;
 
+    /// <summary>
+    /// A short toast while the screen is built, for slow screens; null for none.
+    /// </summary>
+    protected virtual string? AnswerText => null;
+
     public override async Task<Message?> ExecuteAsync()
     {
         var arguments = Payload.Split(ArgumentCount);
@@ -47,7 +52,7 @@ public abstract class ScreenCallbackCommand : AbstractCommand<Message?, Callback
         }
 
         // At once: MusicBrainz may take several seconds, the button must not spin all that time.
-        await TelegramBotClient.AnswerCallbackQuery(Data.Id);
+        await TelegramBotClient.AnswerCallbackQuery(Data.Id, AnswerText);
         AnsweredCallback = true;
 
         var chatId = Data.Message.Chat.Id;

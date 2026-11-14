@@ -24,6 +24,11 @@ public static class ServiceCollectionExtensions
 {
     public const string TelegramClientName = "Telegram";
 
+    /// <summary>
+    /// Downloads the audio of a track, so the bot uploads it with a readable file name.
+    /// </summary>
+    public const string AudioClientName = "Audio";
+
     private const string ConfigurationSectionName = "Configuration";
 
     public static IServiceCollection AddConcertBuddy(this IServiceCollection services, IConfiguration configuration)
@@ -52,6 +57,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<SearchScreens>();
         services.AddScoped<ArtistScreens>();
         services.AddScoped<SetlistScreens>();
+        services.AddScoped<TrackScreens>();
+        services.AddHttpClient(AudioClientName, client => client.Timeout = TimeSpan.FromSeconds(60)).RemoveAllLoggers();
 
         services.AddHttpClient(TelegramClientName)
                 .RemoveAllLoggers()

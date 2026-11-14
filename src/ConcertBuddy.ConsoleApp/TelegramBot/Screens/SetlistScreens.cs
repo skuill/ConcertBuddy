@@ -121,7 +121,7 @@ public sealed class SetlistScreens
         return InlineKeyboardButton.WithCallbackData("⬅️ Artist", _codec.Encode(CallbackActions.Artist, mbid, Number(0), string.Empty));
     }
 
-    private static string SetlistHtml(MusicSetlist setlist, List<MusicSet> sets, List<MusicSong> songs, string mbid)
+    private string SetlistHtml(MusicSetlist setlist, List<MusicSet> sets, List<MusicSong> songs, string mbid)
     {
         var html = new StringBuilder();
         html.Append($"<h3>{ScreenText.Html(setlist.ArtistName)}</h3>");
@@ -152,7 +152,7 @@ public sealed class SetlistScreens
         return html.ToString();
     }
 
-    private static void AppendTable(StringBuilder html, List<MusicSet> sets, List<MusicSong> songs, string mbid)
+    private void AppendTable(StringBuilder html, List<MusicSet> sets, List<MusicSong> songs, string mbid)
     {
         var hasNotes = songs.Any(song => Note(song).Length > 0);
         var columns = hasNotes ? 3 : 2;
@@ -171,7 +171,7 @@ public sealed class SetlistScreens
                 // The song name is a callback button styled as a link; a tape is not a song to listen to.
                 var name = song.Tape || string.IsNullOrWhiteSpace(song.Name)
                     ? $"<i>{ScreenText.Html(song.Name)}</i>"
-                    : $"<tg-button type=\"callback_data\" style=\"link\" data=\"{ScreenText.Html(InlineKeyboardHelper.GetTrackCallbackData(mbid, song.Name))}\">{ScreenText.Html(song.Name)}</tg-button>";
+                    : $"<tg-button type=\"callback_data\" style=\"link\" data=\"{ScreenText.Html(_codec.Encode(CallbackActions.Play, mbid, song.Name))}\">{ScreenText.Html(song.Name)}</tg-button>";
                 var note = hasNotes ? $"<td>{ScreenText.Html(Note(song))}</td>" : string.Empty;
                 html.Append($"<tr><td>{(song.Tape ? string.Empty : Number(number++))}</td><td>{name}</td>{note}</tr>");
             }

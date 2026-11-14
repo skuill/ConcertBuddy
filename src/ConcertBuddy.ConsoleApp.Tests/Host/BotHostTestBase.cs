@@ -70,15 +70,22 @@ public abstract class BotHostTestBase
     /// <summary>
     /// A press of a button with this data under the message the bot sent (<see cref="FakeTelegram.SentMessageId"/>).
     /// </summary>
-    protected static string CreateCallbackUpdate(int updateId, string? data, string chatType = "private")
+    protected static string CreateCallbackUpdate(int updateId, string? data, string chatType = "private", JsonObject? richMessage = null)
     {
         var message = new JsonObject
         {
             ["message_id"] = FakeTelegram.SentMessageId,
             ["date"] = 1,
             ["chat"] = new JsonObject { ["id"] = 10, ["type"] = chatType, ["title"] = chatType == "private" ? null : "T" },
-            ["text"] = "x",
         };
+        if (richMessage == null)
+        {
+            message["text"] = "x";
+        }
+        else
+        {
+            message["rich_message"] = richMessage;
+        }
         var query = new JsonObject
         {
             ["id"] = $"q{updateId}",

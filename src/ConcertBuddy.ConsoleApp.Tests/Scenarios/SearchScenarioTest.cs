@@ -218,6 +218,9 @@ public class SearchScenarioTest : BotHostTestBase
     [InlineData($"/biography {Mbid}")]
     [InlineData($"/setlists 1 1 {Mbid}")]
     [InlineData($"/setlist {Mbid} 4b48efd6")]
+    [InlineData($"/track {Mbid} One")]
+    [InlineData($"/lyric {Mbid} One")]
+    [InlineData($"/top track {Mbid}")]
     [InlineData("x|whatever")]
     [InlineData("s|not-a-number|Metallica")]
     [InlineData("s|-5|Metallica")]
@@ -279,8 +282,10 @@ public class SearchScenarioTest : BotHostTestBase
     public async Task Button_OldCommandFails_TheHandlerAnswersTheButton()
     {
         // Arrange
-        A.CallTo(() => _music.SearchTopTracks(Mbid)).ThrowsAsync(new InvalidOperationException("bug"));
-        var telegram = new FakeTelegram(CreateCallbackUpdate(1, $"/top track {Mbid}"));
+        var telegram = new FakeTelegram(CreateCallbackUpdate(1, "/delete"))
+        {
+            DeleteResponse = () => FakeTelegram.Json(HttpStatusCode.BadRequest, """{"ok":false,"error_code":400,"description":"Bad Request: message can't be deleted"}"""),
+        };
 
         // Act
         await RunUntilHandled(telegram, 1);

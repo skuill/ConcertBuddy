@@ -122,6 +122,9 @@ public class BotHandlers : IBotHandlers
             CallbackActions.Biography => Route<BiographyCommand>(CommandList.COMMAND_BIOGRAPHY, callbackQuery, payload),
             CallbackActions.Setlists => Route<SetlistsCommand>(CommandList.COMMAND_SETLISTS, callbackQuery, payload),
             CallbackActions.Setlist => Route<SetlistCommand>(CommandList.COMMAND_SETLIST, callbackQuery, payload),
+            CallbackActions.TopTracks => Route<TopTracksCommand>(CommandList.COMMAND_TOP, callbackQuery, payload),
+            CallbackActions.Play or CallbackActions.PlayAgain => Route<PlayCommand>(CommandList.COMMAND_TRACK, callbackQuery, payload),
+            CallbackActions.ShowLyrics or CallbackActions.HideLyrics => Route<LyricsCommand>(CommandList.COMMAND_LYRIC, callbackQuery, payload),
             _ => Route<OutdatedCommand>(OutdatedCommandName, callbackQuery),
         };
     }
@@ -130,10 +133,7 @@ public class BotHandlers : IBotHandlers
     {
         return callbackQuery.GetSplitMessageText()[0] switch
         {
-            CommandList.COMMAND_TRACK => Route<TrackCommand>(CommandList.COMMAND_TRACK, callbackQuery),
-            CommandList.COMMAND_LYRIC => Route<LyricCommand>(CommandList.COMMAND_LYRIC, callbackQuery),
             CommandList.COMMAND_DELETE => Route<DeleteCommand>(CommandList.COMMAND_DELETE, callbackQuery),
-            CommandList.COMMAND_TOP => Route<TopCommand>(CommandList.COMMAND_TOP, callbackQuery),
             _ => Route<OutdatedCommand>(OutdatedCommandName, callbackQuery),
         };
     }
