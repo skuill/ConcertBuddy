@@ -82,6 +82,7 @@ internal sealed class FakeTelegram : HttpMessageHandler
             case "getMe":
                 return GetMeResponse();
             case "getUpdates":
+                LastPollBody = await ReadBodyAsync(request.Content, cancellationToken);
                 return await GetUpdates(cancellationToken);
         }
 
@@ -105,6 +106,7 @@ internal sealed class FakeTelegram : HttpMessageHandler
             case "deleteMessage":
                 return DeleteResponse();
             case "answerCallbackQuery":
+            case "answerInlineQuery":
             case "sendChatAction":
                 return Ok("true");
             default:
@@ -115,6 +117,11 @@ internal sealed class FakeTelegram : HttpMessageHandler
     public Func<HttpResponseMessage> SendRichResponse { get; set; } = () => Ok(Message);
 
     public Func<HttpResponseMessage> ProfileResponse { get; set; } = () => Ok("true");
+
+    /// <summary>
+    /// The body of the last getUpdates: what the bot asks Telegram for.
+    /// </summary>
+    public JsonNode? LastPollBody { get; private set; }
 
     /// <summary>
     /// setMyCommands, setMyDescription and setMyShortDescription, in order.

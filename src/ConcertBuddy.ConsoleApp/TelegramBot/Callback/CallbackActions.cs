@@ -42,6 +42,11 @@ public static class CallbackActions
     public const string Upcoming = "u";
 
     /// <summary>
+    /// A setlist of a share link again, after "busy": setlist id.
+    /// </summary>
+    public const string SharedSetlist = "k";
+
+    /// <summary>
     /// Top tracks of an artist on Last.fm: mbid.
     /// </summary>
     public const string TopTracks = "o";
