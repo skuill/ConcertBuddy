@@ -9,6 +9,9 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <!-- CS1591: an application, not a library. XML comments are written where they help. -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <!-- The bot runs on the Alpine image, where .NET has no named cultures (invariant globalization).
+         The same mode everywhere, so local runs and tests fail like the container would (#89). -->
+    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
 </Project>

@@ -42,6 +42,22 @@ MusicBrainz allows about 1 request per second and may answer `503` when it is bu
 
 Screens are checked whole with `TelegramBot/Screens/ScreenDump.cs`: the text, every button with its data and style, the preview.
 
+## The container
+
+The bot runs in `mcr.microsoft.com/dotnet/runtime:10.0-alpine`, where .NET has no named cultures (invariant globalization). `InvariantGlobalization` is on for all projects in `src/Directory.Build.props`, so the tests and local runs behave the same; 1.6.0 broke on the droplet because a date was formatted with `en-US` (#89).
+
+CI builds the image on every pull request and starts it once without settings: it must stop with "Configuration:TelegramToken is required.".
+
+Before a change goes to review, run the image on the dev bot like the server does, from `src`:
+
+```
+docker build -t concertbuddy-check -f ConcertBuddy.ConsoleApp/Dockerfile .
+docker run -d --name concertbuddy-check -e ASPNETCORE_ENVIRONMENT=Development -v "<full path>/appsettings.json:/app/appsettings.json:ro" -v "<full path>/appsettings.Development.json:/app/appsettings.Development.json:ro" concertbuddy-check
+docker logs -f concertbuddy-check
+```
+
+Stop any other run of the dev bot first (one token, one poller), and remove the container and the image afterwards.
+
 ## Rules for new tests
 
 - Assert whole objects and verify the calls to external clients.
