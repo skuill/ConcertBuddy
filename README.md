@@ -28,9 +28,12 @@ Are you planning to go to a concert?
 This Telegram bot will be your companion, like a good buddy! 😎
 
 With ConcertBuddy, you can:
-- Explore artist and band biographies.
-- Check out setlists from recent concerts.
-- Listen to tracks and read their lyrics.
+- Check out setlists from recent concerts and see the upcoming ones.
+- Listen to the songs and read their lyrics.
+- Explore artist and band biographies and top tracks.
+- Share a setlist with your friends.
+
+Everything happens in one message that changes as you go, with a way back from every screen.
 
 Just write the artist/band name to the **[ConcertBuddy](https://t.me/concert_buddy_bot)** bot and enjoy!
 
@@ -41,12 +44,17 @@ A few of the things you can do with ConcertBuddy:
   * `MusicBrainz`
 * ✅ Read artist / band biography
   * `Last.fm`
-* ✅ View setlists from recent concerts
+* ✅ View setlists from recent concerts, as a table with covers, guests and encores
   * `Setlist.fm`
-* ✅ Listen to tracks
+* ✅ See upcoming concerts added by fans
+  * `Setlist.fm`
+* ✅ Listen to tracks of a setlist or of the top tracks
   * Directly from: `Yandex`
-* ✅ Read the lyrics of the tracks
+* ✅ Top tracks of an artist
+  * `Last.fm`
+* ✅ Read the lyrics of the tracks, under the player
   * Different lyric providers: `LRCLIB`, `AZLyrics`, `Genius`, `SongLyrics`, `KPopLyrics`, `LyricsFreak`
+* ✅ Share a setlist: send it to any chat or share a link that opens it in the bot
 
 ## Feedback
 
