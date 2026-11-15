@@ -15,10 +15,11 @@ A flow keeps one message and replaces what it shows: a `Screen` is the HTML text
 | Artist list | the search, ⬅️ ➡️, Results of the card | edited in place, page turns without "Searching…" |
 | Nothing found | the search | tips and example artists |
 | Service unavailable | the search, the artist card | "busy, try again", Try again repeats the same button |
-| Artist card | the list, Artist of the next screens | edited in place, the Last.fm page as the preview, a short biography, Setlists, Full biography, Results back to the list |
+| Artist card | the list, Artist of the next screens | edited in place, the Last.fm page as the preview, a short biography, Setlists, Upcoming, Full biography, Top tracks, Results back to the list |
 | Full biography | the card | rich, paragraphs and the Last.fm credit (CC BY-SA), Artist |
 | Setlists | the card, Setlists of a setlist | ten per screen (setlist.fm gives twenty per request), 🔜 upcoming, 📭 no songs yet, disabled arrows and the page counter, Artist |
-| Setlist | the setlists | rich: a table of songs with notes, sets and encores, a summary, the info of the fans and the setlist.fm link (its terms ask for it); Copy setlist, Setlists |
+| Upcoming | the card, Upcoming of a setlist | the next ten concerts, soonest first, from the first setlist.fm page (its newest twenty; an artist with more concerts ahead may miss the soonest, All on setlist.fm shows them, #50 brings a real source), a note that fans add them and no tickets are sold, Artist |
+| Setlist | the setlists, the upcoming concerts | rich: a table of songs with notes, sets and encores, a summary, the info of the fans and the setlist.fm link (its terms ask for it); Copy setlist, Setlists |
 | Top tracks | the card | edited in place, the Last.fm top tracks as buttons, Artist |
 | Track | a song of a setlist or of the top tracks | a **new** rich message, so the setlist stays: the audio player, Lyrics, Copy name, ❌ |
 | Track lyrics | Lyrics, Hide lyrics of the track | the same message: the lyrics under the player, or without them |
@@ -42,7 +43,8 @@ Telegram allows 64 bytes of callback data. `CallbackCodec` writes `action|arg|ar
 | `a` | MBID, offset, text of the search (empty without a search) | `ArtistCommand` |
 | `b` | MBID | `BiographyCommand` |
 | `l` | MBID, screen from 1 | `SetlistsCommand` |
-| `t` | setlist id, MBID, screen of the setlists to go back to | `SetlistCommand` |
+| `t` | setlist id, MBID, screen of the setlists to go back to (0: back to the upcoming concerts) | `SetlistCommand` |
+| `u` | MBID | `UpcomingCommand` |
 | `o` | MBID | `TopTracksCommand` |
 | `p` | MBID, song | `PlayCommand`, a new track message |
 | `q` | MBID, song | `PlayCommand` from the busy message, which it deletes |

@@ -75,15 +75,16 @@ public sealed class ArtistScreens
 
         var setlists = InlineKeyboardButton.WithCallbackData("📝 Setlists", _codec.Encode(CallbackActions.Setlists, mbid, "1"));
         setlists.Style = KeyboardButtonStyle.Primary;
+        var fullBiography = InlineKeyboardButton.WithCallbackData("📖 Full biography", _codec.Encode(CallbackActions.Biography, mbid));
+        InlineKeyboardButton[] more = _configuration.IsLastFmAvailable()
+            ? new[] { fullBiography, InlineKeyboardButton.WithCallbackData("📻 Top tracks", _codec.Encode(CallbackActions.TopTracks, mbid)) }
+            : new[] { fullBiography };
         var rows = new List<InlineKeyboardButton[]>
         {
-            new[] { setlists, InlineKeyboardButton.WithCallbackData("📖 Full biography", _codec.Encode(CallbackActions.Biography, mbid)) },
+            new[] { setlists, InlineKeyboardButton.WithCallbackData("📅 Upcoming", _codec.Encode(CallbackActions.Upcoming, mbid)) },
+            more,
+            LastRow(searchOffset, searchText),
         };
-        if (_configuration.IsLastFmAvailable())
-        {
-            rows.Add(new[] { InlineKeyboardButton.WithCallbackData("📻 Top tracks", _codec.Encode(CallbackActions.TopTracks, mbid)) });
-        }
-        rows.Add(LastRow(searchOffset, searchText));
         return new Screen(html, new InlineKeyboardMarkup(rows), artist[MusicServiceType.LastFm]?.ExternalUrl?.ToString());
     }
 

@@ -40,8 +40,8 @@ public class ArtistScreensTest
             Group · United States · 1981 -
             <blockquote expandable>Metallica {new string('a', ArtistScreens.MaxBiographyLength - 10)}…</blockquote>
             ---
-            📝 Setlists → l|{Mbid}|1 [Primary] | 📖 Full biography → b|{Mbid}
-            📻 Top tracks → o|{Mbid}
+            📝 Setlists → l|{Mbid}|1 [Primary] | 📅 Upcoming → u|{Mbid}
+            📖 Full biography → b|{Mbid} | 📻 Top tracks → o|{Mbid}
             ⬅️ Results → s|5|metallica | ❌ → /delete
             preview: https://www.last.fm/music/Metallica
             """.ReplaceLineEndings("\n"));
@@ -61,7 +61,8 @@ public class ArtistScreensTest
             🇺🇸 <b>Metallica</b>
             Group · United States · 1981 -
             ---
-            📝 Setlists → l|{Mbid}|1 [Primary] | 📖 Full biography → b|{Mbid}
+            📝 Setlists → l|{Mbid}|1 [Primary] | 📅 Upcoming → u|{Mbid}
+            📖 Full biography → b|{Mbid}
             ❌ → /delete
             preview: none
             """.ReplaceLineEndings("\n"));

@@ -138,6 +138,7 @@ public class BotHandlers : IBotHandlers
             CallbackActions.Biography => Route<BiographyCommand>(CommandList.COMMAND_BIOGRAPHY, callbackQuery, payload),
             CallbackActions.Setlists => Route<SetlistsCommand>(CommandList.COMMAND_SETLISTS, callbackQuery, payload),
             CallbackActions.Setlist => Route<SetlistCommand>(CommandList.COMMAND_SETLIST, callbackQuery, payload),
+            CallbackActions.Upcoming => Route<UpcomingCommand>(CommandList.COMMAND_UPCOMING, callbackQuery, payload),
             CallbackActions.TopTracks => Route<TopTracksCommand>(CommandList.COMMAND_TOP, callbackQuery, payload),
             CallbackActions.Play or CallbackActions.PlayAgain => Route<PlayCommand>(CommandList.COMMAND_TRACK, callbackQuery, payload),
             CallbackActions.ShowLyrics or CallbackActions.HideLyrics => Route<LyricsCommand>(CommandList.COMMAND_LYRIC, callbackQuery, payload),

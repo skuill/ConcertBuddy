@@ -256,6 +256,122 @@ public class SetlistScreensTest
         result.Screen.Keyboard.InlineKeyboard.First().First().CallbackData.ShouldBe($"t|{SetlistId}|{Mbid}|2");
     }
 
+    [Fact]
+    public async Task UpcomingAsync_FutureAndPast_SoonestFirstWithLinkAndBack()
+    {
+        // Arrange: setlist.fm gives the newest first; the past ones are left out.
+        Returns(1, new MusicSetlists
+        {
+            Setlist = new List<MusicSetlist>
+            {
+                Setlist("later", "20-06-2999"),
+                Setlist("sooner", "05-06-2999"),
+                Setlist("past", "01-01-2001"),
+            },
+            Total = 3,
+        });
+
+        // Act
+        var result = await _screens.UpcomingAsync(Mbid);
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.Found);
+        ScreenDump.Of(result.Screen).ShouldBe($"""
+            📅 <b>Metallica</b> · 2 upcoming concerts
+            <i>Added by fans on setlist.fm, no tickets are sold here.</i>
+            ---
+            🔜 5 Jun 2999 · Stockholm · Friends Arena → t|sooner|{Mbid}|0
+            🔜 20 Jun 2999 · Stockholm · Friends Arena → t|later|{Mbid}|0
+            🔗 All on setlist.fm
+            ⬅️ Artist → a|{Mbid}|0|
+            preview: none
+            """.ReplaceLineEndings("\n"));
+        result.Screen.Keyboard.InlineKeyboard.ElementAt(2).Single().Url.ShouldBe("https://www.setlist.fm/search?query=Metallica");
+    }
+
+    [Fact]
+    public async Task UpcomingAsync_MoreThanAScreen_TheSoonestTen()
+    {
+        // Arrange
+        var setlists = Enumerable.Range(1, 20).Select(day => Setlist($"id{day}", $"{day:D2}-01-2999")).Reverse().ToList();
+        Returns(1, new MusicSetlists { Setlist = setlists, Total = 20 });
+
+        // Act
+        var result = await _screens.UpcomingAsync(Mbid);
+
+        // Assert
+        result.Screen.Html.ShouldStartWith("📅 <b>Metallica</b> · 10 upcoming concerts");
+        result.Screen.Keyboard.InlineKeyboard.Take(10).Select(row => row.Single().CallbackData)
+            .ShouldBe(Enumerable.Range(1, 10).Select(day => $"t|id{day}|{Mbid}|0"));
+    }
+
+    [Fact]
+    public async Task UpcomingAsync_OnlyPast_NoneWithLinkAndBack()
+    {
+        // Arrange
+        Returns(1, new MusicSetlists { Setlist = new List<MusicSetlist> { Setlist("past", "01-01-2001") }, Total = 1 });
+
+        // Act
+        var result = await _screens.UpcomingAsync(Mbid);
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.NotFound);
+        ScreenDump.Of(result.Screen).ShouldBe($"""
+            📅 No upcoming concerts of <b>Metallica</b> on setlist.fm yet.
+            ---
+            🔗 All on setlist.fm
+            ⬅️ Artist → a|{Mbid}|0|
+            preview: none
+            """.ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
+    public async Task UpcomingAsync_NoSetlists_NoneWithoutLink()
+    {
+        // Arrange
+        Returns(1, null);
+
+        // Act
+        var result = await _screens.UpcomingAsync(Mbid);
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.NotFound);
+        ScreenDump.Of(result.Screen).ShouldBe($"""
+            📅 No upcoming concerts on setlist.fm yet.
+            ---
+            ⬅️ Artist → a|{Mbid}|0|
+            preview: none
+            """.ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
+    public async Task UpcomingAsync_SetlistFmDown_TryAgain()
+    {
+        // Arrange
+        A.CallTo(() => _music.SearchArtistSetlists(Mbid, 1)).ThrowsAsync(new MusicServiceUnavailableException("setlist.fm", new HttpRequestException("500")));
+
+        // Act
+        var result = await _screens.UpcomingAsync(Mbid);
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.Unavailable);
+        result.Screen.Keyboard.InlineKeyboard.First().First().CallbackData.ShouldBe($"u|{Mbid}");
+    }
+
+    [Fact]
+    public async Task SetlistAsync_FromUpcoming_BackToUpcoming()
+    {
+        // Arrange
+        A.CallTo(() => _music.SearchSetlist(SetlistId)).Returns(Setlist(SetlistId, "01-01-2999", withSongs: false));
+
+        // Act
+        var result = await _screens.SetlistAsync(SetlistId, Mbid, SetlistScreens.FromUpcoming);
+
+        // Assert
+        result.Screen.Html.ShouldContain("<p>🔜 Upcoming concert: no setlist yet.</p>");
+        ScreenDump.Of(result.Screen).ShouldEndWith($"---\n⬅️ Upcoming → u|{Mbid}\npreview: none");
+    }
+
     private void Returns(int apiPage, MusicSetlists? setlists)
     {
         A.CallTo(() => _music.SearchArtistSetlists(Mbid, apiPage)).Returns(setlists);
