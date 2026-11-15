@@ -60,4 +60,19 @@ public static class CallbackActions
     /// Hide the lyrics of the track message: mbid|song.
     /// </summary>
     public const string HideLyrics = "h";
+
+    /// <summary>
+    /// The start menu, no arguments.
+    /// </summary>
+    public const string Menu = "m";
+
+    /// <summary>
+    /// Help, no arguments.
+    /// </summary>
+    public const string Help = "w";
+
+    /// <summary>
+    /// About: version, sources, support. No arguments.
+    /// </summary>
+    public const string About = "i";
 }

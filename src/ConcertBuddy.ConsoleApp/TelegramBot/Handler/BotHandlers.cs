@@ -14,6 +14,7 @@ public class BotHandlers : IBotHandlers
 {
     private const string NoCommand = "none";
     private const string OutdatedCommandName = "outdated";
+    private const string UnknownCommandName = "unknown";
 
     private readonly ILogger<IBotHandlers> _logger;
     private readonly IServiceProvider _serviceProvider;
@@ -90,10 +91,25 @@ public class BotHandlers : IBotHandlers
             return (NoCommand, null);
         }
 
-        return message.GetSplitMessageText()[0] switch
+        var text = message.Text!.Trim();
+        if (!text.StartsWith('/'))
         {
-            CommandList.COMMAND_START => Route<UsageCommand>(CommandList.COMMAND_START, message),
-            _ => Route<SearchMessageCommand>(CommandList.COMMAND_SEARCH, message),
+            return Route<SearchMessageCommand>(CommandList.COMMAND_SEARCH, message, new SearchQuery(text));
+        }
+
+        // "/search@ConcertBuddyBot Metallica" in groups, "/search Metallica" from the command menu.
+        var parts = text.Split(' ', 2);
+        var command = parts[0].Split('@')[0].ToLowerInvariant();
+        var argument = parts.Length > 1 ? parts[1].Trim() : string.Empty;
+        return command switch
+        {
+            CommandList.COMMAND_START => Route<InfoCommand>(CommandList.COMMAND_START, message, InfoPage.Start),
+            CommandList.COMMAND_HELP => Route<InfoCommand>(CommandList.COMMAND_HELP, message, InfoPage.Help),
+            CommandList.COMMAND_ABOUT => Route<InfoCommand>(CommandList.COMMAND_ABOUT, message, InfoPage.About),
+            CommandList.COMMAND_SEARCH when argument.Length == 0 => Route<InfoCommand>(CommandList.COMMAND_SEARCH, message, InfoPage.SearchHint),
+            CommandList.COMMAND_SEARCH => Route<SearchMessageCommand>(CommandList.COMMAND_SEARCH, message, new SearchQuery(argument)),
+            // An unknown command gets the help, not a search for "/whatever".
+            _ => Route<InfoCommand>(UnknownCommandName, message, InfoPage.Help),
         };
     }
 
@@ -125,6 +141,9 @@ public class BotHandlers : IBotHandlers
             CallbackActions.TopTracks => Route<TopTracksCommand>(CommandList.COMMAND_TOP, callbackQuery, payload),
             CallbackActions.Play or CallbackActions.PlayAgain => Route<PlayCommand>(CommandList.COMMAND_TRACK, callbackQuery, payload),
             CallbackActions.ShowLyrics or CallbackActions.HideLyrics => Route<LyricsCommand>(CommandList.COMMAND_LYRIC, callbackQuery, payload),
+            CallbackActions.Menu => Route<InfoCallbackCommand>(CommandList.COMMAND_START, callbackQuery, payload),
+            CallbackActions.Help => Route<InfoCallbackCommand>(CommandList.COMMAND_HELP, callbackQuery, payload),
+            CallbackActions.About => Route<InfoCallbackCommand>(CommandList.COMMAND_ABOUT, callbackQuery, payload),
             _ => Route<OutdatedCommand>(OutdatedCommandName, callbackQuery),
         };
     }

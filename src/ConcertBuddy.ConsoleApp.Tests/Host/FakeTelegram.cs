@@ -86,6 +86,13 @@ internal sealed class FakeTelegram : HttpMessageHandler
         }
 
         var body = await ReadBodyAsync(request.Content, cancellationToken);
+        if (ProfileMethods.Contains(method))
+        {
+            // The bot sets its menu and descriptions on start: kept apart, so the chat scenarios see only their requests.
+            _profileRequests.Enqueue((method, body));
+            return ProfileResponse();
+        }
+
         _requests.Enqueue((method, body));
         switch (method)
         {
@@ -106,6 +113,17 @@ internal sealed class FakeTelegram : HttpMessageHandler
     }
 
     public Func<HttpResponseMessage> SendRichResponse { get; set; } = () => Ok(Message);
+
+    public Func<HttpResponseMessage> ProfileResponse { get; set; } = () => Ok("true");
+
+    /// <summary>
+    /// setMyCommands, setMyDescription and setMyShortDescription, in order.
+    /// </summary>
+    public IReadOnlyCollection<(string Method, JsonNode Body)> ProfileRequests => _profileRequests;
+
+    private static readonly HashSet<string> ProfileMethods = new() { "setMyCommands", "setMyDescription", "setMyShortDescription" };
+
+    private readonly ConcurrentQueue<(string Method, JsonNode Body)> _profileRequests = new();
 
     public Func<HttpResponseMessage> DeleteResponse { get; set; } = () => Ok("true");
 
