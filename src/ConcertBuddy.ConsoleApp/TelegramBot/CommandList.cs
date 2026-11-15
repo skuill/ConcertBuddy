@@ -10,6 +10,7 @@ public class CommandList
     public const string COMMAND_BIOGRAPHY = "/biography";
     public const string COMMAND_SETLISTS = "/setlists";
     public const string COMMAND_SETLIST = "/setlist";
+    public const string COMMAND_UPCOMING = "/upcoming";
     public const string COMMAND_TRACK = "/track";
     public const string COMMAND_LYRIC = "/lyric";
     public const string COMMAND_DELETE = "/delete";

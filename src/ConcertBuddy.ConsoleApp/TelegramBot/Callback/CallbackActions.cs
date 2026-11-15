@@ -32,9 +32,14 @@ public static class CallbackActions
     public const string Setlists = "l";
 
     /// <summary>
-    /// One setlist: setlist id|mbid|screen of the setlists to go back to.
+    /// One setlist: setlist id|mbid|screen of the setlists to go back to, 0 for the upcoming concerts.
     /// </summary>
     public const string Setlist = "t";
+
+    /// <summary>
+    /// The upcoming concerts of an artist on setlist.fm: mbid.
+    /// </summary>
+    public const string Upcoming = "u";
 
     /// <summary>
     /// Top tracks of an artist on Last.fm: mbid.

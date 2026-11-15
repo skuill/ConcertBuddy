@@ -9,7 +9,7 @@ using Telegram.Bot.Types;
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Command;
 
 /// <summary>
-/// One setlist as a rich message in place of the setlists.
+/// One setlist as a rich message in place of the setlists or of the upcoming concerts (screen 0).
 /// </summary>
 public class SetlistCommand : ScreenCallbackCommand
 {
@@ -28,7 +28,7 @@ public class SetlistCommand : ScreenCallbackCommand
         var setlistId = arguments[0];
         var mbid = arguments[1];
         if (setlistId.Length == 0 || !Guid.TryParse(mbid, out _)
-            || !int.TryParse(arguments[2], NumberStyles.None, CultureInfo.InvariantCulture, out var screen) || screen < 1)
+            || !int.TryParse(arguments[2], NumberStyles.None, CultureInfo.InvariantCulture, out var screen))
         {
             return null;
         }

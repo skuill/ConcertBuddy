@@ -23,6 +23,11 @@ public sealed class SetlistScreens
     public const int SetlistsPerApiPage = 20;
 
     /// <summary>
+    /// The setlists screen number of a setlist opened from the upcoming concerts: its back button leads there.
+    /// </summary>
+    public const int FromUpcoming = 0;
+
+    /// <summary>
     /// The limit of a copy_text button. Telegram counts it in UTF-8 bytes: 256 characters with "·" were rejected
     /// as BUTTON_DATA_INVALID on the dev bot.
     /// </summary>
@@ -88,7 +93,12 @@ public sealed class SetlistScreens
             return CommonScreens.Unavailable(exception.Service, SetlistData(setlistId, mbid, screen));
         }
 
-        var back = new[] { InlineKeyboardButton.WithCallbackData("⬅️ Setlists", SetlistsData(mbid, screen)) };
+        var back = new[]
+        {
+            screen == FromUpcoming
+                ? InlineKeyboardButton.WithCallbackData("⬅️ Upcoming", _codec.Encode(CallbackActions.Upcoming, mbid))
+                : InlineKeyboardButton.WithCallbackData("⬅️ Setlists", SetlistsData(mbid, screen)),
+        };
         if (setlist == null)
         {
             var html = "🤷 setlist.fm does not have this setlist any more.";
@@ -104,6 +114,44 @@ public sealed class SetlistScreens
         }
         rows.Add(back);
         return new ScreenResult(new Screen(SetlistHtml(setlist, sets, songs, mbid), new InlineKeyboardMarkup(rows), IsRich: true), CommandResult.Found);
+    }
+
+    /// <summary>
+    /// The next concerts of the artist, soonest first, from the first page of setlist.fm (its newest twenty).
+    /// An artist with more than twenty concerts ahead may miss the soonest ones: "All on setlist.fm" shows them; #50 brings a real source.
+    /// </summary>
+    public async Task<ScreenResult> UpcomingAsync(string mbid)
+    {
+        MusicSetlists? setlists;
+        try
+        {
+            setlists = await _musicSearcher.SearchArtistSetlists(mbid, 1);
+        }
+        catch (MusicServiceUnavailableException exception)
+        {
+            return CommonScreens.Unavailable(exception.Service, _codec.Encode(CallbackActions.Upcoming, mbid));
+        }
+
+        var all = setlists?.Setlist ?? new List<MusicSetlist>();
+        var artistName = all.FirstOrDefault()?.ArtistName;
+        var upcoming = all.Where(IsFuture).OrderBy(setlist => ParseDate(setlist.EventDate)).Take(SetlistsPerScreen).ToList();
+        var allOnSetlistFm = InlineKeyboardButton.WithUrl("🔗 All on setlist.fm", $"https://www.setlist.fm/search?query={Uri.EscapeDataString(artistName ?? string.Empty)}");
+        if (upcoming.Count == 0)
+        {
+            var none = artistName == null
+                ? "📅 No upcoming concerts on setlist.fm yet."
+                : $"📅 No upcoming concerts of <b>{ScreenText.Html(artistName)}</b> on setlist.fm yet.";
+            var noneRows = artistName == null ? new[] { new[] { ArtistButton(mbid) } } : new[] { new[] { allOnSetlistFm }, new[] { ArtistButton(mbid) } };
+            return new ScreenResult(new Screen(none, new InlineKeyboardMarkup(noneRows)), CommandResult.NotFound);
+        }
+
+        var rows = upcoming
+            .Select(setlist => new[] { InlineKeyboardButton.WithCallbackData(Label(setlist), SetlistData(setlist.Id ?? string.Empty, mbid, FromUpcoming)) })
+            .Append(new[] { allOnSetlistFm })
+            .Append(new[] { ArtistButton(mbid) });
+        var html = $"📅 <b>{ScreenText.Html(artistName)}</b> · {Count(upcoming.Count, "upcoming concert", "upcoming concerts")}\n"
+            + "<i>Added by fans on setlist.fm, no tickets are sold here.</i>";
+        return new ScreenResult(new Screen(html, new InlineKeyboardMarkup(rows)), CommandResult.Found);
     }
 
     public string SetlistsData(string mbid, int screen)
@@ -239,6 +287,11 @@ public sealed class SetlistScreens
             text = string.Join("\n", lines) + more;
         }
         return StringHelper.SubstringByByteLength(text, MaxCopyTextBytes);
+    }
+
+    private static DateTime ParseDate(string? date)
+    {
+        return DateTime.TryParseExact(date, "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed) ? parsed : DateTime.MaxValue;
     }
 
     private static bool IsFuture(MusicSetlist setlist)

@@ -75,6 +75,39 @@ public class SetlistScenarioTest : BotHostTestBase
     }
 
     [Fact]
+    public async Task Upcoming_ToAConcertAndBack_SameMessage()
+    {
+        // Arrange
+        var upcoming = new MusicSetlist { Id = "future1", EventDate = "01-01-2999", ArtistName = "Metallica", CityName = "Oslo", VenueName = "Unity Arena" };
+        A.CallTo(() => _music.SearchArtistSetlists(Mbid, 1)).Returns(new MusicSetlists { Setlist = new List<MusicSetlist> { upcoming }, Total = 1 });
+        A.CallTo(() => _music.SearchSetlist("future1")).Returns(upcoming);
+        var telegram = new FakeTelegram(CreateCallbackUpdate(1, $"u|{Mbid}"));
+        using var host = CreateHost(telegram, services => services.AddScoped(_ => _music));
+        await host.StartAsync(Token);
+        await WaitUntil(() => HandledLines().Count == 1);
+        var list = telegram.RequestsOf("editMessageText").Single();
+
+        // Act: open the concert, then back.
+        telegram.AddUpdate(CreateCallbackUpdate(2, ButtonData(list)[0]));
+        await WaitUntil(() => HandledLines().Count == 2);
+        var concert = telegram.RequestsOf("editMessageText").Last();
+        telegram.AddUpdate(CreateCallbackUpdate(3, ButtonData(concert).Last()));
+        await WaitUntil(() => HandledLines().Count == 3);
+        await host.StopAsync(Token);
+
+        // Assert
+        list["text"]!.GetValue<string>().ShouldStartWith("📅 <b>Metallica</b> · 1 upcoming concert\n");
+        concert["rich_message"]!["html"]!.GetValue<string>().ShouldContain("🔜 Upcoming concert: no setlist yet.");
+        telegram.RequestsOf("editMessageText").Last()["text"]!.GetValue<string>().ShouldBe(list["text"]!.GetValue<string>());
+        HandledLines().Select(x => x.Split(" in Private")[0]).ShouldBe(new[]
+        {
+            "Handled update: CallbackQuery /upcoming",
+            "Handled update: CallbackQuery /setlist",
+            "Handled update: CallbackQuery /upcoming",
+        });
+    }
+
+    [Fact]
     public async Task Biography_FromTheCard_RichInTheSameMessage()
     {
         // Arrange
@@ -97,7 +130,8 @@ public class SetlistScenarioTest : BotHostTestBase
     [InlineData($"l|{Mbid}|0")]
     [InlineData($"l|{Mbid}")]
     [InlineData($"t||{Mbid}|1")]
-    [InlineData($"t|{SetlistId}|{Mbid}|0")]
+    [InlineData($"t|{SetlistId}|{Mbid}|-1")]
+    [InlineData("u|not-a-guid")]
     [InlineData($"t|{SetlistId}|x|1")]
     [InlineData("b|not-a-guid")]
     public async Task Button_BadArguments_Outdated(string data)
