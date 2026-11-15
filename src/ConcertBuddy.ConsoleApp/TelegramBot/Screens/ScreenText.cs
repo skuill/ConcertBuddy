@@ -75,16 +75,15 @@ public static partial class ScreenText
     }
 
     /// <summary>
-    /// "31 Oct 2026" from the setlist.fm date "31-10-2026"; any other text stays as it is.
+    /// "31 Oct 2026" from the setlist.fm date "31-10-2026"; any other text stays as it is. The invariant culture has the
+    /// English month names and exists in the container, where .NET has no named cultures (#89).
     /// </summary>
     public static string Date(string? date)
     {
         return DateTime.TryParseExact(date, "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
-            ? parsed.ToString("d MMM yyyy", English)
+            ? parsed.ToString("d MMM yyyy", CultureInfo.InvariantCulture)
             : date ?? string.Empty;
     }
-
-    private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-US");
 
     [GeneratedRegex("<.*?>", RegexOptions.Singleline)]
     private static partial Regex HtmlTag();
