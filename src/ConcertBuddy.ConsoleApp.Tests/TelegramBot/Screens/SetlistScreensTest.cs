@@ -1,5 +1,6 @@
 using ConcertBuddy.ConsoleApp.TelegramBot.Callback;
 using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
+using ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 using ConcertBuddy.ConsoleApp.TelegramBot.Screens;
 using FakeItEasy;
 using MusicSearcher;
@@ -15,11 +16,12 @@ public class SetlistScreensTest
     private const string SetlistId = "4b48efd6";
 
     private readonly IMusicSearcherClient _music = A.Fake<IMusicSearcherClient>();
+    private readonly BotIdentity _identity = new() { Username = "test_bot" };
     private readonly SetlistScreens _screens;
 
     public SetlistScreensTest()
     {
-        _screens = new SetlistScreens(_music, new CallbackCodec());
+        _screens = new SetlistScreens(_music, new CallbackCodec(), _identity);
     }
 
     [Fact]
@@ -159,8 +161,12 @@ public class SetlistScreensTest
             + "</table>"
             + "<blockquote>ℹ️ Rain &amp; thunder</blockquote>"
             + "<footer>Tap a song to listen · Setlist from <a href=\"https://www.setlist.fm/setlist/metallica/2001/x.html\">setlist.fm</a></footer>");
-        result.Screen.Keyboard.InlineKeyboard.First().Single().CopyText!.Text.ShouldBe("Metallica · 31 Oct 2001 · Stockholm\n1. Creeping Death\n2. Whiskey in the Jar\n3. Seek & Destroy");
-        result.Screen.Keyboard.InlineKeyboard.Last().Single().CallbackData.ShouldBe($"l|{Mbid}|3");
+        var rows = result.Screen.Keyboard.InlineKeyboard.Select(row => row.ToList()).ToList();
+        rows[0][0].CopyText!.Text.ShouldBe("Metallica · 31 Oct 2001 · Stockholm\n1. Creeping Death\n2. Whiskey in the Jar\n3. Seek & Destroy");
+        rows[0][1].Text.ShouldBe("↗️ Send to a chat");
+        rows[0][1].SwitchInlineQuery.ShouldBe($"s_{SetlistId}");
+        rows[1].Single().Url.ShouldBe("https://t.me/share/url?url=https%3A%2F%2Ft.me%2Ftest_bot%3Fstart%3Ds_4b48efd6&text=Metallica%20%C2%B7%2031%20Oct%202001%20%C2%B7%20Stockholm");
+        rows[2].Single().CallbackData.ShouldBe($"l|{Mbid}|3");
     }
 
     [Fact]
@@ -195,7 +201,7 @@ public class SetlistScreensTest
         A.CallTo(() => _music.SearchSetlist(SetlistId)).Returns(setlist);
 
         // Act
-        var copy = (await _screens.SetlistAsync(SetlistId, Mbid, 1)).Screen.Keyboard.InlineKeyboard.First().Single().CopyText!.Text;
+        var copy = (await _screens.SetlistAsync(SetlistId, Mbid, 1)).Screen.Keyboard.InlineKeyboard.First().First().CopyText!.Text;
 
         // Assert: within the limit, whole song lines, and the next song would not fit any more.
         Encoding.UTF8.GetByteCount(copy).ShouldBeLessThanOrEqualTo(SetlistScreens.MaxCopyTextBytes);
@@ -220,7 +226,8 @@ public class SetlistScreensTest
         // Assert
         screen.Html.ShouldContain(expected);
         screen.Html.ShouldContain("<footer>Setlist from <a href=\"https://www.setlist.fm/search?query=Metallica\">setlist.fm</a></footer>");
-        screen.Keyboard.InlineKeyboard.Single().Single().Text.ShouldBe("⬅️ Setlists");
+        screen.Keyboard.InlineKeyboard.Select(row => string.Join(" | ", row.Select(button => button.Text)))
+            .ShouldBe(new[] { "↗️ Send to a chat", "🔗 Share link", "⬅️ Setlists" });
     }
 
     [Fact]
@@ -369,7 +376,7 @@ public class SetlistScreensTest
 
         // Assert
         result.Screen.Html.ShouldContain("<p>🔜 Upcoming concert: no setlist yet.</p>");
-        ScreenDump.Of(result.Screen).ShouldEndWith($"---\n⬅️ Upcoming → u|{Mbid}\npreview: none");
+        ScreenDump.Of(result.Screen).ShouldEndWith($"\n⬅️ Upcoming → u|{Mbid}\npreview: none");
     }
 
     private void Returns(int apiPage, MusicSetlists? setlists)

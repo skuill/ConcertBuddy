@@ -19,7 +19,8 @@ A flow keeps one message and replaces what it shows: a `Screen` is the HTML text
 | Full biography | the card | rich, paragraphs and the Last.fm credit (CC BY-SA), Artist |
 | Setlists | the card, Setlists of a setlist | ten per screen (setlist.fm gives twenty per request), 🔜 upcoming, 📭 no songs yet, disabled arrows and the page counter, Artist |
 | Upcoming | the card, Upcoming of a setlist | the next ten concerts, soonest first, from the first setlist.fm page (its newest twenty; an artist with more concerts ahead may miss the soonest, All on setlist.fm shows them, #50 brings a real source), a note that fans add them and no tickets are sold, Artist |
-| Setlist | the setlists, the upcoming concerts | rich: a table of songs with notes, sets and encores, a summary, the info of the fans and the setlist.fm link (its terms ask for it); Copy setlist, Setlists |
+| Setlist | the setlists, the upcoming concerts, a share link | rich: a table of songs with notes, sets and encores, a summary, the info of the fans and the setlist.fm link (its terms ask for it); Copy setlist, Send to a chat, Share link, Setlists (or Upcoming) |
+| Shared setlist card | Send to a chat, in any chat | sent by the user through inline mode: the same table with the song names as text, Open in ConcertBuddy |
 | Top tracks | the card | edited in place, the Last.fm top tracks as buttons, Artist |
 | Track | a song of a setlist or of the top tracks | a **new** rich message, so the setlist stays: the audio player, Lyrics, Copy name, ❌ |
 | Track lyrics | Lyrics, Hide lyrics of the track | the same message: the lyrics under the player, or without them |
@@ -45,6 +46,7 @@ Telegram allows 64 bytes of callback data. `CallbackCodec` writes `action|arg|ar
 | `l` | MBID, screen from 1 | `SetlistsCommand` |
 | `t` | setlist id, MBID, screen of the setlists to go back to (0: back to the upcoming concerts) | `SetlistCommand` |
 | `u` | MBID | `UpcomingCommand` |
+| `k` | setlist id | `SharedSetlistCallbackCommand`, Try again of a share link |
 | `o` | MBID | `TopTracksCommand` |
 | `p` | MBID, song | `PlayCommand`, a new track message |
 | `q` | MBID, song | `PlayCommand` from the busy message, which it deletes |
@@ -52,6 +54,13 @@ Telegram allows 64 bytes of callback data. `CallbackCodec` writes `action|arg|ar
 | `m`, `w`, `i` | none | `InfoCallbackCommand`: Start (menu), Help, About |
 
 Data that starts with `/` belongs to the old commands; only `/delete` is left (the ❌ button). A button the bot does not know (any other old command, a stored id that is gone, wrong arguments) answers "This button is outdated" as an alert.
+
+## Sharing a setlist
+
+- **Send to a chat** is a `switch_inline_query` button with `s_<setlist id>`: Telegram asks for a chat and types `@bot s_<id>` there, the bot answers the inline query (`ShareCommand`) with one article, the setlist card. The song names are text: a callback button in someone else's chat would come back without a message the bot can edit. The card has Open in ConcertBuddy, a link to the bot. Other inline queries get no results for now (search by name: #14).
+- **Share link** opens Telegram's share dialog with `https://t.me/<bot>?start=s_<setlist id>` and a caption. The bot username comes from `getMe` on start (`BotIdentity`): the test and the production bot differ.
+- **Opening a link** sends `/start s_<setlist id>`: the bot answers "Opening the shared setlist…" and edits it into the setlist with all its buttons (`SharedSetlistCommand`); Setlists leads to the first screen of the artist's setlists.
+- Inline mode must be on in BotFather (`/setinline`) for each bot, otherwise Telegram does not send the inline queries. The bot asks for inline queries in every `getUpdates` (`allowed_updates`), because Telegram keeps the list of the last request that set one.
 
 ## Commands and the bot profile
 

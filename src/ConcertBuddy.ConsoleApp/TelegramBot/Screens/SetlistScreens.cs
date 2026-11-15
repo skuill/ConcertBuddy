@@ -1,5 +1,6 @@
 using ConcertBuddy.ConsoleApp.TelegramBot.Callback;
 using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
+using ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
 using MusicSearcher;
 using MusicSearcher.Model;
@@ -33,13 +34,20 @@ public sealed class SetlistScreens
     /// </summary>
     public const int MaxCopyTextBytes = 256;
 
+    /// <summary>
+    /// The start parameter of a shared setlist: t.me/&lt;bot&gt;?start=s_&lt;setlist id&gt;, and the inline query of "Send to a chat".
+    /// </summary>
+    public const string SharePrefix = "s_";
+
     private readonly IMusicSearcherClient _musicSearcher;
     private readonly CallbackCodec _codec;
+    private readonly BotIdentity _botIdentity;
 
-    public SetlistScreens(IMusicSearcherClient musicSearcher, CallbackCodec codec)
+    public SetlistScreens(IMusicSearcherClient musicSearcher, CallbackCodec codec, BotIdentity botIdentity)
     {
         _musicSearcher = musicSearcher;
         _codec = codec;
+        _botIdentity = botIdentity;
     }
 
     public async Task<ScreenResult> SetlistsAsync(string mbid, int screen)
@@ -99,21 +107,85 @@ public sealed class SetlistScreens
                 ? InlineKeyboardButton.WithCallbackData("⬅️ Upcoming", _codec.Encode(CallbackActions.Upcoming, mbid))
                 : InlineKeyboardButton.WithCallbackData("⬅️ Setlists", SetlistsData(mbid, screen)),
         };
+        return setlist == null ? Gone(back) : Setlist(setlist, mbid, back);
+    }
+
+    /// <summary>
+    /// A setlist opened from a share link: the artist comes with the setlist, Setlists leads to its first screen.
+    /// </summary>
+    public async Task<ScreenResult> SharedSetlistAsync(string setlistId)
+    {
+        MusicSetlist? setlist;
+        try
+        {
+            setlist = await _musicSearcher.SearchSetlist(setlistId);
+        }
+        catch (MusicServiceUnavailableException exception)
+        {
+            return CommonScreens.Unavailable(exception.Service, _codec.Encode(CallbackActions.SharedSetlist, setlistId));
+        }
+
+        var mbid = setlist?.ArtistMBID;
+        var back = new[] { mbid == null ? MenuButton() : InlineKeyboardButton.WithCallbackData("⬅️ Setlists", SetlistsData(mbid, 1)) };
+        return setlist == null ? Gone(back) : Setlist(setlist, mbid!, back);
+    }
+
+    /// <summary>
+    /// The setlist card for "Send to a chat": the same table, the song names are text (a button in someone else's chat
+    /// would come back to the bot without a message to edit), and a button that opens the setlist in the bot.
+    /// Null when setlist.fm has no such setlist.
+    /// </summary>
+    /// <exception cref="MusicServiceUnavailableException">setlist.fm did not answer.</exception>
+    public async Task<SharedCard?> SharedCardAsync(string setlistId)
+    {
+        var setlist = await _musicSearcher.SearchSetlist(setlistId);
         if (setlist == null)
         {
-            var html = "🤷 setlist.fm does not have this setlist any more.";
-            return new ScreenResult(new Screen(html, new InlineKeyboardMarkup(new[] { back })), CommandResult.NotFound);
+            return null;
         }
 
         var sets = setlist.Sets?.Set ?? new List<MusicSet>();
         var songs = sets.SelectMany(set => set.Songs ?? new List<MusicSong>()).ToList();
-        var rows = new List<InlineKeyboardButton[]>();
-        if (songs.Count > 0)
+        var open = _botIdentity.StartLink(SharePrefix + setlistId);
+        var keyboard = open == null ? null : new InlineKeyboardMarkup(new[] { new[] { InlineKeyboardButton.WithUrl("🎸 Open in ConcertBuddy", open) } });
+        return new SharedCard(
+            $"{setlist.ArtistName} · {ScreenText.Date(setlist.EventDate)}",
+            string.Join(", ", new[] { setlist.VenueName, setlist.CityName }.Where(part => !string.IsNullOrWhiteSpace(part))),
+            SetlistHtml(setlist, sets, songs, mbid: null),
+            keyboard);
+    }
+
+    private ScreenResult Setlist(MusicSetlist setlist, string mbid, InlineKeyboardButton[] back)
+    {
+        var sets = setlist.Sets?.Set ?? new List<MusicSet>();
+        var songs = sets.SelectMany(set => set.Songs ?? new List<MusicSong>()).ToList();
+        var share = InlineKeyboardButton.WithSwitchInlineQuery("↗️ Send to a chat", SharePrefix + setlist.Id);
+        var rows = new List<InlineKeyboardButton[]>
         {
-            rows.Add(new[] { new InlineKeyboardButton("📋 Copy setlist") { CopyText = new CopyTextButton { Text = CopyText(setlist, songs) } } });
+            songs.Count > 0
+                ? new[] { new InlineKeyboardButton("📋 Copy setlist") { CopyText = new CopyTextButton { Text = CopyText(setlist, songs) } }, share }
+                : new[] { share },
+        };
+        var link = _botIdentity.StartLink(SharePrefix + setlist.Id);
+        if (link != null)
+        {
+            // Telegram's own share dialog: the friend gets a link that opens this setlist in the bot.
+            var caption = $"{setlist.ArtistName} · {ScreenText.Date(setlist.EventDate)} · {setlist.CityName}";
+            rows.Add(new[] { InlineKeyboardButton.WithUrl("🔗 Share link", $"https://t.me/share/url?url={Uri.EscapeDataString(link)}&text={Uri.EscapeDataString(caption)}") });
         }
         rows.Add(back);
         return new ScreenResult(new Screen(SetlistHtml(setlist, sets, songs, mbid), new InlineKeyboardMarkup(rows), IsRich: true), CommandResult.Found);
+    }
+
+    private static ScreenResult Gone(InlineKeyboardButton[] back)
+    {
+        var html = "🤷 setlist.fm does not have this setlist any more.";
+        return new ScreenResult(new Screen(html, new InlineKeyboardMarkup(new[] { back })), CommandResult.NotFound);
+    }
+
+    private InlineKeyboardButton MenuButton()
+    {
+        return InlineKeyboardButton.WithCallbackData("🏠 Menu", _codec.Encode(CallbackActions.Menu));
     }
 
     /// <summary>
@@ -169,7 +241,10 @@ public sealed class SetlistScreens
         return InlineKeyboardButton.WithCallbackData("⬅️ Artist", _codec.Encode(CallbackActions.Artist, mbid, Number(0), string.Empty));
     }
 
-    private string SetlistHtml(MusicSetlist setlist, List<MusicSet> sets, List<MusicSong> songs, string mbid)
+    /// <summary>
+    /// Without an MBID (a card shared to another chat) the song names are text, not buttons.
+    /// </summary>
+    private string SetlistHtml(MusicSetlist setlist, List<MusicSet> sets, List<MusicSong> songs, string? mbid)
     {
         var html = new StringBuilder();
         html.Append($"<h3>{ScreenText.Html(setlist.ArtistName)}</h3>");
@@ -196,11 +271,11 @@ public sealed class SetlistScreens
 
         // setlist.fm asks to link its page wherever its data is shown.
         var url = setlist.Url ?? $"https://www.setlist.fm/search?query={Uri.EscapeDataString(setlist.ArtistName ?? string.Empty)}";
-        html.Append($"<footer>{(songs.Count > 0 ? "Tap a song to listen · " : string.Empty)}Setlist from <a href=\"{ScreenText.Html(url)}\">setlist.fm</a></footer>");
+        html.Append($"<footer>{(songs.Count > 0 && mbid != null ? "Tap a song to listen · " : string.Empty)}Setlist from <a href=\"{ScreenText.Html(url)}\">setlist.fm</a></footer>");
         return html.ToString();
     }
 
-    private void AppendTable(StringBuilder html, List<MusicSet> sets, List<MusicSong> songs, string mbid)
+    private void AppendTable(StringBuilder html, List<MusicSet> sets, List<MusicSong> songs, string? mbid)
     {
         var hasNotes = songs.Any(song => Note(song).Length > 0);
         var columns = hasNotes ? 3 : 2;
@@ -219,6 +294,8 @@ public sealed class SetlistScreens
                 // The song name is a callback button styled as a link; a tape is not a song to listen to.
                 var name = song.Tape || string.IsNullOrWhiteSpace(song.Name)
                     ? $"<i>{ScreenText.Html(song.Name)}</i>"
+                    : mbid == null
+                    ? ScreenText.Html(song.Name)
                     : $"<tg-button type=\"callback_data\" style=\"link\" data=\"{ScreenText.Html(_codec.Encode(CallbackActions.Play, mbid, song.Name))}\">{ScreenText.Html(song.Name)}</tg-button>";
                 var note = hasNotes ? $"<td>{ScreenText.Html(Note(song))}</td>" : string.Empty;
                 html.Append($"<tr><td>{(song.Tape ? string.Empty : Number(number++))}</td><td>{name}</td>{note}</tr>");

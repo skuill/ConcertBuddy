@@ -2,6 +2,7 @@
 using ConcertBuddy.ConsoleApp.TelegramBot.Command;
 using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Helper;
+using ConcertBuddy.ConsoleApp.TelegramBot.Screens;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
@@ -67,7 +68,7 @@ public class BotHandlers : IBotHandlers
             "Handled update: {UpdateType} {Command:l} in {ChatType} chat from user {UserKey:l}: {Result} in {ElapsedMs} ms",
             update.Type,
             commandName,
-            GetChat(update)?.Type,
+            GetChatType(update),
             _userKeys.Get(GetUserId(update)),
             result,
             (long)_timeProvider.GetElapsedTime(startTimestamp).TotalMilliseconds);
@@ -80,6 +81,7 @@ public class BotHandlers : IBotHandlers
             UpdateType.Message => FindMessageCommand(update.Message!),
             UpdateType.EditedMessage => FindMessageCommand(update.EditedMessage!),
             UpdateType.CallbackQuery => FindCallbackCommand(update.CallbackQuery!),
+            UpdateType.InlineQuery => Route<ShareCommand>(CommandList.COMMAND_SHARE, update.InlineQuery!),
             _ => (NoCommand, null),
         };
     }
@@ -103,6 +105,9 @@ public class BotHandlers : IBotHandlers
         var argument = parts.Length > 1 ? parts[1].Trim() : string.Empty;
         return command switch
         {
+            // A share link: t.me/<bot>?start=s_<setlist id> comes as "/start s_<setlist id>".
+            CommandList.COMMAND_START when argument.StartsWith(SetlistScreens.SharePrefix, StringComparison.Ordinal) && ShareCommand.IsSetlistId(argument[SetlistScreens.SharePrefix.Length..])
+                => Route<SharedSetlistCommand>(CommandList.COMMAND_SHARE, message, new SharedSetlistId(argument[SetlistScreens.SharePrefix.Length..])),
             CommandList.COMMAND_START => Route<InfoCommand>(CommandList.COMMAND_START, message, InfoPage.Start),
             CommandList.COMMAND_HELP => Route<InfoCommand>(CommandList.COMMAND_HELP, message, InfoPage.Help),
             CommandList.COMMAND_ABOUT => Route<InfoCommand>(CommandList.COMMAND_ABOUT, message, InfoPage.About),
@@ -139,6 +144,7 @@ public class BotHandlers : IBotHandlers
             CallbackActions.Setlists => Route<SetlistsCommand>(CommandList.COMMAND_SETLISTS, callbackQuery, payload),
             CallbackActions.Setlist => Route<SetlistCommand>(CommandList.COMMAND_SETLIST, callbackQuery, payload),
             CallbackActions.Upcoming => Route<UpcomingCommand>(CommandList.COMMAND_UPCOMING, callbackQuery, payload),
+            CallbackActions.SharedSetlist => Route<SharedSetlistCallbackCommand>(CommandList.COMMAND_SHARE, callbackQuery, payload),
             CallbackActions.TopTracks => Route<TopTracksCommand>(CommandList.COMMAND_TOP, callbackQuery, payload),
             CallbackActions.Play or CallbackActions.PlayAgain => Route<PlayCommand>(CommandList.COMMAND_TRACK, callbackQuery, payload),
             CallbackActions.ShowLyrics or CallbackActions.HideLyrics => Route<LyricsCommand>(CommandList.COMMAND_LYRIC, callbackQuery, payload),
@@ -196,7 +202,15 @@ public class BotHandlers : IBotHandlers
 
     private static long? GetUserId(Update update)
     {
-        return (update.Message?.From ?? update.EditedMessage?.From ?? update.CallbackQuery?.From)?.Id;
+        return (update.Message?.From ?? update.EditedMessage?.From ?? update.CallbackQuery?.From ?? update.InlineQuery?.From)?.Id;
+    }
+
+    /// <summary>
+    /// An inline query has no chat, only the type of the chat it was typed in (when Telegram knows it).
+    /// </summary>
+    private static string GetChatType(Update update)
+    {
+        return GetChat(update)?.Type.ToString() ?? update.InlineQuery?.ChatType?.ToString() ?? "no";
     }
 
     private static Chat? GetChat(Update update)

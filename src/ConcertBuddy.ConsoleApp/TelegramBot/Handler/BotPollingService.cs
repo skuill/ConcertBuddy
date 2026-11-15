@@ -7,6 +7,7 @@ using System.Reflection;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace ConcertBuddy.ConsoleApp.TelegramBot.Handler;
 
@@ -25,8 +26,15 @@ public sealed class BotPollingService : BackgroundService
     // Several updates at once: a slow command (a track download, a lyrics search) must not hold the other users.
     internal const int MaxParallelUpdates = 8;
 
+    /// <summary>
+    /// Telegram keeps the last list it was given, so it is sent with every request: an older bot version without
+    /// inline queries in it would otherwise keep "Send to a chat" silent.
+    /// </summary>
+    internal static readonly UpdateType[] AllowedUpdates = { UpdateType.Message, UpdateType.EditedMessage, UpdateType.CallbackQuery, UpdateType.InlineQuery };
+
     private readonly ITelegramBotClient _botClient;
     private readonly BotProfile _botProfile;
+    private readonly BotIdentity _botIdentity;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHostEnvironment _environment;
     private readonly TimeProvider _timeProvider;
@@ -40,6 +48,7 @@ public sealed class BotPollingService : BackgroundService
     public BotPollingService(
         ITelegramBotClient botClient,
         BotProfile botProfile,
+        BotIdentity botIdentity,
         IServiceScopeFactory scopeFactory,
         IHostEnvironment environment,
         TimeProvider timeProvider,
@@ -47,6 +56,7 @@ public sealed class BotPollingService : BackgroundService
     {
         _botClient = botClient;
         _botProfile = botProfile;
+        _botIdentity = botIdentity;
         _scopeFactory = scopeFactory;
         _environment = environment;
         _timeProvider = timeProvider;
@@ -87,7 +97,7 @@ public sealed class BotPollingService : BackgroundService
                     await _botProfile.SetUpAsync(stoppingToken);
                 }
 
-                var updates = await _botClient.GetUpdates(offset, timeout: PollingTimeoutSeconds, cancellationToken: stoppingToken);
+                var updates = await _botClient.GetUpdates(offset, timeout: PollingTimeoutSeconds, allowedUpdates: AllowedUpdates, cancellationToken: stoppingToken);
                 OnPollingSucceeded();
 
                 foreach (var update in updates)
@@ -131,6 +141,7 @@ public sealed class BotPollingService : BackgroundService
     private async Task LogStartAsync(CancellationToken stoppingToken)
     {
         var botUser = await _botClient.GetMe(stoppingToken);
+        _botIdentity.Username = botUser.Username;
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         _logger.LogInformation(
             "Bot {BotName:l} [{BotId}] start listening. Version: [{Version}]. Environment: [{Environment}]",
