@@ -13,10 +13,10 @@ jobs:
   build_solution:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.0.x
         
@@ -38,15 +38,35 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: false
       
+  # Every pull request and push builds the image like the release does and starts it once, so a broken Dockerfile or a
+  # runtime problem of the Alpine image (no named cultures, #89) shows up before a release.
+  docker_image:
+    runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Build the image
+      run: docker build -t concertbuddy:check -f src/ConcertBuddy.ConsoleApp/Dockerfile src
+
+    - name: Start the image
+      # Without settings the bot must stop with the validation message: the runtime and the configuration load in the container.
+      run: |
+        set +e
+        docker run --rm concertbuddy:check > run.log 2>&1
+        code=$?
+        cat run.log
+        test "$code" -ne 0 && grep -q "Configuration:TelegramToken is required." run.log
+
   publish_docker_image:
     needs: build_solution
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/') # runs only when release with a new tag
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     
     - name: Log in to Docker Hub
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -68,7 +88,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/') # runs only when release with a new tag
     steps:
       - name: Deploy to Digital Ocean droplet via SSH action
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.DIGITALOCEAN_HOST }}
           username: ${{ secrets.DIGITALOCEAN_USERNAME }}

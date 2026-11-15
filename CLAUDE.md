@@ -4,7 +4,9 @@ Notes for AI coding agents working in this repository. Personal or machine-speci
 
 ## Build
 - .NET 10 console app, solution `src/ConcertBuddy.sln`; target framework in `src/Directory.Build.props`, package versions only in `src/Directory.Packages.props`.
-- `dotnet build src/ConcertBuddy.sln --configuration Release` (same as CI, CI does not run tests yet).
+- `dotnet build src/ConcertBuddy.sln --configuration Release` (same as CI; CI also runs the unit tests and builds and starts the Docker image on every pull request).
+- The bot runs on the Alpine image without named cultures: `InvariantGlobalization` is on for all projects (`src/Directory.Build.props`), never ask for a culture like `en-US` (#89).
+- Check a change in the Docker image built like for the server, on the dev bot, not only with `dotnet run`: see `docs/testing.md`.
 
 ## Layout
 - Bot commands: `src/ConcertBuddy.ConsoleApp/TelegramBot/Command/`; routing `TelegramBot/Handler/BotHandlers.cs`.
