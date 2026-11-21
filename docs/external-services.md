@@ -10,7 +10,18 @@ How the bot calls the music services. Settings: `src/MusicSearcher/Http/`.
 
 ## Retries
 
-For MusicBrainz and Setlist.fm: up to 3 retries after 2, 4 and 8 seconds, after `408`, `429`, `5xx`, network errors and a timeout of 15 seconds per attempt. The delays are always ours: a busy MusicBrainz sends `Retry-After: 0` or `1`, and following it made all retries come at once and fail too.
+Retries come after `408`, `429`, `5xx`, network errors and a timeout of 15 seconds per attempt:
+
+- **MusicBrainz:** up to 5 retries, 1 second apart (6 attempts in about 6 seconds).
+- **Setlist.fm:** up to 3 retries after 2, 4 and 8 seconds.
+
+The delays are always ours: a busy MusicBrainz sends `Retry-After: 0` or `1`, and following it made all retries come at once and fail too.
+
+### A busy MusicBrainz
+
+When MusicBrainz is overloaded (often in the European evening), it sheds requests of all clients, not ours for our rate: `503` with `X-RateLimit-Zone: global` and `X-RateLimit-Who: global`, or `X-RateLimit-Zone: search` and `X-RateLimit-Who: search-shed`, always with `Retry-After: 1`. Measured on 2026-11-21 (#93): 35 of 60 searches 1.1 seconds apart got `503`, mixed with successes and at most 5 in a row; a new connection or a pause before the request made no difference. Each request is shed on its own, so many attempts one second apart work better than a few with long delays: four attempts all failed with a chance of about 11%, six of about 4%. When all of them fail, the user gets "busy, try again" (Last.fm as a fallback: #91).
+
+`MusicBrainzBusyLogger` logs every busy answer with these headers and the time since the previous request (`docs/logging.md`).
 
 Requests over the limit wait in a queue of up to 20 requests; when the queue is full, the request fails.
 

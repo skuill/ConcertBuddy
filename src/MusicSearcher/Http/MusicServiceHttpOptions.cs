@@ -7,9 +7,21 @@ namespace MusicSearcher.Http;
 /// </summary>
 public sealed class MusicServiceHttpOptions
 {
-    public int MaxRetryAttempts { get; init; } = 3;
+    /// <summary>
+    /// A busy MusicBrainz sheds each request on its own, in the evening about every second one, without long busy
+    /// windows (measured in #93): more attempts one second apart get through sooner than long delays. Six attempts take
+    /// about 6 seconds, and our limiter keeps them at one request per second.
+    /// </summary>
+    public int MusicBrainzMaxRetryAttempts { get; init; } = 5;
 
-    public TimeSpan RetryDelay { get; init; } = TimeSpan.FromSeconds(2);
+    public TimeSpan MusicBrainzRetryDelay { get; init; } = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    /// Setlist.fm: retries after 2, 4 and 8 seconds.
+    /// </summary>
+    public int SetlistFmMaxRetryAttempts { get; init; } = 3;
+
+    public TimeSpan SetlistFmRetryDelay { get; init; } = TimeSpan.FromSeconds(2);
 
     public TimeSpan AttemptTimeout { get; init; } = TimeSpan.FromSeconds(15);
 

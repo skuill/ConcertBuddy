@@ -1,6 +1,7 @@
 using Hqub.MusicBrainz;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
+using Microsoft.Extensions.Logging;
 using Polly;
 using System.Net;
 using System.Reflection;
@@ -20,19 +21,25 @@ public static class MusicServiceHttpClients
         options ??= new MusicServiceHttpOptions();
 
         // RemoveAllLoggers: the default handlers write two lines per request, the retries are logged by the resilience handler.
-        services.AddHttpClient(MusicBrainzClientName, client =>
+        var musicBrainz = services.AddHttpClient(MusicBrainzClientName, client =>
             {
                 client.BaseAddress = new Uri(MusicBrainzClient.ServiceBaseAddress);
                 client.DefaultRequestHeaders.UserAgent.ParseAdd(GetUserAgent());
             })
             .RemoveAllLoggers()
-            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AutomaticDecompression = DecompressionMethods.All })
-            .AddResilienceHandler(MusicBrainzClientName, builder => ConfigureResilience(builder, options, options.MusicBrainzRateLimiter));
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AutomaticDecompression = DecompressionMethods.All });
+        musicBrainz.AddResilienceHandler(MusicBrainzClientName, builder => ConfigureResilience(
+            builder, options, options.MusicBrainzRateLimiter, options.MusicBrainzMaxRetryAttempts, options.MusicBrainzRetryDelay, DelayBackoffType.Constant));
+        // After the retries, so inside them: every attempt is logged.
+        musicBrainz.AddHttpMessageHandler(provider => new MusicBrainzBusyLogger(
+            provider.GetRequiredService<ILogger<MusicBrainzBusyLogger>>(),
+            provider.GetService<TimeProvider>() ?? TimeProvider.System));
 
         services.AddHttpClient(SetlistFmClientName)
             .RemoveAllLoggers()
             .AddHttpMessageHandler(() => new EnsureSuccessHandler())
-            .AddResilienceHandler(SetlistFmClientName, builder => ConfigureResilience(builder, options, options.SetlistFmRateLimiter));
+            .AddResilienceHandler(SetlistFmClientName, builder => ConfigureResilience(
+                builder, options, options.SetlistFmRateLimiter, options.SetlistFmMaxRetryAttempts, options.SetlistFmRetryDelay, DelayBackoffType.Exponential));
 
         services.AddScoped(provider => new MusicBrainzClient(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(MusicBrainzClientName)));
@@ -43,15 +50,18 @@ public static class MusicServiceHttpClients
     private static void ConfigureResilience(
         ResiliencePipelineBuilder<HttpResponseMessage> builder,
         MusicServiceHttpOptions options,
-        RateLimiter rateLimiter)
+        RateLimiter rateLimiter,
+        int maxRetryAttempts,
+        TimeSpan retryDelay,
+        DelayBackoffType backoffType)
     {
         // The order matters: every retry waits for the limiter, and the timeout does not count the time in its queue.
         builder
             .AddRetry(new HttpRetryStrategyOptions
             {
-                MaxRetryAttempts = options.MaxRetryAttempts,
-                Delay = options.RetryDelay,
-                BackoffType = DelayBackoffType.Exponential,
+                MaxRetryAttempts = maxRetryAttempts,
+                Delay = retryDelay,
+                BackoffType = backoffType,
                 // No jitter: one bot instance does not need it to spread its retries.
                 UseJitter = false,
                 // Our delays, not Retry-After: a busy MusicBrainz sends 503 with "Retry-After: 0" or 1, so the retries came

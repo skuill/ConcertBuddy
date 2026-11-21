@@ -15,4 +15,9 @@ public enum CommandResult
     /// A button of an older bot run, the user got "This button is outdated".
     /// </summary>
     Outdated,
+
+    /// <summary>
+    /// A newer tap on the same message ended first: this screen was dropped, the message keeps the newer one (#92).
+    /// </summary>
+    Superseded,
 }

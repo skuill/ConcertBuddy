@@ -68,10 +68,16 @@ A message that starts with `/` is a command: `/start`, `/help`, `/about`, `/sear
 
 On every start `BotProfile` sets the command menu (for private chats and for all groups) and the descriptions ("What can this bot do?" and the short one of the profile) from code, so they always match what the bot can do. What is set in BotFather by hand is overwritten; BotFather keeps the name, the photo and inline mode. If Telegram rejects them, one Warning is logged and the bot works on.
 
+## The latest tap wins
+
+Updates are handled in parallel, and a tap that waits for MusicBrainz retries can end seconds after a newer tap on the same message. So a screen command takes the next version of its message (`ScreenVersions`, by chat and message id) before it does anything, and edits the message only while that version is still the latest: an older tap that ends later drops its screen, and the message keeps the newer one (#92). A message is kept in `ScreenVersions` only while a tap on it is in progress. New messages (a search, a track) and other messages are not affected.
+
+The older tap still does its work (the music services have no cancellation here); only its screen is dropped.
+
 ## Answering buttons
 
 Every button press is answered, otherwise the button keeps spinning. Screen commands answer at once, before the music services are asked, and set `AnsweredCallback`; slow ones (a track, the lyrics) answer with a toast ("⏳ Loading One…") and the track also sends the "sending a file" chat action; for the other commands `BotHandlers` answers after the command, also when it failed.
 
 ## Results
 
-A screen command reports `Found`, `NotFound`, `Unavailable` or `Outdated` for the log line of the update (`docs/logging.md`). A music service that did not answer is `Unavailable`, never "nothing found".
+A screen command reports `Found`, `NotFound`, `Unavailable`, `Outdated` or `Superseded` (a newer tap on the message took over, see above) for the log line of the update (`docs/logging.md`). A music service that did not answer is `Unavailable`, never "nothing found".

@@ -53,6 +53,7 @@ public static class ServiceCollectionExtensions
 
         // Screens (#48): the codec keeps the long button data of all chats, so it lives as long as the bot.
         services.AddSingleton<CallbackCodec>();
+        services.AddSingleton<ScreenVersions>();
         services.AddTransient<ScreenSender>();
         services.AddScoped<SearchScreens>();
         services.AddScoped<ArtistScreens>();

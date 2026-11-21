@@ -27,6 +27,9 @@
     <ProjectReference Include="..\MusicSearcher\MusicSearcher.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="ConcertBuddy.ConsoleApp.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="appsettings.template.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>

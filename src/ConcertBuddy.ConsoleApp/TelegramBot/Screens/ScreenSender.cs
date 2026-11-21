@@ -11,10 +11,20 @@ namespace ConcertBuddy.ConsoleApp.TelegramBot.Screens;
 public sealed class ScreenSender
 {
     private readonly ITelegramBotClient _botClient;
+    private readonly ScreenVersions _versions;
 
-    public ScreenSender(ITelegramBotClient botClient)
+    public ScreenSender(ITelegramBotClient botClient, ScreenVersions versions)
     {
         _botClient = botClient;
+        _versions = versions;
+    }
+
+    /// <summary>
+    /// A tap on the message starts: from now on an older tap on it no longer changes its screen (#92).
+    /// </summary>
+    public ScreenEdit BeginEdit(long chatId, int messageId)
+    {
+        return new ScreenEdit(this, _versions, chatId, messageId);
     }
 
     public Task<Message> SendAsync(long chatId, Screen screen)
