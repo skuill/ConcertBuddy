@@ -185,7 +185,7 @@ public class MusicSearcherClientTest
     [InlineData(HttpStatusCode.InternalServerError)]
     public async Task SearchArtistsByName_MusicBrainzFails_Unavailable(HttpStatusCode status)
     {
-        // Arrange: a unique name, so the file cache of MusicBrainz responses has nothing for it.
+        // Arrange
         var handler = new FakeHttpMessageHandler(() => new HttpResponseMessage(status));
         var client = CreateClient(handler);
 
@@ -208,6 +208,39 @@ public class MusicSearcherClientTest
 
         // Assert
         exception.InnerException.ShouldBeOfType<HttpRequestException>();
+    }
+
+    [Fact]
+    public async Task SearchArtistsByName_SameNameAgain_FromTheCacheWithoutARequest()
+    {
+        // Arrange
+        var handler = new FakeHttpMessageHandler(SearchAnswer);
+        var client = CreateClient(handler);
+        var first = await client.SearchArtistsByName(Artist);
+
+        // Act
+        var second = await client.SearchArtistsByName(Artist);
+
+        // Assert
+        handler.Calls.ShouldBe(1);
+        first.Select(x => (x.MBID, x.Name)).ShouldBe(new (string?, string?)[] { (Mbid, Artist) });
+        second.Select(x => (x.MBID, x.Name)).ShouldBe(new (string?, string?)[] { (Mbid, Artist) });
+    }
+
+    [Fact]
+    public async Task SearchArtistsByName_BusyThenAgain_TheBusyAnswerIsNotCached()
+    {
+        // Arrange
+        var handler = new FakeHttpMessageHandler(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable), SearchAnswer);
+        var client = CreateClient(handler);
+        await Should.ThrowAsync<MusicServiceUnavailableException>(() => client.SearchArtistsByName(Artist));
+
+        // Act
+        var result = await client.SearchArtistsByName(Artist);
+
+        // Assert
+        handler.Calls.ShouldBe(2);
+        result.Select(x => (x.MBID, x.Name)).ShouldBe(new (string?, string?)[] { (Mbid, Artist) });
     }
 
     [Theory]
@@ -278,6 +311,15 @@ public class MusicSearcherClientTest
     }
 
     private static string UniqueName() => $"test-{Guid.NewGuid():N}";
+
+    /// <summary>
+    /// A MusicBrainz artist search with one artist, in the JSON the client asks for.
+    /// </summary>
+    private static HttpResponseMessage SearchAnswer()
+    {
+        var json = $$"""{"created":"2026-11-21T00:00:00.000Z","count":1,"offset":0,"artists":[{"id":"{{Mbid}}","type":"Group","score":100,"name":"{{Artist}}","sort-name":"{{Artist}}","country":"US"}]}""";
+        return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json") };
+    }
 
     private static IMusicServiceClient CreateService(MusicTrackBase track)
     {

@@ -12,7 +12,6 @@ using MusicSearcher.MusicBrainz;
 using MusicSearcher.MusicService.Abstract;
 using MusicSearcher.MusicService.SetlistFm;
 using System.Net;
-using System.Reflection;
 
 namespace MusicSearcher;
 
@@ -23,6 +22,9 @@ public class MusicSearcherClient : IMusicSearcherClient
     private List<IMusicServiceClient> _musicServiceClients;
 
     private MusicBrainzClient _musicBrainzClient;
+
+    // Every answer of MusicBrainz for a day: the search, the artist by MBID, the recordings of a track.
+    private readonly MemoryRequestCache _musicBrainzCache = new(TimeProvider.System);
 
     private const int MEMORY_CACHE_SIZE = 256;
     private IMemoryCache? _artistMemoryCache;
@@ -50,11 +52,8 @@ public class MusicSearcherClient : IMusicSearcherClient
             Size = 1
         };
 
-        // Get path for local file cache.
-        var location = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
         _musicBrainzClient = musicBrainzClient;
-        _musicBrainzClient.Cache = new FileRequestCache(Path.Combine(location!, "cache"));
+        _musicBrainzClient.Cache = _musicBrainzCache;
 
         _musicServiceClients = new List<IMusicServiceClient>();
     }
@@ -316,6 +315,7 @@ public class MusicSearcherClient : IMusicSearcherClient
 
     public void Dispose()
     {
+        _musicBrainzCache.Dispose();
         if (_isMemoryCacheEnabled)
             _artistMemoryCache!.Dispose();
         if (_musicServiceClients != null && _musicServiceClients.Any())

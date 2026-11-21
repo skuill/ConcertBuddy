@@ -1,3 +1,4 @@
+using Polly;
 using System.Threading.RateLimiting;
 
 namespace MusicSearcher.Http;
@@ -9,21 +10,27 @@ public sealed class MusicServiceHttpOptions
 {
     /// <summary>
     /// A busy MusicBrainz sheds each request on its own, in the evening about every second one, without long busy
-    /// windows (measured in #93): more attempts one second apart get through sooner than long delays. Six attempts take
-    /// about 6 seconds, and our limiter keeps them at one request per second.
+    /// windows (measured in #93): more attempts one second apart get through sooner than long delays, and our limiter
+    /// keeps them at one request per second. It answers in 0.05 to 0.6 seconds, about 1.4 on a new connection, so an
+    /// attempt gets 3 seconds; the six attempts fit into the 8 seconds a user waits at most.
     /// </summary>
-    public int MusicBrainzMaxRetryAttempts { get; init; } = 5;
-
-    public TimeSpan MusicBrainzRetryDelay { get; init; } = TimeSpan.FromSeconds(1);
+    public ServiceCallPolicy MusicBrainz { get; init; } = new(
+        MaxRetryAttempts: 5,
+        RetryDelay: TimeSpan.FromSeconds(1),
+        BackoffType: DelayBackoffType.Constant,
+        AttemptTimeout: TimeSpan.FromSeconds(3),
+        TotalTimeout: TimeSpan.FromSeconds(8));
 
     /// <summary>
-    /// Setlist.fm: retries after 2, 4 and 8 seconds.
+    /// Setlist.fm answers in under a second (the setlists screen took 0.8 seconds on the dev bot): retries after 2 and
+    /// 4 seconds, 5 seconds per attempt, 10 seconds in total.
     /// </summary>
-    public int SetlistFmMaxRetryAttempts { get; init; } = 3;
-
-    public TimeSpan SetlistFmRetryDelay { get; init; } = TimeSpan.FromSeconds(2);
-
-    public TimeSpan AttemptTimeout { get; init; } = TimeSpan.FromSeconds(15);
+    public ServiceCallPolicy SetlistFm { get; init; } = new(
+        MaxRetryAttempts: 2,
+        RetryDelay: TimeSpan.FromSeconds(2),
+        BackoffType: DelayBackoffType.Exponential,
+        AttemptTimeout: TimeSpan.FromSeconds(5),
+        TotalTimeout: TimeSpan.FromSeconds(10));
 
     public RateLimiter MusicBrainzRateLimiter { get; init; } = CreateRateLimiter(requestsPerSecond: 1);
 

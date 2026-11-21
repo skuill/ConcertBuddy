@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using MusicSearcher.Http;
+using Polly;
 using Polly.Timeout;
 using Shouldly;
 using System.Collections.Concurrent;
@@ -38,7 +39,7 @@ public class MusicServiceHttpClientsTest
         // Arrange: the default delays; the fake clock records them and lets them pass at once.
         var time = new RecordingTimeProvider();
         var handler = new FakeHttpMessageHandler(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
-        var client = CreateClient(MusicServiceHttpClients.MusicBrainzClientName, handler, defaultRetries: true, time: time);
+        var client = CreateClient(MusicServiceHttpClients.MusicBrainzClientName, handler, defaultPolicy: true, time: time);
 
         // Act
         var response = await client.GetAsync(Url, TestContext.Current.CancellationToken);
@@ -62,7 +63,7 @@ public class MusicServiceHttpClientsTest
             response.Headers.TryAddWithoutValidation("Retry-After", retryAfter);
             return response;
         });
-        var client = CreateClient(MusicServiceHttpClients.MusicBrainzClientName, handler, defaultRetries: true, time: time);
+        var client = CreateClient(MusicServiceHttpClients.MusicBrainzClientName, handler, defaultPolicy: true, time: time);
 
         // Act
         await client.GetAsync(Url, TestContext.Current.CancellationToken);
@@ -73,19 +74,35 @@ public class MusicServiceHttpClientsTest
     }
 
     [Fact]
-    public async Task SetlistFm_AlwaysFailing_WaitsTwoFourAndEightSeconds()
+    public async Task SetlistFm_AlwaysFailing_ThreeAttemptsAfterTwoAndFourSeconds()
     {
         // Arrange
         var time = new RecordingTimeProvider();
         var handler = new FakeHttpMessageHandler(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
-        var client = CreateClient(MusicServiceHttpClients.SetlistFmClientName, handler, defaultRetries: true, time: time);
+        var client = CreateClient(MusicServiceHttpClients.SetlistFmClientName, handler, defaultPolicy: true, time: time);
 
         // Act
         await Should.ThrowAsync<HttpRequestException>(() => client.GetAsync(Url, TestContext.Current.CancellationToken));
 
         // Assert
-        handler.Calls.ShouldBe(4);
-        time.Delays.ShouldBe(new[] { TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8) });
+        handler.Calls.ShouldBe(3);
+        time.Delays.ShouldBe(new[] { TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4) });
+    }
+
+    [Theory]
+    [InlineData(MusicServiceHttpClients.MusicBrainzClientName, 8, 3)]
+    [InlineData(MusicServiceHttpClients.SetlistFmClientName, 10, 5)]
+    public async Task Request_DefaultPolicy_TotalAndAttemptTimeouts(string name, int totalSeconds, int attemptSeconds)
+    {
+        // Arrange
+        var time = new RecordingTimeProvider();
+        var client = CreateClient(name, new FakeHttpMessageHandler(() => new HttpResponseMessage(HttpStatusCode.OK)), defaultPolicy: true, time: time);
+
+        // Act
+        await client.GetAsync(Url, TestContext.Current.CancellationToken);
+
+        // Assert: the whole call first, then the attempt inside it.
+        time.Timeouts.ShouldBe(new[] { TimeSpan.FromSeconds(totalSeconds), TimeSpan.FromSeconds(attemptSeconds) });
     }
 
     [Fact]
@@ -190,6 +207,20 @@ public class MusicServiceHttpClientsTest
         handler.Calls.ShouldBe(1 + Retries);
     }
 
+    [Theory]
+    [InlineData(MusicServiceHttpClients.MusicBrainzClientName)]
+    [InlineData(MusicServiceHttpClients.SetlistFmClientName)]
+    public async Task Request_ServiceHangs_TheTotalTimeoutEndsTheCallWithoutRetries(string name)
+    {
+        // Arrange: the attempt would wait much longer, so only the total timeout can end it, and nothing retries after it.
+        var handler = new HangingHandler();
+        var client = CreateClient(name, handler, attemptTimeout: TimeSpan.FromMinutes(1), totalTimeout: TimeSpan.FromMilliseconds(50));
+
+        // Act, Assert
+        await Should.ThrowAsync<TimeoutRejectedException>(() => client.GetAsync(Url, TestContext.Current.CancellationToken).WaitAsync(SafetyTimeout, TestContext.Current.CancellationToken));
+        handler.Calls.ShouldBe(1);
+    }
+
     [Fact]
     public async Task SetlistFm_TooManyRequests_RetriesAndSucceeds()
     {
@@ -235,7 +266,7 @@ public class MusicServiceHttpClientsTest
         handler.Calls.ShouldBe(1 + Retries);
     }
 
-    internal static HttpClient CreateClient(string name, HttpMessageHandler handler, RateLimiter? musicBrainzLimiter = null, TimeSpan? attemptTimeout = null, bool defaultRetries = false, TimeProvider? time = null, Action<IServiceCollection>? configure = null)
+    internal static HttpClient CreateClient(string name, HttpMessageHandler handler, RateLimiter? musicBrainzLimiter = null, TimeSpan? attemptTimeout = null, bool defaultPolicy = false, TimeProvider? time = null, Action<IServiceCollection>? configure = null, TimeSpan? totalTimeout = null)
     {
         var services = new ServiceCollection();
         var defaults = new MusicServiceHttpOptions();
@@ -244,13 +275,12 @@ public class MusicServiceHttpClientsTest
             services.AddSingleton(time);
         }
         configure?.Invoke(services);
+        // Without the default policy: retries at once, and timeouts that do not fire unless a test sets them.
+        var fast = new ServiceCallPolicy(Retries, TimeSpan.Zero, DelayBackoffType.Constant, attemptTimeout ?? TimeSpan.FromSeconds(15), totalTimeout ?? TimeSpan.FromSeconds(60));
         services.AddMusicServiceHttpClients(new MusicServiceHttpOptions
         {
-            MusicBrainzMaxRetryAttempts = defaultRetries ? defaults.MusicBrainzMaxRetryAttempts : Retries,
-            MusicBrainzRetryDelay = defaultRetries ? defaults.MusicBrainzRetryDelay : TimeSpan.Zero,
-            SetlistFmMaxRetryAttempts = defaultRetries ? defaults.SetlistFmMaxRetryAttempts : Retries,
-            SetlistFmRetryDelay = defaultRetries ? defaults.SetlistFmRetryDelay : TimeSpan.Zero,
-            AttemptTimeout = attemptTimeout ?? TimeSpan.FromSeconds(15),
+            MusicBrainz = defaultPolicy ? defaults.MusicBrainz : fast,
+            SetlistFm = defaultPolicy ? defaults.SetlistFm : fast,
             MusicBrainzRateLimiter = musicBrainzLimiter ?? CreateOpenLimiter(),
             SetlistFmRateLimiter = CreateOpenLimiter(),
         });
@@ -273,23 +303,48 @@ public class MusicServiceHttpClientsTest
     }
 
     /// <summary>
-    /// Records the retry delays and lets them pass at once. The attempt timeout keeps its real timer, so it never fires in a test.
+    /// Records the retry delays and lets them pass at once. The timeouts keep their real timers, so they never fire in a
+    /// test, and are recorded when they are set: a timeout gets an infinite timer first and its time with Change.
     /// </summary>
     private sealed class RecordingTimeProvider : TimeProvider
     {
-        private static readonly TimeSpan AttemptTimeout = new MusicServiceHttpOptions().AttemptTimeout;
-
         public ConcurrentQueue<TimeSpan> Delays { get; } = new();
+
+        public ConcurrentQueue<TimeSpan> Timeouts { get; } = new();
 
         public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
         {
-            // Infinite timers (-1 ms) belong to the resilience handler itself and never fire.
-            if (dueTime == AttemptTimeout || dueTime < TimeSpan.Zero)
+            if (dueTime == Timeout.InfiniteTimeSpan)
             {
-                return System.CreateTimer(callback, state, dueTime, period);
+                return new TimeoutTimer(System.CreateTimer(callback, state, dueTime, period), Timeouts);
             }
             Delays.Enqueue(dueTime);
             return System.CreateTimer(callback, state, TimeSpan.Zero, period);
+        }
+
+        private sealed class TimeoutTimer : ITimer
+        {
+            private readonly ITimer _timer;
+            private readonly ConcurrentQueue<TimeSpan> _timeouts;
+
+            public TimeoutTimer(ITimer timer, ConcurrentQueue<TimeSpan> timeouts)
+            {
+                _timer = timer;
+                _timeouts = timeouts;
+            }
+
+            public bool Change(TimeSpan dueTime, TimeSpan period)
+            {
+                if (dueTime != Timeout.InfiniteTimeSpan)
+                {
+                    _timeouts.Enqueue(dueTime);
+                }
+                return _timer.Change(dueTime, period);
+            }
+
+            public void Dispose() => _timer.Dispose();
+
+            public ValueTask DisposeAsync() => _timer.DisposeAsync();
         }
     }
 
