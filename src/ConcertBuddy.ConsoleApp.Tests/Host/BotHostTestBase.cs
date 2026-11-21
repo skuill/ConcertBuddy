@@ -68,13 +68,13 @@ public abstract class BotHostTestBase
     }
 
     /// <summary>
-    /// A press of a button with this data under the message the bot sent (<see cref="FakeTelegram.SentMessageId"/>).
+    /// A press of a button with this data under the message the bot sent (<see cref="FakeTelegram.SentMessageId"/>), or under another message.
     /// </summary>
-    protected static string CreateCallbackUpdate(int updateId, string? data, string chatType = "private", JsonObject? richMessage = null)
+    protected static string CreateCallbackUpdate(int updateId, string? data, string chatType = "private", JsonObject? richMessage = null, int messageId = FakeTelegram.SentMessageId)
     {
         var message = new JsonObject
         {
-            ["message_id"] = FakeTelegram.SentMessageId,
+            ["message_id"] = messageId,
             ["date"] = 1,
             ["chat"] = new JsonObject { ["id"] = 10, ["type"] = chatType, ["title"] = chatType == "private" ? null : "T" },
         };

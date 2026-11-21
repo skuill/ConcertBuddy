@@ -33,7 +33,7 @@ public class MusicServiceHttpClientsTest
     }
 
     [Fact]
-    public async Task MusicBrainz_AlwaysBusy_WaitsTwoFourAndEightSeconds()
+    public async Task MusicBrainz_AlwaysBusy_SixAttemptsOneSecondApart()
     {
         // Arrange: the default delays; the fake clock records them and lets them pass at once.
         var time = new RecordingTimeProvider();
@@ -45,14 +45,14 @@ public class MusicServiceHttpClientsTest
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
-        handler.Calls.ShouldBe(4);
-        time.Delays.ShouldBe(new[] { TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8) });
+        handler.Calls.ShouldBe(6);
+        time.Delays.ShouldBe(Enumerable.Repeat(TimeSpan.FromSeconds(1), 5));
     }
 
     [Theory]
     [InlineData("0")]
-    [InlineData("1")]
-    public async Task MusicBrainz_BusyWithRetryAfter_StillWaitsTwoFourAndEightSeconds(string retryAfter)
+    [InlineData("5")]
+    public async Task MusicBrainz_BusyWithRetryAfter_StillWaitsOneSecond(string retryAfter)
     {
         // Arrange: a busy MusicBrainz sends Retry-After; following it made the retries come at once (seen on the dev bot).
         var time = new RecordingTimeProvider();
@@ -66,6 +66,22 @@ public class MusicServiceHttpClientsTest
 
         // Act
         await client.GetAsync(Url, TestContext.Current.CancellationToken);
+
+        // Assert
+        handler.Calls.ShouldBe(6);
+        time.Delays.ShouldBe(Enumerable.Repeat(TimeSpan.FromSeconds(1), 5));
+    }
+
+    [Fact]
+    public async Task SetlistFm_AlwaysFailing_WaitsTwoFourAndEightSeconds()
+    {
+        // Arrange
+        var time = new RecordingTimeProvider();
+        var handler = new FakeHttpMessageHandler(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+        var client = CreateClient(MusicServiceHttpClients.SetlistFmClientName, handler, defaultRetries: true, time: time);
+
+        // Act
+        await Should.ThrowAsync<HttpRequestException>(() => client.GetAsync(Url, TestContext.Current.CancellationToken));
 
         // Assert
         handler.Calls.ShouldBe(4);
@@ -219,7 +235,7 @@ public class MusicServiceHttpClientsTest
         handler.Calls.ShouldBe(1 + Retries);
     }
 
-    internal static HttpClient CreateClient(string name, HttpMessageHandler handler, RateLimiter? musicBrainzLimiter = null, TimeSpan? attemptTimeout = null, bool defaultRetries = false, TimeProvider? time = null)
+    internal static HttpClient CreateClient(string name, HttpMessageHandler handler, RateLimiter? musicBrainzLimiter = null, TimeSpan? attemptTimeout = null, bool defaultRetries = false, TimeProvider? time = null, Action<IServiceCollection>? configure = null)
     {
         var services = new ServiceCollection();
         var defaults = new MusicServiceHttpOptions();
@@ -227,10 +243,13 @@ public class MusicServiceHttpClientsTest
         {
             services.AddSingleton(time);
         }
+        configure?.Invoke(services);
         services.AddMusicServiceHttpClients(new MusicServiceHttpOptions
         {
-            MaxRetryAttempts = defaultRetries ? defaults.MaxRetryAttempts : Retries,
-            RetryDelay = defaultRetries ? defaults.RetryDelay : TimeSpan.Zero,
+            MusicBrainzMaxRetryAttempts = defaultRetries ? defaults.MusicBrainzMaxRetryAttempts : Retries,
+            MusicBrainzRetryDelay = defaultRetries ? defaults.MusicBrainzRetryDelay : TimeSpan.Zero,
+            SetlistFmMaxRetryAttempts = defaultRetries ? defaults.SetlistFmMaxRetryAttempts : Retries,
+            SetlistFmRetryDelay = defaultRetries ? defaults.SetlistFmRetryDelay : TimeSpan.Zero,
             AttemptTimeout = attemptTimeout ?? TimeSpan.FromSeconds(15),
             MusicBrainzRateLimiter = musicBrainzLimiter ?? CreateOpenLimiter(),
             SetlistFmRateLimiter = CreateOpenLimiter(),

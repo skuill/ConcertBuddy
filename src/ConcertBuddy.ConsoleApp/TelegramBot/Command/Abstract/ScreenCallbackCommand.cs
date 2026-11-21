@@ -51,20 +51,20 @@ public abstract class ScreenCallbackCommand : AbstractCommand<Message?, Callback
             return null;
         }
 
+        // Before anything else: a newer tap on this message from now on keeps its screen over this one (#92).
+        using var edit = _sender.BeginEdit(Data.Message.Chat.Id, Data.Message.MessageId);
+
         // At once: MusicBrainz may take several seconds, the button must not spin all that time.
         await TelegramBotClient.AnswerCallbackQuery(Data.Id, AnswerText);
         AnsweredCallback = true;
 
-        var chatId = Data.Message.Chat.Id;
-        var messageId = Data.Message.MessageId;
         if (Waiting != null)
         {
-            await _sender.EditAsync(chatId, messageId, Waiting);
+            await edit.EditAsync(Waiting);
         }
 
         var result = await build();
-        Result = result.Result;
-        await _sender.EditAsync(chatId, messageId, result.Screen);
+        Result = await edit.EditAsync(result.Screen) ? result.Result : CommandResult.Superseded;
         return Data.Message;
     }
 }

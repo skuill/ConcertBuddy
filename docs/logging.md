@@ -10,7 +10,7 @@ At the `Information` level every update gets one line:
 Handled update: Message /search in Private chat from user 3f9a1c0b7d2e4a51: Found in 812 ms
 ```
 
-It holds the update type, the command (`/start`, `/help`, `/about`, `/search`, `unknown` for any other command, the screen of a button), the chat type, a pseudonymous user key, the result (`Found`, `NotFound`, `Error`, `Unavailable` when a music service did not answer, `Outdated` for a button the bot does not know) and the duration.
+It holds the update type, the command (`/start`, `/help`, `/about`, `/search`, `unknown` for any other command, the screen of a button), the chat type, a pseudonymous user key, the result (`Found`, `NotFound`, `Error`, `Unavailable` when a music service did not answer, `Outdated` for a button the bot does not know, `Superseded` when a newer tap on the same message ended first and this screen was dropped) and the duration.
 
 - What the user typed is not in this line. Search texts, artist names and song names are written at the `Debug` level only.
 - The Telegram user id is never logged. The user key is the start of HMAC-SHA256 of the id with the secret `Configuration:UserKeySecret`: the same user always gets the same key, and without the secret the key cannot be traced back to the id. Without the secret the line shows `-`.
@@ -36,6 +36,20 @@ The count covers what Docker still keeps (the compose file keeps up to 20 files 
 | `Microsoft.Hosting.Lifetime` | `Information` |
 | `LyricsScraperNET` | `Error` |
 | `Polly` | `Warning`, set in the code: one line per retry |
+
+## When MusicBrainz is busy
+
+Every busy answer of MusicBrainz (`429`, `5xx`) gets a `Warning` line per attempt, next to the retry line of Polly, with the headers that say why and the time since the previous MusicBrainz request (`-` for the first one after the start):
+
+```
+MusicBrainz answered 503 to /ws/2/artist: zone search, who search-shed, Retry-After 1, seconds since the previous request 312.4
+```
+
+Only the path is logged: the query string holds what the user typed. To see how often MusicBrainz is busy and whether it is the first request after a pause:
+
+```
+docker logs CONCERT_BUDDY --since 24h 2>&1 | grep 'MusicBrainz answered'
+```
 
 ## When Telegram is not available
 
