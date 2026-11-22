@@ -3,6 +3,7 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Callback;
 using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using MusicSearcher;
 using MusicSearcher.Model.Abstract;
+using MusicSearcher.MusicService;
 using System.Globalization;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -24,6 +25,11 @@ public sealed class SearchScreens
     /// Artists that tour now, so their setlists are fresh (checked on setlist.fm in #46).
     /// </summary>
     public static readonly IReadOnlyList<string> Examples = new[] { "Metallica", "Linkin Park", "Foo Fighters", "Ed Sheeran" };
+
+    /// <summary>
+    /// Under a list or a card that came from Last.fm, so the missing country, type and years do not look like a bug.
+    /// </summary>
+    public const string LastFmNote = "MusicBrainz is busy, so this comes from Last.fm.";
 
     private readonly IMusicSearcherClient _musicSearcher;
     private readonly CallbackCodec _codec;
@@ -79,7 +85,13 @@ public sealed class SearchScreens
         rows.Add(Navigation(text, offset, hasNextPage: artists.Count == PageSize));
 
         var page = offset == 0 ? string.Empty : $" (page {(offset / PageSize) + 1})";
-        return new Screen($"Choose the artist for <b>{ScreenText.Html(text)}</b>{page}:", new InlineKeyboardMarkup(rows));
+        var html = $"Choose the artist for <b>{ScreenText.Html(text)}</b>{page}:";
+        // MusicBrainz did not answer and the list came from Last.fm (#91): without country, type and years.
+        if (!artists[0].IsMusicArtistExist(MusicServiceType.MusicBrainz))
+        {
+            html += $"\n<i>{LastFmNote}</i>";
+        }
+        return new Screen(html, new InlineKeyboardMarkup(rows));
     }
 
     private Screen NotFound(string text)

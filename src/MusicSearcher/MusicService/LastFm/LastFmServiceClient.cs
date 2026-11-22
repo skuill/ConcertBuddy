@@ -11,7 +11,15 @@ public sealed class LastFmServiceClient : IMusicServiceClient
 {
     private const int TOP_TRACKS_LIMIT = 10;
 
+    /// <summary>
+    /// Hqub.Lastfm takes no HttpClient and no timeout: a call that does not end in this time is given up (#91). Its
+    /// request may still end in the background.
+    /// </summary>
+    internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(4);
+
     private readonly ILastFmApi _lastFmApi;
+    private readonly TimeProvider _timeProvider;
+    private readonly TimeSpan _timeout;
     private AvailableSearchType availableSearch = AvailableSearchType.All;
 
     public LastFmServiceClient(string apiKey, string secret)
@@ -19,9 +27,11 @@ public sealed class LastFmServiceClient : IMusicServiceClient
     {
     }
 
-    public LastFmServiceClient(ILastFmApi lastFmApi)
+    public LastFmServiceClient(ILastFmApi lastFmApi, TimeProvider? timeProvider = null, TimeSpan? timeout = null)
     {
         _lastFmApi = lastFmApi;
+        _timeProvider = timeProvider ?? TimeProvider.System;
+        _timeout = timeout ?? DefaultTimeout;
     }
 
     public MusicServiceType MusicServiceType => MusicServiceType.LastFm;
@@ -30,7 +40,7 @@ public sealed class LastFmServiceClient : IMusicServiceClient
     {
         try
         {
-            var lastFmArtist = await _lastFmApi.GetArtistInfoByMbidAsync(mbid);
+            var lastFmArtist = await Limited(_lastFmApi.GetArtistInfoByMbidAsync(mbid));
 
             if (lastFmArtist != null)
             {
@@ -49,6 +59,10 @@ public sealed class LastFmServiceClient : IMusicServiceClient
         {
             throw new Exception($"Request to LastFM for MBID [{mbid}] timed out.", ex);
         }
+        catch (TimeoutException ex)
+        {
+            throw new Exception($"LastFM did not answer for MBID [{mbid}] in {_timeout.TotalSeconds} s.", ex);
+        }
         catch (ServiceException ex)
         {
             throw new Exception($"Hqub.Lastfm returns error with code [{ex.ErrorCode}] and message [{ex.Message}]");
@@ -65,7 +79,7 @@ public sealed class LastFmServiceClient : IMusicServiceClient
     {
         try
         {
-            var lastFmArtist = await _lastFmApi.GetArtistInfoAsync(name);
+            var lastFmArtist = await Limited(_lastFmApi.GetArtistInfoAsync(name));
 
             if (lastFmArtist != null)
             {
@@ -84,10 +98,27 @@ public sealed class LastFmServiceClient : IMusicServiceClient
         {
             throw new Exception($"Request to LastFM for name [{name}] timed out.", ex);
         }
+        catch (TimeoutException ex)
+        {
+            throw new Exception($"LastFM did not answer for name [{name}] in {_timeout.TotalSeconds} s.", ex);
+        }
         catch (Exception ex)
         {
             throw new Exception($"An unexpected error occurred while getting artist by name [{name}].", ex);
         }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Last.fm pages from 1: the offset is a multiple of the limit, as the bot turns whole pages.</remarks>
+    public async Task<IReadOnlyList<MusicArtistBase>> SearchArtistsByName(string name, int limit, int offset)
+    {
+        var artists = await Limited(_lastFmApi.SearchArtistsAsync(name, page: (offset / limit) + 1, limit));
+        return artists.Select(x => new LastFmMusicArtist(x)).ToList<MusicArtistBase>();
+    }
+
+    private Task<T> Limited<T>(Task<T> call)
+    {
+        return call.WaitAsync(_timeout, _timeProvider);
     }
 
     public async Task<List<MusicTrackBase>> SearchTopTracks(MusicArtistBase artist)
@@ -95,7 +126,7 @@ public sealed class LastFmServiceClient : IMusicServiceClient
         var tracks = await GetTopTracksByMbid(artist.MBID);
         if (tracks.Count == 0 && !string.IsNullOrWhiteSpace(artist.Name))
         {
-            tracks = await _lastFmApi.GetTopTracksAsync(artist.Name, TOP_TRACKS_LIMIT);
+            tracks = await Limited(_lastFmApi.GetTopTracksAsync(artist.Name, TOP_TRACKS_LIMIT));
         }
         return tracks.Select(x => new LastFmMusicTrack(x)).ToList<MusicTrackBase>();
     }
@@ -108,7 +139,7 @@ public sealed class LastFmServiceClient : IMusicServiceClient
         }
         try
         {
-            return await _lastFmApi.GetTopTracksByMbidAsync(mbid, TOP_TRACKS_LIMIT);
+            return await Limited(_lastFmApi.GetTopTracksByMbidAsync(mbid, TOP_TRACKS_LIMIT));
         }
         catch (ServiceException)
         {

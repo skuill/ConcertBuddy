@@ -18,6 +18,11 @@ public abstract class MusicArtistBase : IMusicArtist
     /// The whole biography; only Last.fm has it, <see cref="Biography"/> is its summary.
     /// </summary>
     public virtual string? FullBiography => null;
+
+    /// <summary>
+    /// Last.fm listeners: tells apart artists with the same name when MusicBrainz is busy (#91).
+    /// </summary>
+    public virtual long? Listeners => null;
     /// <summary>
     /// Areas are geographic regions or settlements.
     /// </summary>

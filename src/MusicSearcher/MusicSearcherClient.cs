@@ -9,6 +9,7 @@ using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.Model.MusicBrainz;
 using MusicSearcher.MusicBrainz;
+using MusicSearcher.MusicService;
 using MusicSearcher.MusicService.Abstract;
 using MusicSearcher.MusicService.SetlistFm;
 using System.Net;
@@ -88,90 +89,202 @@ public class MusicSearcherClient : IMusicSearcherClient
     /// <inheritdoc />
     public async Task<IEnumerable<MusicArtistBase>> SearchArtistsByName(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5, int offset = 0)
     {
-        IEnumerable<MusicArtist> result = new List<MusicArtist>();
         if (string.IsNullOrWhiteSpace(name))
         {
-            return result;
+            return new List<MusicArtist>();
+        }
+
+        // In turn (#91): MusicBrainz, then Last.fm, then MusicBrainz once more. No state between the searches: every
+        // search starts with MusicBrainz, which has the country, type and years that Last.fm does not have.
+        try
+        {
+            return await SearchMusicBrainzArtistsAsync(name, scoreType, limit, offset);
+        }
+        catch (Exception ex)
+        {
+            // Warning, not Error: the user gets the artists of Last.fm or "Try again", the bot itself is fine.
+            _logger?.LogWarning(ex, "MusicBrainz did not answer the artist search [{Name}]", name);
+            var lastFmArtists = await SearchLastFmArtistsAsync(name, limit, offset);
+            if (lastFmArtists != null)
+            {
+                return lastFmArtists;
+            }
         }
 
         try
         {
-            // By default, search results will be ordered by score, so to get the
-            // best match you could do artists.Items.First(). Sometimes this method
-            // won't work (example: search for 'U2').
-            var artists = await _musicBrainzClient.Artists.SearchAsync(name.Quote(), limit, offset);
-            if (artists == null || !artists.Any())
-            {
-                _logger?.LogInformation("Can't find artist [{Name}] with search limit {Limit}", name, limit);
-                return result;
-            }
-
-            result = scoreType switch
-            {
-                ScoreType.MusicBrainz => artists.Select(x => new MusicArtist(new MusicBrainzMusicArtist(x))),
-                ScoreType.Levenshtein => artists.OrderByDescending(x => Levenshtein.Similarity(x.Name, name)).Select(x => new MusicArtist(new MusicBrainzMusicArtist(x))),
-                _ => new List<MusicArtist>()
-            };
-
-            _logger?.LogDebug("Find artists for [{Name}]: {Artists}", name, string.Join("; ", result.Select(x => $"{x.Name} [score: {x.Score}]")));
-            return result;
+            return await SearchMusicBrainzArtistsAsync(name, scoreType, limit, offset);
         }
         catch (Exception ex)
         {
-            // Warning, not Error: the user gets "Try again", the bot itself is fine.
-            _logger?.LogWarning(ex, "MusicBrainz did not answer the artist search [{Name}]", name);
+            _logger?.LogWarning(ex, "MusicBrainz did not answer the artist search [{Name}] again", name);
             throw new MusicServiceUnavailableException("MusicBrainz", ex);
+        }
+    }
+
+    private async Task<IEnumerable<MusicArtistBase>> SearchMusicBrainzArtistsAsync(string name, ScoreType scoreType, int limit, int offset)
+    {
+        // By default, search results will be ordered by score, so to get the
+        // best match you could do artists.Items.First(). Sometimes this method
+        // won't work (example: search for 'U2').
+        var artists = await _musicBrainzClient.Artists.SearchAsync(name.Quote(), limit, offset);
+        if (artists == null || !artists.Any())
+        {
+            _logger?.LogInformation("Can't find artist [{Name}] with search limit {Limit}", name, limit);
+            return new List<MusicArtist>();
+        }
+
+        var result = scoreType switch
+        {
+            ScoreType.MusicBrainz => artists.Select(x => new MusicArtist(new MusicBrainzMusicArtist(x))).ToList(),
+            ScoreType.Levenshtein => artists.OrderByDescending(x => Levenshtein.Similarity(x.Name, name)).Select(x => new MusicArtist(new MusicBrainzMusicArtist(x))).ToList(),
+            _ => new List<MusicArtist>()
+        };
+
+        _logger?.LogDebug("Find artists for [{Name}]: {Artists}", name, string.Join("; ", result.Select(x => $"{x.Name} [score: {x.Score}]")));
+        return result;
+    }
+
+    /// <summary>
+    /// The search when MusicBrainz does not answer (#91): Last.fm artists with an MBID, because the card, the setlists and
+    /// the buttons go by MBID. Null when there is no Last.fm, it fails too or has no such artist: then MusicBrainz is busy
+    /// for the user, not "nothing found".
+    /// </summary>
+    private async Task<IReadOnlyList<MusicArtistBase>?> SearchLastFmArtistsAsync(string name, int limit, int offset)
+    {
+        var lastFm = _musicServiceClients.FirstOrDefault(x => x.MusicServiceType == MusicServiceType.LastFm);
+        if (lastFm == null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var artists = (await lastFm.SearchArtistsByName(name, limit, offset))
+                .Where(x => !string.IsNullOrWhiteSpace(x.MBID))
+                .Select(x => new MusicArtist(x))
+                .ToList<MusicArtistBase>();
+            // Only the count: the search text is written at the Debug level only.
+            _logger?.LogInformation("MusicBrainz is busy: {Count} artists of the search from Last.fm", artists.Count);
+            return artists.Count > 0 ? artists : null;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Last.fm did not answer the artist search either");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// The card when MusicBrainz does not answer (#91): what Last.fm knows by the MBID (name, photo, biography, link), without
+    /// the type, area and years of MusicBrainz. Null when there is no Last.fm, it fails too or does not know the MBID.
+    /// </summary>
+    private async Task<MusicArtistBase?> GetLastFmArtistAsync(string artistMBID)
+    {
+        var lastFm = _musicServiceClients.FirstOrDefault(x => x.MusicServiceType == MusicServiceType.LastFm);
+        if (lastFm == null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var artist = await lastFm.GetArtistByMBID(artistMBID);
+            if (string.IsNullOrWhiteSpace(artist.Name))
+            {
+                return null;
+            }
+            _logger?.LogInformation("MusicBrainz is busy: the artist [{ArtistMBID}] from Last.fm", artistMBID);
+            return new MusicArtist(artist);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Last.fm did not answer the artist [{ArtistMBID}] either", artistMBID);
+            return null;
         }
     }
 
     public async Task<MusicArtistBase> SearchArtistByMBID(string artistMBID)
     {
-        var result = new MusicArtist();
+        if (IsMemoryCacheEnabled && _artistMemoryCache!.TryGetValue(artistMBID, out MusicArtist? cached))
+        {
+            return cached!;
+        }
+
+        // In turn (#91): MusicBrainz, then Last.fm, then MusicBrainz once more.
+        Artist? musicBrainzArtist;
         try
         {
-            bool isResultFromCache = false;
-            if (IsMemoryCacheEnabled)
-                isResultFromCache = _artistMemoryCache!.TryGetValue(artistMBID, out result);
-            if (isResultFromCache)
-                return result!;
-
-            result = new MusicArtist();
-            result.Add(new MusicBrainzMusicArtist(await _musicBrainzClient.Artists.GetAsync(artistMBID)));
-
-            foreach (var musicServiceClient in _musicServiceClients.OrderByDescending(x => x.GetAvailableSearch()))
-            {
-                var currentSearchType = musicServiceClient.GetAvailableSearch();
-
-                var currentSearchResult = await TrySearchArtist(musicServiceClient, currentSearchType, artistMBID, result.Name!);
-
-                // Try search artist by name if failed for All/MBID.
-                if (!currentSearchResult.Success && currentSearchType.HasFlag(AvailableSearchType.All))
-                {
-                    currentSearchResult = await TrySearchArtist(musicServiceClient, AvailableSearchType.Name, artistMBID, result.Name!);
-                }
-
-                if (currentSearchResult.Success)
-                {
-                    result.Add(currentSearchResult.MusicArtist!);
-                }
-            }
-        }
-        catch (WebServiceException ex) when (ex.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.NotFound)
-        {
-            _logger?.LogInformation("MusicBrainz has no artist with mbid [{ArtistMBID}]: {StatusCode}", artistMBID, ex.StatusCode);
-            return new MusicArtist();
+            musicBrainzArtist = await GetMusicBrainzArtistAsync(artistMBID);
         }
         catch (Exception ex)
         {
-            // The other services are asked one by one and skipped on errors, so this is MusicBrainz.
             _logger?.LogWarning(ex, "MusicBrainz did not answer the artist [{ArtistMBID}]", artistMBID);
-            throw new MusicServiceUnavailableException("MusicBrainz", ex);
+            // Not cached: the next tap gets the full card again once MusicBrainz answers.
+            var lastFmArtist = await GetLastFmArtistAsync(artistMBID);
+            if (lastFmArtist != null)
+            {
+                return lastFmArtist;
+            }
+
+            try
+            {
+                musicBrainzArtist = await GetMusicBrainzArtistAsync(artistMBID);
+            }
+            catch (Exception again)
+            {
+                _logger?.LogWarning(again, "MusicBrainz did not answer the artist [{ArtistMBID}] again", artistMBID);
+                throw new MusicServiceUnavailableException("MusicBrainz", again);
+            }
+        }
+
+        if (musicBrainzArtist == null)
+        {
+            return new MusicArtist();
+        }
+
+        var result = new MusicArtist();
+        result.Add(new MusicBrainzMusicArtist(musicBrainzArtist));
+
+        // The other services are asked one by one and skipped on errors.
+        foreach (var musicServiceClient in _musicServiceClients.OrderByDescending(x => x.GetAvailableSearch()))
+        {
+            var currentSearchType = musicServiceClient.GetAvailableSearch();
+
+            var currentSearchResult = await TrySearchArtist(musicServiceClient, currentSearchType, artistMBID, result.Name!);
+
+            // Try search artist by name if failed for All/MBID.
+            if (!currentSearchResult.Success && currentSearchType.HasFlag(AvailableSearchType.All))
+            {
+                currentSearchResult = await TrySearchArtist(musicServiceClient, AvailableSearchType.Name, artistMBID, result.Name!);
+            }
+
+            if (currentSearchResult.Success)
+            {
+                result.Add(currentSearchResult.MusicArtist!);
+            }
         }
 
         if (IsMemoryCacheEnabled)
             _artistMemoryCache!.Set(artistMBID, result, _memoryCacheEntryOptions);
 
         return result;
+    }
+
+    /// <summary>
+    /// Null when MusicBrainz has no such artist: a <c>400</c> or <c>404</c>, not an error.
+    /// </summary>
+    private async Task<Artist?> GetMusicBrainzArtistAsync(string artistMBID)
+    {
+        try
+        {
+            return await _musicBrainzClient.Artists.GetAsync(artistMBID);
+        }
+        catch (WebServiceException ex) when (ex.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.NotFound)
+        {
+            _logger?.LogInformation("MusicBrainz has no artist with mbid [{ArtistMBID}]: {StatusCode}", artistMBID, ex.StatusCode);
+            return null;
+        }
     }
 
     private async Task<(bool Success, MusicArtistBase? MusicArtist)> TrySearchArtist(

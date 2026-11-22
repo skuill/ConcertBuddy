@@ -12,14 +12,15 @@ public sealed class MusicServiceHttpOptions
     /// A busy MusicBrainz sheds each request on its own, in the evening about every second one, without long busy
     /// windows (measured in #93): more attempts one second apart get through sooner than long delays, and our limiter
     /// keeps them at one request per second. It answers in 0.05 to 0.6 seconds, about 1.4 on a new connection, so an
-    /// attempt gets 3 seconds; the six attempts fit into the 8 seconds a user waits at most.
+    /// attempt gets 3 seconds. Three attempts in about 2 seconds, 4 at most; then <c>MusicSearcherClient</c> asks
+    /// Last.fm, and MusicBrainz once more only when Last.fm does not help (#91).
     /// </summary>
     public ServiceCallPolicy MusicBrainz { get; init; } = new(
-        MaxRetryAttempts: 5,
+        MaxRetryAttempts: 2,
         RetryDelay: TimeSpan.FromSeconds(1),
         BackoffType: DelayBackoffType.Constant,
         AttemptTimeout: TimeSpan.FromSeconds(3),
-        TotalTimeout: TimeSpan.FromSeconds(8));
+        TotalTimeout: TimeSpan.FromSeconds(4));
 
     /// <summary>
     /// Setlist.fm answers in under a second (the setlists screen took 0.8 seconds on the dev bot): retries after 2 and

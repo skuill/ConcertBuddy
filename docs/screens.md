@@ -14,7 +14,7 @@ A flow keeps one message and replaces what it shows: a `Screen` is the HTML text
 | Searching | a text message, `/search <name>`, an example, Try again | a text message sends it, a button edits it |
 | Artist list | the search, ⬅️ ➡️, Results of the card | edited in place, page turns without "Searching…" |
 | Nothing found | the search | tips and example artists |
-| Service unavailable | the search, the artist card | "busy, try again", Try again repeats the same button |
+| Service unavailable | the search, the artist card | "busy, try again", Try again repeats the same button; when MusicBrainz does not answer, the list and the card come from Last.fm, with listeners and a note in italics (`docs/external-services.md`) |
 | Artist card | the list, Artist of the next screens | edited in place, the Last.fm page as the preview, a short biography, Setlists, Upcoming, Full biography, Top tracks, Results back to the list |
 | Full biography | the card | rich, paragraphs and the Last.fm credit (CC BY-SA), Artist |
 | Setlists | the card, Setlists of a setlist | ten per screen (setlist.fm gives twenty per request), 🔜 upcoming, 📭 no songs yet, disabled arrows and the page counter, Artist |

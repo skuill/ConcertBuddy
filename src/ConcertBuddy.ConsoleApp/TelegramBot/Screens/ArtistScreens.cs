@@ -67,6 +67,12 @@ public sealed class ArtistScreens
             html += $"\n{ScreenText.Html(description)}";
         }
 
+        // MusicBrainz did not answer and the card came from Last.fm (#91).
+        if (!artist.IsMusicArtistExist(MusicServiceType.MusicBrainz))
+        {
+            html += $"\n<i>{SearchScreens.LastFmNote}</i>";
+        }
+
         var biography = ScreenText.Biography(artist.Biography);
         if (biography.Length > 0)
         {

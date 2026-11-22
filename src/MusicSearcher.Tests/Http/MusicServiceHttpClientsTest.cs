@@ -34,7 +34,7 @@ public class MusicServiceHttpClientsTest
     }
 
     [Fact]
-    public async Task MusicBrainz_AlwaysBusy_SixAttemptsOneSecondApart()
+    public async Task MusicBrainz_AlwaysBusy_ThreeAttemptsOneSecondApart()
     {
         // Arrange: the default delays; the fake clock records them and lets them pass at once.
         var time = new RecordingTimeProvider();
@@ -46,8 +46,8 @@ public class MusicServiceHttpClientsTest
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
-        handler.Calls.ShouldBe(6);
-        time.Delays.ShouldBe(Enumerable.Repeat(TimeSpan.FromSeconds(1), 5));
+        handler.Calls.ShouldBe(3);
+        time.Delays.ShouldBe(Enumerable.Repeat(TimeSpan.FromSeconds(1), 2));
     }
 
     [Theory]
@@ -69,8 +69,8 @@ public class MusicServiceHttpClientsTest
         await client.GetAsync(Url, TestContext.Current.CancellationToken);
 
         // Assert
-        handler.Calls.ShouldBe(6);
-        time.Delays.ShouldBe(Enumerable.Repeat(TimeSpan.FromSeconds(1), 5));
+        handler.Calls.ShouldBe(3);
+        time.Delays.ShouldBe(Enumerable.Repeat(TimeSpan.FromSeconds(1), 2));
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class MusicServiceHttpClientsTest
     }
 
     [Theory]
-    [InlineData(MusicServiceHttpClients.MusicBrainzClientName, 8, 3)]
+    [InlineData(MusicServiceHttpClients.MusicBrainzClientName, 4, 3)]
     [InlineData(MusicServiceHttpClients.SetlistFmClientName, 10, 5)]
     public async Task Request_DefaultPolicy_TotalAndAttemptTimeouts(string name, int totalSeconds, int attemptSeconds)
     {
