@@ -18,6 +18,20 @@ public class ScreenTextTest
     }
 
     [Theory]
+    [InlineData(0, "0 listeners")]
+    [InlineData(1, "1 listener")]
+    [InlineData(999, "999 listeners")]
+    [InlineData(1_000, "1K listeners")]
+    [InlineData(849_600, "850K listeners")]
+    [InlineData(1_000_000, "1M listeners")]
+    [InlineData(3_142_000, "3.1M listeners")]
+    [InlineData(12_960_000, "13M listeners")]
+    public void Listeners_Count_ShortForm(long count, string expected)
+    {
+        ScreenText.Listeners(count).ShouldBe(expected);
+    }
+
+    [Theory]
     [InlineData("Short text", 20, "Short text")]
     [InlineData("Exactly ten", 11, "Exactly ten")]
     [InlineData("One two three four", 12, "One two…")]

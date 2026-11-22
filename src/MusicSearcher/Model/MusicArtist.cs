@@ -50,6 +50,8 @@ public class MusicArtist : MusicArtistBase, IEnumerable<MusicArtistBase>
 
     public override Uri? ExternalUrl => GetFirstNonDefaultValue(x => x.ExternalUrl);
 
+    public override long? Listeners => GetFirstNonDefaultValue(x => x.Listeners);
+
     private T? GetFirstNonDefaultValue<T>(Func<MusicArtistBase, T> selector)
     {
         return _musicArtists.Select(selector).FirstOrDefault(x => !EqualityComparer<T>.Default.Equals(x, default));

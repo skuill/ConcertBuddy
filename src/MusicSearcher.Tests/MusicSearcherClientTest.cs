@@ -1,11 +1,13 @@
 ﻿using FakeItEasy;
 using Hqub.MusicBrainz;
+using HqubArtist = Hqub.Lastfm.Entities.Artist;
 using LyricsScraperNET;
 using LyricsScraperNET.Models.Requests;
 using LyricsScraperNET.Models.Responses;
 using Microsoft.Extensions.Logging;
 using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
+using MusicSearcher.Model.LastFm;
 using MusicSearcher.MusicService;
 using MusicSearcher.MusicService.Abstract;
 using MusicSearcher.MusicService.SetlistFm;
@@ -194,7 +196,8 @@ public class MusicSearcherClientTest
 
         // Assert
         exception.Service.ShouldBe("MusicBrainz");
-        handler.Calls.ShouldBe(1);
+        // Without Last.fm: MusicBrainz, then MusicBrainz once more.
+        handler.Calls.ShouldBe(2);
     }
 
     [Fact]
@@ -230,8 +233,9 @@ public class MusicSearcherClientTest
     [Fact]
     public async Task SearchArtistsByName_BusyThenAgain_TheBusyAnswerIsNotCached()
     {
-        // Arrange
-        var handler = new FakeHttpMessageHandler(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable), SearchAnswer);
+        // Arrange: both turns of the first search are busy.
+        var busy = () => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+        var handler = new FakeHttpMessageHandler(busy, busy, SearchAnswer);
         var client = CreateClient(handler);
         await Should.ThrowAsync<MusicServiceUnavailableException>(() => client.SearchArtistsByName(Artist));
 
@@ -239,7 +243,7 @@ public class MusicSearcherClientTest
         var result = await client.SearchArtistsByName(Artist);
 
         // Assert
-        handler.Calls.ShouldBe(2);
+        handler.Calls.ShouldBe(3);
         result.Select(x => (x.MBID, x.Name)).ShouldBe(new (string?, string?)[] { (Mbid, Artist) });
     }
 
@@ -288,6 +292,192 @@ public class MusicSearcherClientTest
         exception.Service.ShouldBe("MusicBrainz");
     }
 
+    [Fact]
+    public async Task SearchArtistsByName_MusicBrainzBusy_ArtistsOfLastFmThatHaveAnMbid()
+    {
+        // Arrange
+        var lastFm = CreateLastFm();
+        A.CallTo(() => lastFm.SearchArtistsByName(Artist, 5, 10)).Returns(new MusicArtistBase[]
+        {
+            new LastFmMusicArtist(new HqubArtist { Name = Artist, MBID = Mbid }),
+            new LastFmMusicArtist(new HqubArtist { Name = "Metallica Tribute" }),
+        });
+        var client = CreateClient(Busy(), lastFm);
+
+        // Act
+        var result = (await client.SearchArtistsByName(Artist, limit: 5, offset: 10)).ToList();
+
+        // Assert
+        result.Select(x => (x.MBID, x.Name)).ShouldBe(new (string?, string?)[] { (Mbid, Artist) });
+        result[0].IsMusicArtistExist(MusicServiceType.MusicBrainz).ShouldBeFalse();
+        result[0].IsMusicArtistExist(MusicServiceType.LastFm).ShouldBeTrue();
+        A.CallTo(() => lastFm.SearchArtistsByName(Artist, 5, 10)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task SearchArtistsByName_MusicBrainzAnswers_LastFmIsNotAsked()
+    {
+        // Arrange
+        var lastFm = CreateLastFm();
+        var client = CreateClient(new FakeHttpMessageHandler(SearchAnswer), lastFm);
+
+        // Act
+        var result = (await client.SearchArtistsByName(Artist)).ToList();
+
+        // Assert
+        result[0].IsMusicArtistExist(MusicServiceType.MusicBrainz).ShouldBeTrue();
+        A.CallTo(() => lastFm.SearchArtistsByName(A<string>._, A<int>._, A<int>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task SearchArtistsByName_MusicBrainzAndLastFmBusy_Unavailable()
+    {
+        // Arrange
+        var lastFm = CreateLastFm();
+        A.CallTo(() => lastFm.SearchArtistsByName(Artist, 5, 0)).ThrowsAsync(new TimeoutException());
+        var musicBrainz = Busy();
+        var client = CreateClient(musicBrainz, lastFm);
+
+        // Act
+        var exception = await Should.ThrowAsync<MusicServiceUnavailableException>(() => client.SearchArtistsByName(Artist));
+
+        // Assert: MusicBrainz, Last.fm, MusicBrainz once more.
+        exception.Service.ShouldBe("MusicBrainz");
+        musicBrainz.Calls.ShouldBe(2);
+        A.CallTo(() => lastFm.SearchArtistsByName(Artist, 5, 0)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task SearchArtistsByName_MusicBrainzBusyAndLastFmFails_MusicBrainzAgainFindsTheArtists()
+    {
+        // Arrange
+        var lastFm = CreateLastFm();
+        A.CallTo(() => lastFm.SearchArtistsByName(Artist, 5, 0)).ThrowsAsync(new TimeoutException());
+        var musicBrainz = new FakeHttpMessageHandler(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable), SearchAnswer);
+        var client = CreateClient(musicBrainz, lastFm);
+
+        // Act
+        var result = (await client.SearchArtistsByName(Artist)).ToList();
+
+        // Assert
+        result.Select(x => (x.MBID, x.Name)).ShouldBe(new (string?, string?)[] { (Mbid, Artist) });
+        result[0].IsMusicArtistExist(MusicServiceType.MusicBrainz).ShouldBeTrue();
+        musicBrainz.Calls.ShouldBe(2);
+        A.CallTo(() => lastFm.SearchArtistsByName(Artist, 5, 0)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task SearchArtistByMBID_MusicBrainzBusyAndLastFmFails_MusicBrainzAgainGivesTheFullCardAndCachesIt()
+    {
+        // Arrange: Last.fm fails both for the card and for the biography afterwards.
+        var lastFm = CreateLastFm();
+        A.CallTo(() => lastFm.GetAvailableSearch()).Returns(AvailableSearchType.MBID);
+        A.CallTo(() => lastFm.GetArtistByMBID(Mbid)).ThrowsAsync(new Exception("LastFM did not answer"));
+        var musicBrainz = new FakeHttpMessageHandler(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable), ArtistAnswer);
+        var client = CreateClient(musicBrainz, lastFm);
+
+        // Act
+        var first = await client.SearchArtistByMBID(Mbid);
+        var second = await client.SearchArtistByMBID(Mbid);
+
+        // Assert
+        foreach (var result in new[] { first, second })
+        {
+            (result.Name, result.MBID, result.Country).ShouldBe((Artist, Mbid, "US"));
+            result.IsMusicArtistExist(MusicServiceType.MusicBrainz).ShouldBeTrue();
+        }
+        musicBrainz.Calls.ShouldBe(2);
+        A.CallTo(() => lastFm.GetArtistByMBID(Mbid)).MustHaveHappenedTwiceExactly();
+    }
+
+    [Fact]
+    public async Task SearchArtistsByName_MusicBrainzBusyAndLastFmHasNoArtistWithAnMbid_UnavailableNotNothingFound()
+    {
+        // Arrange
+        var lastFm = CreateLastFm();
+        A.CallTo(() => lastFm.SearchArtistsByName(Artist, 5, 0)).Returns(new MusicArtistBase[] { new LastFmMusicArtist(new HqubArtist { Name = "Metallica Tribute" }) });
+        var client = CreateClient(Busy(), lastFm);
+
+        // Act, Assert
+        await Should.ThrowAsync<MusicServiceUnavailableException>(() => client.SearchArtistsByName(Artist));
+    }
+
+    [Fact]
+    public async Task SearchArtistByMBID_MusicBrainzBusy_CardOfLastFmNotCached()
+    {
+        // Arrange
+        var lastFm = CreateLastFm();
+        A.CallTo(() => lastFm.GetArtistByMBID(Mbid)).Returns(new LastFmMusicArtist(new HqubArtist { Name = Artist, MBID = Mbid, Url = "https://www.last.fm/music/Metallica" }));
+        var musicBrainz = Busy();
+        var client = CreateClient(musicBrainz, lastFm);
+
+        // Act
+        var first = await client.SearchArtistByMBID(Mbid);
+        var second = await client.SearchArtistByMBID(Mbid);
+
+        // Assert
+        foreach (var result in new[] { first, second })
+        {
+            (result.Name, result.MBID, result.ExternalUrl).ShouldBe((Artist, Mbid, new Uri("https://www.last.fm/music/Metallica")));
+            result.IsMusicArtistExist(MusicServiceType.MusicBrainz).ShouldBeFalse();
+        }
+        // Not cached: the second tap asks MusicBrainz again.
+        musicBrainz.Calls.ShouldBe(2);
+        A.CallTo(() => lastFm.GetArtistByMBID(Mbid)).MustHaveHappenedTwiceExactly();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SearchArtistByMBID_MusicBrainzBusyAndLastFmDoesNotHelp_Unavailable(bool lastFmFails)
+    {
+        // Arrange
+        var lastFm = CreateLastFm();
+        var call = A.CallTo(() => lastFm.GetArtistByMBID(Mbid));
+        if (lastFmFails)
+        {
+            call.ThrowsAsync(new Exception("LastFM did not answer"));
+        }
+        else
+        {
+            call.Returns(new LastFmMusicArtist(new HqubArtist()));
+        }
+        var musicBrainz = Busy();
+        var client = CreateClient(musicBrainz, lastFm);
+
+        // Act
+        var exception = await Should.ThrowAsync<MusicServiceUnavailableException>(() => client.SearchArtistByMBID(Mbid));
+
+        // Assert: MusicBrainz, Last.fm, MusicBrainz once more.
+        exception.Service.ShouldBe("MusicBrainz");
+        musicBrainz.Calls.ShouldBe(2);
+        A.CallTo(() => lastFm.GetArtistByMBID(Mbid)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task SearchArtistByMBID_MusicBrainzHasNoSuchArtist_LastFmIsNotAsked()
+    {
+        // Arrange
+        var lastFm = CreateLastFm();
+        var client = CreateClient(new FakeHttpMessageHandler(() => new HttpResponseMessage(HttpStatusCode.NotFound)), lastFm);
+
+        // Act
+        var result = await client.SearchArtistByMBID(Mbid);
+
+        // Assert
+        result.Name.ShouldBeNull();
+        A.CallTo(() => lastFm.GetArtistByMBID(A<string>._)).MustNotHaveHappened();
+    }
+
+    private static FakeHttpMessageHandler Busy() => new(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+
+    private static IMusicServiceClient CreateLastFm()
+    {
+        var lastFm = A.Fake<IMusicServiceClient>();
+        A.CallTo(() => lastFm.MusicServiceType).Returns(MusicServiceType.LastFm);
+        return lastFm;
+    }
+
     private void AssertLogged(LogLevel level, int times, string messageStart = "")
     {
         A.CallTo(_logger)
@@ -304,10 +494,10 @@ public class MusicSearcherClientTest
         return new MusicSearcherClient(_lyricsClient, _setlistClient, services, new MusicBrainzClient(), _logger);
     }
 
-    private MusicSearcherClient CreateClient(HttpMessageHandler musicBrainz)
+    private MusicSearcherClient CreateClient(HttpMessageHandler musicBrainz, params IMusicServiceClient[] services)
     {
         var httpClient = new HttpClient(musicBrainz) { BaseAddress = new Uri(MusicBrainzClient.ServiceBaseAddress) };
-        return new MusicSearcherClient(_lyricsClient, _setlistClient, Array.Empty<IMusicServiceClient>(), new MusicBrainzClient(httpClient), A.Fake<ILogger<MusicSearcherClient>>());
+        return new MusicSearcherClient(_lyricsClient, _setlistClient, services, new MusicBrainzClient(httpClient), A.Fake<ILogger<MusicSearcherClient>>());
     }
 
     private static string UniqueName() => $"test-{Guid.NewGuid():N}";
@@ -318,6 +508,15 @@ public class MusicSearcherClientTest
     private static HttpResponseMessage SearchAnswer()
     {
         var json = $$"""{"created":"2026-11-21T00:00:00.000Z","count":1,"offset":0,"artists":[{"id":"{{Mbid}}","type":"Group","score":100,"name":"{{Artist}}","sort-name":"{{Artist}}","country":"US"}]}""";
+        return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json") };
+    }
+
+    /// <summary>
+    /// A MusicBrainz artist by MBID, in the JSON the client asks for.
+    /// </summary>
+    private static HttpResponseMessage ArtistAnswer()
+    {
+        var json = $$"""{"id":"{{Mbid}}","type":"Group","name":"{{Artist}}","sort-name":"{{Artist}}","country":"US"}""";
         return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json") };
     }
 

@@ -16,6 +16,12 @@ public sealed class LastFmApi : ILastFmApi
 
     public Task<Artist> GetArtistInfoAsync(string name) => _lastFmClient.Artist.GetInfoAsync(name);
 
+    public async Task<IReadOnlyList<Artist>> SearchArtistsAsync(string name, int page, int limit)
+    {
+        var artists = await _lastFmClient.Artist.SearchAsync(name, page, limit);
+        return artists.Items.ToList();
+    }
+
     public async Task<IReadOnlyList<Track>> GetTopTracksByMbidAsync(string mbid, int limit)
     {
         var tracks = await _lastFmClient.Artist.GetTopTracksByMbidAsync(mbid, limit: limit);

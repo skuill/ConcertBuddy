@@ -69,6 +69,37 @@ public class ArtistScreensTest
     }
 
     [Fact]
+    public async Task CardAsync_MusicBrainzBusyCardFromLastFm_NoteInsteadOfTheDescriptionLine()
+    {
+        // Arrange: MusicSearcherClient gave the card of Last.fm alone (#91).
+        var lastFm = new TestArtist
+        {
+            Service = MusicServiceType.LastFm,
+            NameValue = "Metallica",
+            MbidValue = Mbid,
+            BiographyValue = "Metallica is an American heavy metal band.",
+            ExternalUrlValue = new Uri("https://www.last.fm/music/Metallica"),
+        };
+        Returns(new MusicArtist(lastFm));
+
+        // Act
+        var result = await CreateScreens(lastFmAvailable: true).CardAsync(Mbid, 0, "metallica");
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.Found);
+        ScreenDump.Of(result.Screen).ShouldBe($"""
+            🎤 <b>Metallica</b>
+            <i>MusicBrainz is busy, so this comes from Last.fm.</i>
+            <blockquote expandable>Metallica is an American heavy metal band.</blockquote>
+            ---
+            📝 Setlists → l|{Mbid}|1 [Primary] | 📅 Upcoming → u|{Mbid}
+            📖 Full biography → b|{Mbid} | 📻 Top tracks → o|{Mbid}
+            ⬅️ Results → s|0|metallica | ❌ → /delete
+            preview: https://www.last.fm/music/Metallica
+            """.ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
     public async Task CardAsync_NameOnly_NoDescriptionLine()
     {
         // Arrange

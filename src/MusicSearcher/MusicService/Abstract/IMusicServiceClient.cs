@@ -12,6 +12,11 @@ public interface IMusicServiceClient
     public Task<MusicArtistBase> SearchArtistByName(string name);
 
     /// <summary>
+    /// Artists for the name, best first: the search when MusicBrainz does not answer (#91).
+    /// </summary>
+    public Task<IReadOnlyList<MusicArtistBase>> SearchArtistsByName(string name, int limit, int offset);
+
+    /// <summary>
     /// Null when the service has no such track: a normal result, not a failure.
     /// </summary>
     public Task<MusicTrackBase?> SearchTrack(string artistName, string trackName);

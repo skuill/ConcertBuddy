@@ -8,16 +8,18 @@ public interface IMusicSearcherClient : IDisposable
 {
     /// <summary>
     /// The artist from MusicBrainz with what the other services know about it; an empty artist (no name) when MusicBrainz has none.
+    /// When MusicBrainz does not answer: what Last.fm knows by the MBID, without MusicBrainz in it (see <c>IsMusicArtistExist</c>).
     /// </summary>
-    /// <exception cref="MusicServiceUnavailableException">MusicBrainz did not answer.</exception>
+    /// <exception cref="MusicServiceUnavailableException">MusicBrainz did not answer, and Last.fm did not either.</exception>
     Task<MusicArtistBase> SearchArtistByMBID(string artistMBID);
 
     Task<MusicArtistBase> SearchArtistByName(string name, ScoreType scoreType = ScoreType.MusicBrainz);
 
     /// <summary>
     /// Artists of MusicBrainz for the name, best first; empty when nothing is found.
+    /// When MusicBrainz does not answer: the artists of Last.fm that have an MBID.
     /// </summary>
-    /// <exception cref="MusicServiceUnavailableException">MusicBrainz did not answer.</exception>
+    /// <exception cref="MusicServiceUnavailableException">MusicBrainz did not answer, and Last.fm did not either.</exception>
     Task<IEnumerable<MusicArtistBase>> SearchArtistsByName(string name, ScoreType scoreType = ScoreType.MusicBrainz, int limit = 5, int offset = 0);
 
     Task<MusicTrackBase> SearchTrack(string artistName, string trackName);

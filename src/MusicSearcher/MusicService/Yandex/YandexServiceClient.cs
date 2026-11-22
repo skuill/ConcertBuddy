@@ -29,6 +29,11 @@ public class YandexServiceClient : IMusicServiceClient
         throw new NotImplementedException();
     }
 
+    public Task<IReadOnlyList<MusicArtistBase>> SearchArtistsByName(string name, int limit, int offset)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<MusicTrackBase>> SearchTopTracks(MusicArtistBase artist)
     {
         throw new NotImplementedException();

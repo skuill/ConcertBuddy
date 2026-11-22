@@ -3,8 +3,10 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Screens;
 using FakeItEasy;
 using MusicSearcher;
+using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.MusicBrainz;
+using MusicSearcher.MusicService;
 using Shouldly;
 
 namespace ConcertBuddy.ConsoleApp.Tests.TelegramBot.Screens;
@@ -40,6 +42,30 @@ public class SearchScreensTest
             🎤 Artist 4 · Person → a|00000000-0000-0000-0000-000000000004|0|Metallica
             🎤 Artist 5 · Person → a|00000000-0000-0000-0000-000000000005|0|Metallica
             ❌ → /delete | ➡️ → s|5|Metallica
+            preview: none
+            """.ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
+    public async Task SearchAsync_MusicBrainzBusyListFromLastFm_NoteUnderTheTitle()
+    {
+        // Arrange: MusicSearcherClient gave the artists of Last.fm (#91): names and MBIDs only.
+        Returns("Metallica", 0,
+            new MusicArtist(new TestArtist { Service = MusicServiceType.LastFm, NameValue = "Metallica", MbidValue = TestArtist.MetallicaMbid, ListenersValue = 3_142_000 }),
+            new MusicArtist(new TestArtist { Service = MusicServiceType.LastFm, NameValue = "Metallica Tribute", MbidValue = "00000000-0000-0000-0000-000000000002", ListenersValue = 850 }));
+
+        // Act
+        var result = await _screens.SearchAsync("Metallica", 0);
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.Found);
+        ScreenDump.Of(result.Screen).ShouldBe("""
+            Choose the artist for <b>Metallica</b>:
+            <i>MusicBrainz is busy, so this comes from Last.fm.</i>
+            ---
+            🎤 Metallica · 3.1M listeners → a|65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab|0|Metallica
+            🎤 Metallica Tribute · 850 listeners → a|00000000-0000-0000-0000-000000000002|0|Metallica
+            ❌ → /delete
             preview: none
             """.ReplaceLineEndings("\n"));
     }

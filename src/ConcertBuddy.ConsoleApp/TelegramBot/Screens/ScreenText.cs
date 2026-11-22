@@ -52,8 +52,28 @@ public static partial class ScreenText
     public static string Describe(MusicArtistBase artist)
     {
         var years = artist.ActiveYears?.Trim(' ', '-');
-        var parts = new[] { artist.Type, artist.Area, string.IsNullOrEmpty(years) ? null : artist.ActiveYears!.Trim() };
+        var parts = new[]
+        {
+            artist.Type,
+            artist.Area,
+            string.IsNullOrEmpty(years) ? null : artist.ActiveYears!.Trim(),
+            artist.Listeners is { } listeners ? Listeners(listeners) : null,
+        };
         return string.Join(" · ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+    }
+
+    /// <summary>
+    /// "3.1M listeners", "850K listeners", "12 listeners": short, so the names in the buttons stay readable.
+    /// </summary>
+    public static string Listeners(long count)
+    {
+        var number = count switch
+        {
+            >= 1_000_000 => (count / 1_000_000d).ToString("0.#", CultureInfo.InvariantCulture) + "M",
+            >= 1_000 => Math.Round(count / 1_000d).ToString("0", CultureInfo.InvariantCulture) + "K",
+            _ => count.ToString(CultureInfo.InvariantCulture),
+        };
+        return count == 1 ? "1 listener" : $"{number} listeners";
     }
 
     private const string LastFmReadMore = "Read more on Last.fm";

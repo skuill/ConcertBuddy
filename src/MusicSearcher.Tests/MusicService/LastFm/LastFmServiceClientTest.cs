@@ -1,6 +1,7 @@
 using FakeItEasy;
 using Hqub.Lastfm;
 using Hqub.Lastfm.Entities;
+using Microsoft.Extensions.Time.Testing;
 using MusicSearcher.Model.Abstract;
 using MusicSearcher.Model.LastFm;
 using MusicSearcher.MusicService;
@@ -14,6 +15,7 @@ public class LastFmServiceClientTest
     private const string Mbid = "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab";
     private const string ArtistName = "Metallica";
     private const int ExpectedLimit = 10;
+    private static readonly TimeSpan SafetyTimeout = TimeSpan.FromSeconds(5);
 
     private static readonly Track[] Tracks =
     {
@@ -111,6 +113,76 @@ public class LastFmServiceClientTest
 
         // Act, Assert
         await Should.ThrowAsync<ServiceException>(() => client.SearchTopTracks(CreateArtist(null, ArtistName)));
+    }
+
+    [Theory]
+    [InlineData(0, 1)]
+    [InlineData(5, 2)]
+    [InlineData(10, 3)]
+    public async Task SearchArtistsByName_Offset_AsksThePageOfLastFm(int offset, int expectedPage)
+    {
+        // Arrange
+        var found = new[]
+        {
+            new Artist { Name = ArtistName, MBID = Mbid, Url = "https://www.last.fm/music/Metallica", Statistics = new Statistics { Listeners = 3_100_000 } },
+            new Artist { Name = "Metallica Tribute", Url = "https://www.last.fm/music/Metallica+Tribute" },
+        };
+        A.CallTo(() => _api.SearchArtistsAsync(ArtistName, expectedPage, 5)).Returns(found);
+        var client = new LastFmServiceClient(_api);
+
+        // Act
+        var result = await client.SearchArtistsByName(ArtistName, limit: 5, offset: offset);
+
+        // Assert
+        result.Select(x => (x.MusicServiceType, x.Name, x.MBID, x.ExternalUrl, x.Listeners)).ShouldBe(new (MusicServiceType, string?, string?, Uri?, long?)[]
+        {
+            (MusicServiceType.LastFm, ArtistName, Mbid, new Uri("https://www.last.fm/music/Metallica"), 3_100_000),
+            (MusicServiceType.LastFm, "Metallica Tribute", null, new Uri("https://www.last.fm/music/Metallica+Tribute"), null),
+        });
+        A.CallTo(() => _api.SearchArtistsAsync(ArtistName, expectedPage, 5)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task SearchArtistsByName_LastFmDoesNotAnswer_GivesUpAfterTheTimeout()
+    {
+        // Arrange: Hqub.Lastfm takes no timeout, so the client stops waiting itself.
+        var time = new FakeTimeProvider();
+        A.CallTo(() => _api.SearchArtistsAsync(ArtistName, 1, 5)).Returns(new TaskCompletionSource<IReadOnlyList<Artist>>().Task);
+        var client = new LastFmServiceClient(_api, time);
+        var search = client.SearchArtistsByName(ArtistName, limit: 5, offset: 0);
+
+        // Act
+        time.Advance(LastFmServiceClient.DefaultTimeout - TimeSpan.FromMilliseconds(1));
+        var doneBefore = search.IsCompleted;
+        time.Advance(TimeSpan.FromMilliseconds(1));
+
+        // Assert
+        doneBefore.ShouldBeFalse();
+        // A safety wait, so a missing limit fails the test instead of hanging it.
+        await Task.WhenAny(search, Task.Delay(SafetyTimeout, TestContext.Current.CancellationToken));
+        search.IsCompleted.ShouldBeTrue();
+        await Should.ThrowAsync<TimeoutException>(() => search);
+        LastFmServiceClient.DefaultTimeout.ShouldBe(TimeSpan.FromSeconds(4));
+    }
+
+    [Fact]
+    public async Task GetArtistByMBID_LastFmDoesNotAnswer_FailsAfterTheTimeout()
+    {
+        // Arrange
+        var time = new FakeTimeProvider();
+        A.CallTo(() => _api.GetArtistInfoByMbidAsync(Mbid)).Returns(new TaskCompletionSource<Artist>().Task);
+        var client = new LastFmServiceClient(_api, time);
+        var artist = client.GetArtistByMBID(Mbid);
+
+        // Act
+        time.Advance(LastFmServiceClient.DefaultTimeout);
+
+        // Assert
+        await Task.WhenAny(artist, Task.Delay(SafetyTimeout, TestContext.Current.CancellationToken));
+        artist.IsCompleted.ShouldBeTrue();
+        var exception = await Should.ThrowAsync<Exception>(() => artist);
+        exception.InnerException.ShouldBeOfType<TimeoutException>();
+        exception.Message.ShouldBe($"LastFM did not answer for MBID [{Mbid}] in 4 s.");
     }
 
     [Fact]

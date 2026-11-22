@@ -46,6 +46,10 @@ internal sealed class TestArtist : MusicArtistBase
 
     public override string? Type => TypeValue;
 
+    public long? ListenersValue { get; init; }
+
+    public override long? Listeners => ListenersValue;
+
     public string? CountryValue { get; init; }
 
     public override string? Country => CountryValue;

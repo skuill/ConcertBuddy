@@ -20,6 +20,7 @@ public class LastFmMusicArtist : MusicArtistBase
     public override Uri? ImageUri { get => TryGetLastFmArtistImageUri(); }
     public override string? Biography { get => _artist.Biography?.Summary; }
     public override string? FullBiography { get => _artist.Biography?.Content; }
+    public override long? Listeners { get => _artist.Statistics?.Listeners; }
     public override string? Area { get => default; }
     public override string? ActiveYears { get => default; }
     public override string? Type { get => default; }

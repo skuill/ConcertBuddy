@@ -51,6 +51,8 @@ Only the path is logged: the query string holds what the user typed. To see how 
 docker logs CONCERT_BUDDY --since 24h 2>&1 | grep 'MusicBrainz answered'
 ```
 
+When the search or the card then comes from Last.fm, an `Information` line says so ("MusicBrainz is busy: 3 artists of the search from Last.fm", "... the artist [<mbid>] from Last.fm"); when Last.fm does not answer either, a `Warning`.
+
 ## When Telegram is not available
 
 The first failed attempt gets one line, `Warning` for a temporary problem and `Error` for any other. The next attempts are at the `Debug` level. When polling works again, one `Information` line says so. Between the attempts the bot waits `retry_after` if Telegram sent it, otherwise 1, 2, 4 and up to 60 seconds. An invalid token (`401`) stops the bot.
