@@ -37,6 +37,6 @@ public class SearchCallbackCommand : ScreenCallbackCommand
         }
 
         _text = arguments[1];
-        return () => _screens.SearchAsync(_text, _offset);
+        return () => _screens.SearchAsync(_text, _offset, newSearch: Payload.Action == CallbackActions.NewSearch);
     }
 }

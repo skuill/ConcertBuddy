@@ -28,7 +28,7 @@ public class SearchScenarioTest : BotHostTestBase
     public async Task Search_ArtistsFound_SearchingThenTheListInTheSameMessage()
     {
         // Arrange
-        ArtistsFor("Metallica", TestArtist.Metallica(), TestArtist.Numbered(2));
+        ArtistsFor("Metallica", TestArtist.Metallica(), TestArtist.Namesake(2));
         var telegram = new FakeTelegram(CreateTextUpdate(1, "  Metallica "));
 
         // Act
@@ -46,6 +46,49 @@ public class SearchScenarioTest : BotHostTestBase
         list["text"]!.GetValue<string>().ShouldBe("Choose the artist for <b>Metallica</b>:");
         ButtonData(list).ShouldBe(new[] { $"a|{Mbid}|0|Metallica", "a|00000000-0000-0000-0000-000000000002|0|Metallica", "/delete" });
         HandledLines().Single().ShouldStartWith("Handled update: Message /search in Private chat from user -: Found in ");
+    }
+
+    [Fact]
+    public async Task Search_OneArtistWithTheName_CardAtOnceInTheSameMessageAndNotThisArtistLeadsToTheList()
+    {
+        // Arrange (#94)
+        ArtistsFor("metallica", TestArtist.Metallica(), TestArtist.Numbered(2));
+        A.CallTo(() => _music.SearchArtistByMBID(Mbid)).Returns(new MusicArtist(TestArtist.Metallica()));
+        var telegram = new FakeTelegram(CreateTextUpdate(1, "metallica"));
+        using var host = CreateHost(telegram, services => services.AddScoped(_ => _music));
+        await host.StartAsync(Token);
+        await WaitUntil(() => HandledLines().Count == 1);
+        var card = telegram.RequestsOf("editMessageText").Single();
+
+        // Act
+        telegram.AddUpdate(CreateCallbackUpdate(2, ButtonData(card).Single(x => x.StartsWith("s|"))));
+        await WaitUntil(() => HandledLines().Count == 2);
+        await host.StopAsync(Token);
+
+        // Assert
+        card["text"]!.GetValue<string>().ShouldBe("🇺🇸 <b>Metallica</b>\nGroup · United States · 1981 -");
+        card["reply_markup"]!["inline_keyboard"]!.AsArray().Last()![0]!["text"]!.GetValue<string>().ShouldBe("🔄 Not this artist?");
+        telegram.RequestsOf("editMessageText").Last()["text"]!.GetValue<string>().ShouldBe("Choose the artist for <b>metallica</b>:");
+        HandledLines()[0].ShouldStartWith("Handled update: Message /search in Private chat from user -: Found in ");
+    }
+
+    [Fact]
+    public async Task Search_TryAgainWithOneArtistOfTheName_CardAtOnce()
+    {
+        // Arrange: "Try again" and the examples are new searches too (#94).
+        ArtistsFor("Metallica", TestArtist.Metallica());
+        A.CallTo(() => _music.SearchArtistByMBID(Mbid)).Returns(new MusicArtist(TestArtist.Metallica()));
+        var telegram = new FakeTelegram(CreateCallbackUpdate(1, "n|0|Metallica"));
+
+        // Act
+        await RunUntilHandled(telegram, 1);
+
+        // Assert
+        telegram.RequestsOf("editMessageText").Select(x => x["text"]!.GetValue<string>()).ShouldBe(new[]
+        {
+            "🔍 Searching for <b>Metallica</b>…",
+            "🇺🇸 <b>Metallica</b>\nGroup · United States · 1981 -",
+        });
     }
 
     [Fact]
@@ -69,7 +112,7 @@ public class SearchScenarioTest : BotHostTestBase
         // Arrange: MusicBrainz fails once, then answers.
         A.CallTo(() => _music.SearchArtistsByName("Metallica", A<ScoreType>._, 5, 0))
             .ThrowsAsync(new MusicServiceUnavailableException("MusicBrainz", new HttpRequestException("503"))).Once()
-            .Then.Returns(new MusicArtistBase[] { TestArtist.Metallica() });
+            .Then.Returns(new MusicArtistBase[] { TestArtist.Metallica(), TestArtist.Namesake(2) });
         var telegram = new FakeTelegram(CreateTextUpdate(1, "Metallica"));
         using var host = CreateHost(telegram, services => services.AddScoped(_ => _music));
         await host.StartAsync(Token);
@@ -99,7 +142,7 @@ public class SearchScenarioTest : BotHostTestBase
     public async Task Artist_PickedFromTheList_CardInTheSameMessageAndResultsLeadBack()
     {
         // Arrange
-        ArtistsFor("metallica", TestArtist.Metallica());
+        ArtistsFor("metallica", TestArtist.Metallica(), TestArtist.Namesake(2));
         A.CallTo(() => _music.SearchArtistByMBID(Mbid)).Returns(new MusicArtist(TestArtist.Metallica()));
         var telegram = new FakeTelegram(CreateTextUpdate(1, "metallica"));
         using var host = CreateHost(telegram, services => services.AddScoped(_ => _music));
@@ -144,7 +187,7 @@ public class SearchScenarioTest : BotHostTestBase
     public async Task Search_ExampleButton_SearchingThenTheList()
     {
         // Arrange
-        ArtistsFor("Metallica", TestArtist.Metallica());
+        ArtistsFor("Metallica", TestArtist.Metallica(), TestArtist.Namesake(2));
         var telegram = new FakeTelegram(CreateCallbackUpdate(1, "n|0|Metallica"));
 
         // Act

@@ -12,10 +12,10 @@ A flow keeps one message and replaces what it shows: a `Screen` is the HTML text
 | Help | `/help`, an unknown command, Start, About | what the bot can do, Menu, About |
 | About | `/about`, Start, Help | version, data sources, code, support links, Menu, Help |
 | Searching | a text message, `/search <name>`, an example, Try again | a text message sends it, a button edits it |
-| Artist list | the search, ⬅️ ➡️, Results of the card | edited in place, page turns without "Searching…" |
-| Nothing found | the search | tips and example artists |
+| Artist list | the search, ⬅️ ➡️, Results (or Not this artist?) of the card | edited in place, page turns without "Searching…"; after nothing found, the list of the other keyboard layout with "Did you mean …?" |
+| Nothing found | the search | tips and example artists, when the other keyboard layout finds nothing either |
 | Service unavailable | the search, the artist card | "busy, try again", Try again repeats the same button; when MusicBrainz does not answer, the list and the card come from Last.fm, with listeners and a note in italics (`docs/external-services.md`) |
-| Artist card | the list, Artist of the next screens | edited in place, the Last.fm page as the preview, a short biography, Setlists, Upcoming, Full biography, Top tracks, Results back to the list |
+| Artist card | the list, a new search with one artist of exactly the typed name, Artist of the next screens | edited in place, the Last.fm page as the preview, a short biography, Setlists, Upcoming, Full biography, Top tracks, Results back to the list ("Not this artist?" when the search opened it at once) |
 | Full biography | the card | rich, paragraphs and the Last.fm credit (CC BY-SA), Artist |
 | Setlists | the card, Setlists of a setlist | ten per screen (setlist.fm gives twenty per request), 🔜 upcoming, 📭 no songs yet, disabled arrows and the page counter, Artist |
 | Upcoming | the card, Upcoming of a setlist | the next ten concerts, soonest first, from the first setlist.fm page (its newest twenty; an artist with more concerts ahead may miss the soonest, All on setlist.fm shows them, #50 brings a real source), a note that fans add them and no tickets are sold, Artist |
@@ -73,6 +73,17 @@ On every start `BotProfile` sets the command menu (for private chats and for all
 Updates are handled in parallel, and a tap that waits for MusicBrainz retries can end seconds after a newer tap on the same message. So a screen command takes the next version of its message (`ScreenVersions`, by chat and message id) before it does anything, and edits the message only while that version is still the latest: an older tap that ends later drops its screen, and the message keeps the newer one (#92). A message is kept in `ScreenVersions` only while a tap on it is in progress. New messages (a search, a track) and other messages are not affected.
 
 The older tap still does its work (the music services have no cancellation here); only its screen is dropped.
+
+## A new search
+
+A new search (a text message, `/search`, an example, Try again) does more than a page turn or the way back from a card (#94):
+
+- **Confident match:** when exactly one artist of the first page has the typed name (letters and digits, any case: "metallica", "METALLICA!"), the card opens at once in the search message. Its last button is "🔄 Not this artist?", which shows the list. Two artists with the name ("Nirvana") keep the list.
+- **The other keyboard layout:** when nothing is found, the bot searches the text as typed on the other layout (`KeyboardLayout`: "ьуефддшсф" is "metallica", "rbyj" is "кино"). If that finds artists, the list says "Nothing found for X. Did you mean Y?" and its buttons go on with Y; no card opens at once, because the user did not type Y. Otherwise the usual "Nothing found".
+
+## Loading
+
+A screen command that is not ready within a second (`ScreenEdit.LoadingDelay`) puts "⏳ Loading…" without buttons into the message, then the screen. A fast screen (the cache, a page turn) does not blink, and without buttons a waiting user does not tap again. The lyrics of a track are the exception: the message keeps its player and the toast says that the lyrics are being looked for.
 
 ## Answering buttons
 

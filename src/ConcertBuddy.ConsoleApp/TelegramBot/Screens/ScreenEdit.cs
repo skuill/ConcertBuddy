@@ -10,11 +10,13 @@ public sealed class ScreenEdit : IDisposable
     private readonly long _chatId;
     private readonly int _messageId;
     private readonly long _version;
+    private readonly TimeProvider _timeProvider;
 
-    internal ScreenEdit(ScreenSender sender, ScreenVersions versions, long chatId, int messageId)
+    internal ScreenEdit(ScreenSender sender, ScreenVersions versions, TimeProvider timeProvider, long chatId, int messageId)
     {
         _sender = sender;
         _versions = versions;
+        _timeProvider = timeProvider;
         _chatId = chatId;
         _messageId = messageId;
         _version = versions.Begin(chatId, messageId);
@@ -32,6 +34,28 @@ public sealed class ScreenEdit : IDisposable
 
         await _sender.EditAsync(_chatId, _messageId, screen);
         return true;
+    }
+
+    /// <summary>
+    /// How long a screen may take before the message shows <see cref="CommonScreens.Loading"/> (#94).
+    /// </summary>
+    public static readonly TimeSpan LoadingDelay = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    /// Builds a screen and shows the loading screen meanwhile when it is not built within <see cref="LoadingDelay"/>, so a
+    /// fast screen does not blink. The delay starts before the build, so it counts all of it.
+    /// </summary>
+    public async Task<T> BuildWithLoadingAsync<T>(Func<Task<T>> build)
+    {
+        using var stop = new CancellationTokenSource();
+        var delay = Task.Delay(LoadingDelay, _timeProvider, stop.Token);
+        var building = build();
+        if (await Task.WhenAny(building, delay) == delay)
+        {
+            await EditAsync(CommonScreens.Loading);
+        }
+        stop.Cancel();
+        return await building;
     }
 
     public void Dispose()

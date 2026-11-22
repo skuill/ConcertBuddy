@@ -29,7 +29,7 @@ public class SearchMessageCommand : AbstractCommand<Message?, Message>
         var text = SearchScreens.CleanText(_query.Text);
         var message = await _sender.SendAsync(Data.Chat.Id, SearchScreens.Searching(text));
 
-        var result = await _screens.SearchAsync(text, offset: 0);
+        var result = await _screens.SearchAsync(text, offset: 0, newSearch: true);
         Result = result.Result;
         await _sender.EditAsync(Data.Chat.Id, message.MessageId, result.Screen);
         return message;

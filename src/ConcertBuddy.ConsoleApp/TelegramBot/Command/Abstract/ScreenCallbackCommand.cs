@@ -39,6 +39,12 @@ public abstract class ScreenCallbackCommand : AbstractCommand<Message?, Callback
     /// </summary>
     protected virtual string? AnswerText => null;
 
+    /// <summary>
+    /// "⏳ Loading…" when the screen takes more than a second (#94); off for a message whose content must stay, like a track
+    /// with its player.
+    /// </summary>
+    protected virtual bool ShowsLoading => true;
+
     public override async Task<Message?> ExecuteAsync()
     {
         var arguments = Payload.Split(ArgumentCount);
@@ -58,12 +64,16 @@ public abstract class ScreenCallbackCommand : AbstractCommand<Message?, Callback
         await TelegramBotClient.AnswerCallbackQuery(Data.Id, AnswerText);
         AnsweredCallback = true;
 
+        ScreenResult result;
         if (Waiting != null)
         {
             await edit.EditAsync(Waiting);
+            result = await build();
         }
-
-        var result = await build();
+        else
+        {
+            result = ShowsLoading ? await edit.BuildWithLoadingAsync(build) : await build();
+        }
         Result = await edit.EditAsync(result.Screen) ? result.Result : CommandResult.Superseded;
         return Data.Message;
     }

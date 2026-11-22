@@ -12,11 +12,13 @@ public sealed class ScreenSender
 {
     private readonly ITelegramBotClient _botClient;
     private readonly ScreenVersions _versions;
+    private readonly TimeProvider _timeProvider;
 
-    public ScreenSender(ITelegramBotClient botClient, ScreenVersions versions)
+    public ScreenSender(ITelegramBotClient botClient, ScreenVersions versions, TimeProvider timeProvider)
     {
         _botClient = botClient;
         _versions = versions;
+        _timeProvider = timeProvider;
     }
 
     /// <summary>
@@ -24,7 +26,7 @@ public sealed class ScreenSender
     /// </summary>
     public ScreenEdit BeginEdit(long chatId, int messageId)
     {
-        return new ScreenEdit(this, _versions, chatId, messageId);
+        return new ScreenEdit(this, _versions, _timeProvider, chatId, messageId);
     }
 
     public Task<Message> SendAsync(long chatId, Screen screen)

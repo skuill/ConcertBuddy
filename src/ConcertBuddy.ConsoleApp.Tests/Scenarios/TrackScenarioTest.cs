@@ -1,3 +1,4 @@
+using ConcertBuddy.ConsoleApp.TelegramBot.Screens;
 using ConcertBuddy.ConsoleApp.Tests.Host;
 using ConcertBuddy.ConsoleApp.Tests.TelegramBot.Screens;
 using FakeItEasy;
@@ -158,6 +159,36 @@ public class TrackScenarioTest : BotHostTestBase
         edit["reply_markup"]!["inline_keyboard"]![0]![0]!["text"]!.GetValue<string>().ShouldBe("🎼 Hide lyrics");
         A.CallTo(() => _music.SearchArtistByMBID(A<string>._)).MustNotHaveHappened();
         HandledLines().Single().ShouldStartWith("Handled update: CallbackQuery /lyric in Private chat from user -: Found in ");
+    }
+
+    [Fact]
+    public async Task ShowLyrics_SlowSearch_NoLoadingScreenThePlayerStays()
+    {
+        // Arrange: the lyrics take long; the track message must keep its player meanwhile (#94), the toast says it works.
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        A.CallTo(() => _music.SearchLyric("Metallica", "One")).ReturnsLazily(async () =>
+        {
+            started.TrySetResult();
+            await release.Task;
+            return new MusicLyric { IsSuccessSearchResult = true, LyricText = "I can't remember anything" };
+        });
+        var telegram = new FakeTelegram(CreateCallbackUpdate(1, $"y|{Mbid}|One", richMessage: TrackMessage()));
+        using var host = CreateHost(telegram, services => services.AddScoped(_ => _music));
+        await host.StartAsync(Token);
+        await started.Task.WaitAsync(SafetyTimeout, Token);
+
+        // Act
+        Time.Advance(ScreenEdit.LoadingDelay * 3);
+        await Task.Delay(50, Token);
+        var editsWhileSlow = telegram.RequestsOf("editMessageText").Count;
+        release.SetResult();
+        await WaitUntil(() => HandledLines().Count == 1);
+        await host.StopAsync(Token);
+
+        // Assert
+        editsWhileSlow.ShouldBe(0);
+        telegram.RequestsOf("editMessageText").Single()["rich_message"]!["html"]!.GetValue<string>().ShouldContain("I can't remember anything");
     }
 
     [Fact]

@@ -22,21 +22,20 @@ public sealed class ArtistScreens
 
     private readonly IMusicSearcherClient _musicSearcher;
     private readonly CallbackCodec _codec;
-    private readonly SearchScreens _searchScreens;
     private readonly Configuration _configuration;
 
-    public ArtistScreens(IMusicSearcherClient musicSearcher, CallbackCodec codec, SearchScreens searchScreens, IOptions<Configuration> configuration)
+    public ArtistScreens(IMusicSearcherClient musicSearcher, CallbackCodec codec, IOptions<Configuration> configuration)
     {
         _musicSearcher = musicSearcher;
         _codec = codec;
-        _searchScreens = searchScreens;
         _configuration = configuration.Value;
     }
 
     /// <summary>
     /// The card of the artist; the search text and offset lead back to the results (an empty text: no search, no button).
+    /// A card that a confident match opened at once (#94) calls that button "Not this artist?".
     /// </summary>
-    public async Task<ScreenResult> CardAsync(string mbid, int searchOffset, string searchText)
+    public async Task<ScreenResult> CardAsync(string mbid, int searchOffset, string searchText, bool confidentMatch = false)
     {
         MusicArtist artist;
         try
@@ -55,10 +54,10 @@ public sealed class ArtistScreens
             return new ScreenResult(new Screen(html, new InlineKeyboardMarkup(new[] { LastRow(searchOffset, searchText) })), CommandResult.NotFound);
         }
 
-        return new ScreenResult(Card(artist, mbid, searchOffset, searchText), CommandResult.Found);
+        return new ScreenResult(Card(artist, mbid, searchOffset, searchText, confidentMatch), CommandResult.Found);
     }
 
-    private Screen Card(MusicArtist artist, string mbid, int searchOffset, string searchText)
+    private Screen Card(MusicArtist artist, string mbid, int searchOffset, string searchText, bool confidentMatch)
     {
         var html = $"{ScreenText.Flag(artist.Country)} <b>{ScreenText.Html(artist.Name)}</b>";
         var description = ScreenText.Describe(artist);
@@ -89,7 +88,7 @@ public sealed class ArtistScreens
         {
             new[] { setlists, InlineKeyboardButton.WithCallbackData("📅 Upcoming", _codec.Encode(CallbackActions.Upcoming, mbid)) },
             more,
-            LastRow(searchOffset, searchText),
+            LastRow(searchOffset, searchText, confidentMatch),
         };
         return new Screen(html, new InlineKeyboardMarkup(rows), artist[MusicServiceType.LastFm]?.ExternalUrl?.ToString());
     }
@@ -130,10 +129,10 @@ public sealed class ArtistScreens
         return new ScreenResult(new Screen(rich.ToString(), new InlineKeyboardMarkup(back), IsRich: true), CommandResult.Found);
     }
 
-    private InlineKeyboardButton[] LastRow(int searchOffset, string searchText)
+    private InlineKeyboardButton[] LastRow(int searchOffset, string searchText, bool confidentMatch = false)
     {
         return searchText.Length == 0
             ? new[] { CommonScreens.DeleteButton() }
-            : new[] { InlineKeyboardButton.WithCallbackData("⬅️ Results", _searchScreens.SearchData(searchText, searchOffset)), CommonScreens.DeleteButton() };
+            : new[] { InlineKeyboardButton.WithCallbackData(confidentMatch ? "🔄 Not this artist?" : "⬅️ Results", SearchScreens.SearchData(_codec, searchText, searchOffset)), CommonScreens.DeleteButton() };
     }
 }

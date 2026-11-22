@@ -25,6 +25,9 @@ public class LyricsCommand : ScreenCallbackCommand
 
     protected override string? AnswerText => Show ? "⏳ Looking for the lyrics…" : null;
 
+    // The track message keeps its player while the lyrics are looked for: the toast says it is working.
+    protected override bool ShowsLoading => false;
+
     private bool Show => Payload.Action == CallbackActions.ShowLyrics;
 
     protected override Func<Task<ScreenResult>>? Prepare(string[] arguments)
