@@ -41,7 +41,8 @@ Just write the artist/band name to the **[ConcertBuddy](https://t.me/concert_bud
 
 A few of the things you can do with ConcertBuddy:
 * ✅ Search artist / band by name
-  * `MusicBrainz`
+  * `MusicBrainz`, `Last.fm` when MusicBrainz is busy
+  * An exact name opens the artist at once; a name typed in the wrong keyboard layout is understood
 * ✅ Read artist / band biography
   * `Last.fm`
 * ✅ View setlists from recent concerts, as a table with covers, guests and encores
