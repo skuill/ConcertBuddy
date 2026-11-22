@@ -77,4 +77,14 @@ internal sealed class TestArtist : MusicArtistBase
         MbidValue = $"00000000-0000-0000-0000-{number:D12}",
         TypeValue = "Person",
     };
+
+    /// <summary>
+    /// Another artist called Metallica: with it a search for "Metallica" shows the list, not the card at once (#94).
+    /// </summary>
+    public static TestArtist Namesake(int number) => new()
+    {
+        NameValue = "Metallica",
+        MbidValue = $"00000000-0000-0000-0000-{number:D12}",
+        TypeValue = "Person",
+    };
 }

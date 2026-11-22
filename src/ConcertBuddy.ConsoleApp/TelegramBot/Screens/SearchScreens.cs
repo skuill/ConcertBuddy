@@ -33,11 +33,13 @@ public sealed class SearchScreens
 
     private readonly IMusicSearcherClient _musicSearcher;
     private readonly CallbackCodec _codec;
+    private readonly ArtistScreens _artistScreens;
 
-    public SearchScreens(IMusicSearcherClient musicSearcher, CallbackCodec codec)
+    public SearchScreens(IMusicSearcherClient musicSearcher, CallbackCodec codec, ArtistScreens artistScreens)
     {
         _musicSearcher = musicSearcher;
         _codec = codec;
+        _artistScreens = artistScreens;
     }
 
     public static string CleanText(string text)
@@ -50,7 +52,11 @@ public sealed class SearchScreens
         return new Screen($"🔍 Searching for <b>{ScreenText.Html(text)}</b>…", InlineKeyboardMarkup.Empty());
     }
 
-    public async Task<ScreenResult> SearchAsync(string text, int offset)
+    /// <summary>
+    /// A page of the search. A new search (not a page turn or the way back from a card) opens the card at once when one
+    /// artist has exactly the typed name, and tries the other keyboard layout when nothing is found (#94).
+    /// </summary>
+    public async Task<ScreenResult> SearchAsync(string text, int offset, bool newSearch = false)
     {
         List<MusicArtistBase> artists;
         try
@@ -64,15 +70,66 @@ public sealed class SearchScreens
 
         if (artists.Count > 0)
         {
-            return new ScreenResult(List(text, artists, offset), CommandResult.Found);
+            var match = newSearch && offset == 0 ? ConfidentMatch(text, artists) : null;
+            return match != null
+                ? await _artistScreens.CardAsync(match.MBID!, 0, text, confidentMatch: true)
+                : new ScreenResult(List(text, artists, offset), CommandResult.Found);
         }
 
-        return offset == 0
-            ? new ScreenResult(NotFound(text), CommandResult.NotFound)
-            : new ScreenResult(NoMorePages(text, offset), CommandResult.NotFound);
+        if (offset > 0)
+        {
+            return new ScreenResult(NoMorePages(text, offset), CommandResult.NotFound);
+        }
+
+        return newSearch ? await OtherLayoutAsync(text) : new ScreenResult(NotFound(text), CommandResult.NotFound);
     }
 
-    private Screen List(string text, List<MusicArtistBase> artists, int offset)
+    /// <summary>
+    /// The one artist whose name is the typed text (letters and digits, any case), or null when there is none or several:
+    /// "Nirvana" has two bands, so the list stays.
+    /// </summary>
+    private static MusicArtistBase? ConfidentMatch(string text, List<MusicArtistBase> artists)
+    {
+        var typed = Letters(text);
+        var matches = artists.Where(artist => !string.IsNullOrEmpty(artist.MBID) && Letters(artist.Name ?? string.Empty) == typed).ToList();
+        return typed.Length > 0 && matches.Count == 1 ? matches[0] : null;
+    }
+
+    private static string Letters(string text)
+    {
+        return string.Concat(text.Where(char.IsLetterOrDigit)).ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Nothing found: the same text typed on the other keyboard layout, "ьуефддшсф" for "metallica". The list says what was
+    /// searched instead, so the result is no surprise.
+    /// </summary>
+    private async Task<ScreenResult> OtherLayoutAsync(string text)
+    {
+        var swapped = KeyboardLayout.Swap(text);
+        if (swapped != text)
+        {
+            List<MusicArtistBase> artists;
+            try
+            {
+                artists = (await _musicSearcher.SearchArtistsByName(swapped, limit: PageSize, offset: 0)).ToList();
+            }
+            catch (MusicServiceUnavailableException exception)
+            {
+                return CommonScreens.Unavailable(exception.Service, _codec.Encode(CallbackActions.NewSearch, Number(0), text));
+            }
+
+            if (artists.Count > 0)
+            {
+                var title = $"🤔 Nothing found for <b>{ScreenText.Html(text)}</b>. Did you mean <b>{ScreenText.Html(swapped)}</b>?";
+                return new ScreenResult(List(swapped, artists, 0, title), CommandResult.Found);
+            }
+        }
+
+        return new ScreenResult(NotFound(text), CommandResult.NotFound);
+    }
+
+    private Screen List(string text, List<MusicArtistBase> artists, int offset, string? title = null)
     {
         var rows = artists
             .Select(artist => new[]
@@ -85,7 +142,7 @@ public sealed class SearchScreens
         rows.Add(Navigation(text, offset, hasNextPage: artists.Count == PageSize));
 
         var page = offset == 0 ? string.Empty : $" (page {(offset / PageSize) + 1})";
-        var html = $"Choose the artist for <b>{ScreenText.Html(text)}</b>{page}:";
+        var html = title ?? $"Choose the artist for <b>{ScreenText.Html(text)}</b>{page}:";
         // MusicBrainz did not answer and the list came from Last.fm (#91): without country, type and years.
         if (!artists[0].IsMusicArtistExist(MusicServiceType.MusicBrainz))
         {
@@ -119,21 +176,21 @@ public sealed class SearchScreens
         var buttons = new List<InlineKeyboardButton>();
         if (offset > 0)
         {
-            buttons.Add(InlineKeyboardButton.WithCallbackData("⬅️", SearchData(text, Math.Max(0, offset - PageSize))));
+            buttons.Add(InlineKeyboardButton.WithCallbackData("⬅️", SearchData(_codec, text, Math.Max(0, offset - PageSize))));
         }
 
         buttons.Add(CommonScreens.DeleteButton());
         if (hasNextPage)
         {
-            buttons.Add(InlineKeyboardButton.WithCallbackData("➡️", SearchData(text, offset + PageSize)));
+            buttons.Add(InlineKeyboardButton.WithCallbackData("➡️", SearchData(_codec, text, offset + PageSize)));
         }
 
         return buttons.ToArray();
     }
 
-    public string SearchData(string text, int offset)
+    public static string SearchData(CallbackCodec codec, string text, int offset)
     {
-        return _codec.Encode(CallbackActions.Search, Number(offset), text);
+        return codec.Encode(CallbackActions.Search, Number(offset), text);
     }
 
     private string NewSearchData(string text)

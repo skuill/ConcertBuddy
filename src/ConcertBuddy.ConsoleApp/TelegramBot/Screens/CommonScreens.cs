@@ -8,6 +8,11 @@ public static class CommonScreens
     public const string OutdatedButton = "This button is outdated. Send the artist name again.";
 
     /// <summary>
+    /// A screen that takes more than a second (#94): no buttons, so a waiting user does not tap again and again.
+    /// </summary>
+    public static readonly Screen Loading = new("⏳ Loading…", InlineKeyboardMarkup.Empty());
+
+    /// <summary>
     /// A service did not answer: it is not the user's query, so no tips, just "Try again" with the same button data.
     /// </summary>
     public static ScreenResult Unavailable(string service, string retryCallbackData)

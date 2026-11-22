@@ -227,6 +227,6 @@ public class ArtistScreensTest
     private ArtistScreens CreateScreens(bool lastFmAvailable)
     {
         var configuration = lastFmAvailable ? new Configuration { LastFmApiKey = "key", LastFmApiSecret = "secret" } : new Configuration();
-        return new ArtistScreens(_music, _codec, new SearchScreens(_music, _codec), Options.Create(configuration));
+        return new ArtistScreens(_music, _codec, Options.Create(configuration));
     }
 }

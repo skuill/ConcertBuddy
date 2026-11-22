@@ -2,6 +2,7 @@ using ConcertBuddy.ConsoleApp.TelegramBot.Callback;
 using ConcertBuddy.ConsoleApp.TelegramBot.Command.Abstract;
 using ConcertBuddy.ConsoleApp.TelegramBot.Screens;
 using FakeItEasy;
+using Microsoft.Extensions.Options;
 using MusicSearcher;
 using MusicSearcher.Model;
 using MusicSearcher.Model.Abstract;
@@ -19,7 +20,7 @@ public class SearchScreensTest
 
     public SearchScreensTest()
     {
-        _screens = new SearchScreens(_music, _codec);
+        _screens = new SearchScreens(_music, _codec, new ArtistScreens(_music, _codec, Options.Create(new Configuration())));
     }
 
     [Fact]
@@ -44,6 +45,128 @@ public class SearchScreensTest
             ❌ → /delete | ➡️ → s|5|Metallica
             preview: none
             """.ReplaceLineEndings("\n"));
+    }
+
+    [Theory]
+    [InlineData("Metallica")]
+    [InlineData("  metallica ")]
+    [InlineData("METALLICA!")]
+    public async Task SearchAsync_NewSearchOneArtistWithTheName_CardAtOnceWithNotThisArtist(string text)
+    {
+        // Arrange
+        Returns(text, 0, TestArtist.Metallica(), TestArtist.Numbered(2));
+        A.CallTo(() => _music.SearchArtistByMBID(TestArtist.MetallicaMbid)).Returns(new MusicArtist(TestArtist.Metallica()));
+
+        // Act
+        var result = await _screens.SearchAsync(text, 0, newSearch: true);
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.Found);
+        ScreenDump.Of(result.Screen).ShouldBe($"""
+            🇺🇸 <b>Metallica</b>
+            Group · United States · 1981 -
+            ---
+            📝 Setlists → l|{TestArtist.MetallicaMbid}|1 [Primary] | 📅 Upcoming → u|{TestArtist.MetallicaMbid}
+            📖 Full biography → b|{TestArtist.MetallicaMbid}
+            🔄 Not this artist? → s|0|{text} | ❌ → /delete
+            preview: none
+            """.ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
+    public async Task SearchAsync_NewSearchTwoArtistsWithTheName_ListWithoutTheCard()
+    {
+        // Arrange
+        Returns("Metallica", 0, TestArtist.Metallica(), TestArtist.Namesake(2));
+
+        // Act
+        var result = await _screens.SearchAsync("Metallica", 0, newSearch: true);
+
+        // Assert
+        result.Screen.Html.ShouldBe("Choose the artist for <b>Metallica</b>:");
+        A.CallTo(() => _music.SearchArtistByMBID(A<string>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task SearchAsync_PageOrBackToTheResults_ListEvenWithOneArtistOfTheName()
+    {
+        // Arrange: "Not this artist?" and "Results" lead here, they must not open the card again.
+        Returns("Metallica", 0, TestArtist.Metallica(), TestArtist.Numbered(2));
+
+        // Act
+        var result = await _screens.SearchAsync("Metallica", 0);
+
+        // Assert
+        result.Screen.Html.ShouldBe("Choose the artist for <b>Metallica</b>:");
+        A.CallTo(() => _music.SearchArtistByMBID(A<string>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task SearchAsync_NothingInTheTypedLayout_DidYouMeanListOfTheOtherLayout()
+    {
+        // Arrange
+        Returns("ьуефддшсф", 0);
+        Returns("metallica", 0, TestArtist.Metallica(), TestArtist.Numbered(2));
+
+        // Act
+        var result = await _screens.SearchAsync("ьуефддшсф", 0, newSearch: true);
+
+        // Assert: the list of the swapped text, its buttons lead back to it; no card at once, the user did not type it.
+        result.Result.ShouldBe(CommandResult.Found);
+        ScreenDump.Of(result.Screen).ShouldBe("""
+            🤔 Nothing found for <b>ьуефддшсф</b>. Did you mean <b>metallica</b>?
+            ---
+            🇺🇸 Metallica · Group · United States · 1981 - → a|65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab|0|metallica
+            🎤 Artist 2 · Person → a|00000000-0000-0000-0000-000000000002|0|metallica
+            ❌ → /delete
+            preview: none
+            """.ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
+    public async Task SearchAsync_NothingInBothLayouts_NotFoundForTheTypedText()
+    {
+        // Arrange
+        Returns("Metalica", 0);
+        Returns("ьуефдшсф", 0);
+
+        // Act
+        var result = await _screens.SearchAsync("Metalica", 0, newSearch: true);
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.NotFound);
+        result.Screen.Html.ShouldStartWith("🤷 Nothing found for <b>Metalica</b>.");
+        A.CallTo(() => _music.SearchArtistsByName("ьуефдшсф", A<ScoreType>._, SearchScreens.PageSize, 0)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task SearchAsync_PageWithNothing_NoSecondLayout()
+    {
+        // Arrange
+        Returns("Metalica", 0);
+
+        // Act
+        var result = await _screens.SearchAsync("Metalica", 0);
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.NotFound);
+        A.CallTo(() => _music.SearchArtistsByName("ьуефдшсф", A<ScoreType>._, A<int>._, A<int>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task SearchAsync_OtherLayoutBusy_TryAgainTheTypedText()
+    {
+        // Arrange
+        Returns("ьуефддшсф", 0);
+        A.CallTo(() => _music.SearchArtistsByName("metallica", A<ScoreType>._, SearchScreens.PageSize, 0))
+            .ThrowsAsync(new MusicServiceUnavailableException("MusicBrainz", new HttpRequestException("503")));
+
+        // Act
+        var result = await _screens.SearchAsync("ьуефддшсф", 0, newSearch: true);
+
+        // Assert
+        result.Result.ShouldBe(CommandResult.Unavailable);
+        result.Screen.Keyboard.InlineKeyboard.First().First().CallbackData.ShouldBe("n|0|ьуефддшсф");
     }
 
     [Fact]
